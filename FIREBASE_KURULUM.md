@@ -2,6 +2,8 @@
 
 Bu kurulum **bir kez** yapılır. Buluşçuların ve personelin hiçbir ayar yapmasına gerek kalmaz.
 
+> **v1.1'den v1.2'ye geçiyorsanız:** Buluş Bildirim Formu için yeni kurallar eklendi (`forms`, `formPersonal`). Firebase kullanan kurumlarda **5. adımı** (kuralları yeniden yükleme) tekrarlayın.
+
 > **JellyFish projesini kullanmayın.** TTO Takip için **ayrı bir Firebase projesi** açın. `database.rules.json` yüklendiğinde projedeki tüm kuralların yerine geçer; aynı projeyi kullanırsanız JellyFish çalışmaz hâle gelir.
 
 ---
@@ -108,4 +110,4 @@ Uygulamada **Ayarlar → Dosya verilerini yedekle (JSON)** ya da Firebase Consol
 
 ---
 
-*TTO Takip v1.1 — Teknoloji Transfer Ofisi Fikri Mülkiyet Dosya Takibi*
+*TTO Takip v1.2 — Teknoloji Transfer Ofisi Fikri Mülkiyet Dosya Takibi*

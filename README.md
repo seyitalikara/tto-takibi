@@ -41,6 +41,22 @@ TÜRKPATENT'in açıkladığı ortalama patent tescil süresi 2023'te 36 ay, 202
 - **Rüçhan / yurt dışı başvuru son günü:** TÜRKPATENT başvurusu + 12 ay (patent, faydalı model), + 6 ay (tasarım, marka).
 - Personel her dosyaya elle süre ekleyebilir (inceleme talebi, yıllık ücret, itiraza cevap…). Genel Bakış ekranı önümüzdeki 60 günün sürelerini listeler.
 
+## 📝 Buluş Bildirim Formu ve Word çıktısı
+
+Her dosyanın içinde **dijital Buluş Bildirim Formu** bulunur (dosya ayrıntısı → **Formu doldur**). Form, kurumun kâğıt formuyla aynı bölümlerden oluşur:
+
+- **Dilekçe:** TTO Koordinatörlüğüne ön değerlendirme talebi (metin otomatik oluşur).
+- **Yürütücü ve buluşçular:** Ad soyad, T.C. kimlik no, adres, telefon/e-posta, katkı payı.
+- **13 soru:** Anahtar kelimeler, uygulama alanı, mevcut tekniğin eksiklikleri, üstünlükler, unsurlar tablosu, araştırmalar, yayınlar, ifşa, sanayiye uygulanabilirlik, ülkeler, geliştirme tarihi, destekler, alternatifler.
+- **Çizimler, şekillerin açıklaması, detaylı anlatım.**
+- **Fikri Sınai Mülkiyet Hakları Ticarileştirme Ön Raporu.**
+
+**Word olarak indir** düğmesi dilekçe, form ve ön raporu tek tek ya da tek dosyada üretir. Çıktıda her buluşçu ve yürütücü için **ıslak imza alanı**, her sayfanın altında **paraf satırı** ve sayfa numarası vardır. Belgeyi yazdırıp tüm sayfaları paraflayın ve **mavi mürekkepli kalemle** imzalayın.
+
+Buluşçular, dosya TTO ön inceleme aşamasındayken (Başvuru Alındı, Ön İnceleme, Belge Bekleniyor) formu kendileri doldurabilir; sonrasında yalnızca TTO düzenler. **T.C. kimlik no, adres ve telefonu** yalnızca TTO personeli ve bilginin sahibi buluşçu görür; aynı dosyadaki diğer buluşçular göremez.
+
+Kâğıt ortamdaki eski dosyalar için: **[ESKI_DOSYA_AKTARIMI.md](ESKI_DOSYA_AKTARIMI.md)**.
+
 ## 👥 Kim ne yapabilir?
 
 | İşlem | Koordinatör | Koord. Yrd. | Şef / Personel | Buluşçu |
@@ -76,7 +92,9 @@ Firebase kurulumu için **[FIREBASE_KURULUM.md](FIREBASE_KURULUM.md)** dosyasın
 | `kurumlar.js` | Platformdaki kurumlar, logoları ve Firebase ayarları |
 | `logos/` | Kurum logoları (isteğe bağlı) |
 | `KURUM_EKLEME.md` | Yeni üniversite ekleme ve ticari kullanım notları |
+| `ESKI_DOSYA_AKTARIMI.md`, `ornek_aktarim.json` | Kâğıt evrakın dijitale aktarılması ve örnek veri dosyası |
+| `ozel/` | Gerçek aktarım dosyaları için yerel klasör — GitHub'a **yüklenmez** (`.gitignore`) |
 | `database.rules.json` | Firebase Realtime Database güvenlik kuralları |
 | `FIREBASE_KURULUM.md` | Adım adım Firebase kurulumu |
 
-*TTO Takip v1.1*
+*TTO Takip v1.2*

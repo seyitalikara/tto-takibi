@@ -43,6 +43,23 @@
       ".read": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true)",
       ".write": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true)"
     },
+    "forms": {
+      "$fid": {
+        ".read": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true) || ((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists())",
+        ".write": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true) || ((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists() && newData.exists() && root.child('files').child($fid).child('stage').val().matches(/^(basvuru|on_inceleme|eksik)$/))"
+      }
+    },
+    "formPersonal": {
+      "$fid": {
+        ".read": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true)",
+        ".write": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true)",
+        "$k": {
+          ".read": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true) || ((auth != null && auth.token.email_verified === true) && $k === auth.token.email.toLowerCase().replace('.', ','))",
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true) || ((auth != null && auth.token.email_verified === true) && $k === auth.token.email.toLowerCase().replace('.', ',') && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists())",
+          ".validate": "!newData.child('tc').exists() || (newData.child('tc').isString() && newData.child('tc').val().length <= 20)"
+        }
+      }
+    },
     "userFiles": {
       ".read": "((auth != null && auth.token.email_verified === true) && root.child('staff').child(auth.token.email.toLowerCase().replace('.', ',')).child('active').val() === true)",
       "$k": {

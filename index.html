@@ -189,7 +189,7 @@ const KURUMLAR = (Array.isArray(window.TTO_KURUMLAR) && window.TTO_KURUMLAR.leng
   {id:'hacettepe', name:'Hacettepe Üniversitesi', short:'HÜ', city:'Ankara', color:'#b91c1c', firebase:null}
 ];
 let TENANT = null; // seçili kurum
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 // ============================================================
 // SABİTLER
@@ -459,6 +459,26 @@ function demoSeed(){
     hist:[['basvuru',ago(360)],['on_inceleme',ago(350)],['kurul',ago(330)],['hazirlik',ago(315)],['tp_basvuru',ago(300)],['tp_arastirma',ago(200)],['red',ago(40),'Araştırma raporunda yenilik bulunamadığı için başvuru reddedildi.']]});
   file({no:'TTO-2026-003', type:'tasarim', title:'Modüler güneş paneli taşıyıcı ayak seti', inv:['elif','selin'],
     hist:[['basvuru',ago(45)],['on_inceleme',ago(35)],['hazirlik',ago(12),'Görseller tasarımcıdan bekleniyor.']]});
+  T.forms = {demo005: {leadKey: ek(P.can.email),
+    petition: {date: ago(95), signerKey: ek(P.can.email)},
+    keywords: 'Hidrojen–doğal gaz karışımı; diyaframlı gaz sayacı; akış ölçümü; diyafram ömrü; hidrojen uyumlu malzeme',
+    q2: 'Buluş, doğal gaz dağıtım şebekelerinde kullanılan ölçüm cihazları alanındadır. Hidrojen katkılı doğal gaz taşıyan konut ve ticari hatlarda tüketim ölçümü için kullanılır.',
+    q3: 'Mevcut diyaframlı sayaçlar saf doğal gaz için tasarlanmıştır. Hidrojen oranı arttıkça diyafram malzemesinde geçirgenlik ve yaşlanma artar, ölçüm hatası büyür.',
+    q4: 'Diyafram çevresine yerleştirilen koruyucu katman ve akış düzenleyici kanal sayesinde hidrojen katkılı gazda ölçüm doğruluğu korunur ve diyafram ömrü uzar.',
+    units: [{name:'Koruyucu katmanlı diyafram', isNew:true, critical:true, func:'Hidrojen geçirgenliğini azaltır.'},{name:'Akış düzenleyici kanal', isNew:true, critical:true, func:'Diyafram üzerindeki basınç dalgalanmasını sönümler.'},{name:'Sayaç gövdesi', prior:true, func:'Ölçüm odalarını taşır.'}],
+    q6: {patentTR:true, patentAbroad:true, internet:true, text:'TÜRKPATENT ve Espacenet veri tabanlarında "hydrogen gas meter diaphragm" anahtar kelimeleriyle tarama yapılmıştır. Bulunan yayınlar koruyucu katman ve akış düzenleyici birleşimini içermemektedir. (Örnek demo metni.)'},
+    q7: 'Evet. Hidrojen–doğal gaz karışımlarının ölçüm cihazlarına etkisini inceleyen akademik yayınlardan haberdarız.',
+    q8: 'Buluş kamuya açıklanmamıştır. Patent başvurusundan sonra bildiri olarak sunulması planlanmaktadır.',
+    q9: 'Evet. Sayaç üreticileri tarafından mevcut üretim hatlarında küçük değişikliklerle üretilebilir.',
+    q10: 'Almanya, Hollanda, Birleşik Krallık, Japonya ve Güney Kore.',
+    q11: {start: 'Mart 2026', end: 'Çalışmalar devam etmektedir'},
+    q12: 'Bulunmamaktadır.',
+    q13: 'Koruyucu katman farklı polimer kaplamalarla, akış düzenleyici farklı kanal geometrileriyle üretilebilir.',
+    figDesc: 'Şekil 1, sayacın genel görünümünü göstermektedir.\nŞekil 2, koruyucu katmanlı diyaframın kesit görünümünü göstermektedir.',
+    detail: 'Buluş; sayaç gövdesi (1), ölçüm odaları (2), koruyucu katmanlı diyafram (3) ve akış düzenleyici kanaldan (4) oluşur. (Örnek demo metni.)',
+    commercial: {ozet:'Hidrojen katkılı doğal gaz hatlarında ölçüm doğruluğunu koruyan diyaframlı sayaç düzeneği.', amac:'Şebekelerde hidrojen katkısına geçişte sayaç değişim maliyetini azaltmak.', sektor:'Enerji, doğal gaz dağıtımı, ölçüm cihazları', trl:'TRL 3 – Kavram kanıtı laboratuvar ölçekte yapılmıştır.', trlSure:'9–12 ay', trlButce:'Yaklaşık 400.000 TL (KDV hariç)', prototip:'Yaklaşık 150.000 TL', avantaj:'Mevcut üretim hatlarına uyumlu, düşük ek maliyet.', dezavantaj:'Uzun süreli saha testleri gereklidir.', lisans:'Sayaç üreticilerine münhasır olmayan lisans önerilir.'}
+  }};
+  T.formPersonal = {demo005: {[ek(P.can.email)]: {address:'Mühendislik Fakültesi, Demir Çelik Kampüsü', phone:''}}};
   T.staffNotifs.s1 = {at:Date.now()-2*86400000, text:'Hasan Koç portal üzerinden yeni başvuru yaptı: "Titreşim sönümleyici ray altı elastomer ped"', fid:'demo007', fromEk:ek(P.hasan.email)};
   T.notifs[ek(P.can.email)] = {
     a1:{at:Date.now()-10*86400000, text:'"Hidrojen katkılı doğal gaz hatları için akış ölçer düzeneği" dosyası → Değerlendirme / Hak Talebi Kararı', fid:'demo005', read:false},
@@ -474,7 +494,7 @@ let B = null; // arka uç
 const S = {
   user:null, role:null, me:null, profile:null,
   files:{}, internal:{}, staff:{}, users:{}, userFilesAll:{}, staffNotifs:{}, notifs:{}, settings:{...DEFAULT_SETTINGS}, meta:{},
-  myFileIds:[], fileUnsubs:{}, unsubs:[], loaded:{},
+  myFileIds:[], fileUnsubs:{}, unsubs:[], loaded:{}, forms:{}, formUnsubs:{},
   view:null, fileMode:'table', filters:{q:'',type:'',phase:'',stage:'',resp:'',year:''}, peopleQ:'', peopleKind:'',
   detailId:null, modalStack:[]
 };
@@ -627,6 +647,7 @@ async function enterApp(){
 function teardown(){
   S.unsubs.forEach(f=>{ try{f();}catch(e){} }); S.unsubs=[];
   Object.values(S.fileUnsubs).forEach(f=>{ try{f();}catch(e){} }); S.fileUnsubs={};
+  Object.values(S.formUnsubs||{}).forEach(f=>{ try{f();}catch(e){} }); S.formUnsubs={}; S.forms={};
   Object.assign(S, {files:{}, internal:{}, staff:{}, users:{}, userFilesAll:{}, staffNotifs:{}, notifs:{}, myFileIds:[], loaded:{}, role:null, me:null, profile:null, view:null, detailId:null});
   closeAllModals(); closeNotifs(); $('toasts').innerHTML='';
 }
@@ -935,12 +956,12 @@ function openModal(html, opts={}){
   wrap.addEventListener('mousedown', e => { if (e.target===wrap) wrap.dataset.down='1'; });
   wrap.addEventListener('mouseup', e => { if (e.target===wrap && wrap.dataset.down==='1' && !opts.sticky) closeModal(id); wrap.dataset.down=''; });
   $('modals').appendChild(wrap);
-  S.modalStack.push({id, refresh:opts.refresh||null});
+  S.modalStack.push({id, refresh:opts.refresh||null, onClose:opts.onClose||null});
   return id;
 }
 function closeModal(id){
   if (!id) { const top=S.modalStack[S.modalStack.length-1]; if (!top) return; id=top.id; }
-  const el=$(id); if (el) el.remove(); S.modalStack = S.modalStack.filter(m=>m.id!==id);
+  const m0=S.modalStack.find(m=>m.id===id); const el=$(id); if (el) el.remove(); S.modalStack = S.modalStack.filter(m=>m.id!==id); if (m0 && m0.onClose) { try { m0.onClose(); } catch(e){ console.warn(e); } }
   if (!S.modalStack.some(m=>m.detail)) S.detailId=null;
 }
 function closeAllModals(){ S.modalStack.slice().forEach(m=>closeModal(m.id)); }
@@ -1023,7 +1044,7 @@ function filteredFiles(){
 }
 VIEWS.files = {
   mount(){
-    setTop('Dosyalar', 'Buluş, faydalı model, tasarım ve marka dosyaları', `<button onclick="exportCsv()" class="btn btn-s"><i class="fas fa-file-csv"></i> Excel'e aktar</button><button onclick="openFileForm()" class="btn btn-p"><i class="fas fa-plus"></i> Yeni Dosya</button>`);
+    setTop('Dosyalar', 'Buluş, faydalı model, tasarım ve marka dosyaları', `<button onclick="openImportModal()" class="btn btn-s"><i class="fas fa-file-import"></i> Eski dosya aktar</button><button onclick="exportCsv()" class="btn btn-s"><i class="fas fa-file-csv"></i> Excel'e aktar</button><button onclick="openFileForm()" class="btn btn-p"><i class="fas fa-plus"></i> Yeni Dosya</button>`);
     const F = S.filters;
     const years = [...new Set(list(S.files).map(f=>(ttoDateOf(f)||'').slice(0,4)).filter(Boolean))].sort().reverse();
     const staffOpts = list(S.staff).map(s=>`<option value="${esc(ek(s.email))}" ${F.resp===ek(s.email)?'selected':''}>${esc(s.name)}</option>`).join('');
@@ -1197,7 +1218,8 @@ function openDetail(fid){
   const existing = S.modalStack.find(m=>m.detail);
   if (existing) closeModal(existing.id);
   S.detailId = fid;
-  const id = openModal('', {wide:true, refresh: body => { if (S.files[fid]) body.innerHTML = detailHtml(fid); else { closeModal(id); } }});
+  watchForm(fid);
+  const id = openModal('', {wide:true, onClose: () => unwatchForm(fid), refresh: body => { if (S.files[fid]) { const sc=body.closest('.modal-overlay').scrollTop; body.innerHTML = detailHtml(fid); body.closest('.modal-overlay').scrollTop=sc; } else { closeModal(id); } }});
   S.modalStack[S.modalStack.length-1].detail = true;
   $(id).querySelector('.modal-body').innerHTML = detailHtml(fid);
 }
@@ -1246,6 +1268,7 @@ function detailHtml(fid){
         staff?`<button onclick="openNoteModal('${fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-lock mr-1"></i>İç not ekle</button>`:'')}
     </div>
     <div class="lg:col-span-2">
+      ${section('Buluş Bildirim Formu','fa-file-signature', formSectionHtml(fid))}
       ${section('Buluşçular ('+inv.length+')', 'fa-users', `<div class="space-y-2">${inv.map(p=>`<div class="flex items-center gap-2.5 p-2 rounded-lg ${p.email&&ek(p.email)===S.user.ek?'bg-emerald-50':'bg-slate-50'}"><span class="w-8 h-8 rounded-full bg-white text-slate-600 text-xs font-bold flex items-center justify-center flex-shrink-0 border border-slate-200">${esc(initials(p.name))}</span><div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">${esc(p.name)}${p.email&&ek(p.email)===S.user.ek?' <span class="text-xs text-emerald-700 font-normal">(siz)</span>':''}</div><div class="text-[11px] text-slate-400 truncate">${esc(KINDS[p.kind]||'')}${p.unit?' · '+esc(p.unit):''}</div>${staff&&p.email?`<div class="text-[11px] text-slate-400 truncate">${esc(p.email)} ${S.users[ek(p.email)]?'<i class="fas fa-circle-check text-emerald-500" title="Kayıtlı kullanıcı"></i>':''}</div>`:''}</div>${p.share?`<span class="text-xs font-semibold text-slate-500">%${esc(p.share)}</span>`:''}</div>`).join('')}</div>`)}
       ${staff?section('Süreler','fa-calendar-days', dls.length?`<div class="space-y-1.5">${dls.map(d=>`<div class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 ${d.done?'opacity-60':''}">${d.id?`<input type="checkbox" ${d.done?'checked':''} onchange="toggleDeadline('${fid}','${d.id}',this.checked)">`:'<i class="fas fa-wand-magic-sparkles text-slate-300 text-xs" title="Otomatik hesaplandı"></i>'}<div class="flex-1 min-w-0"><div class="text-xs font-semibold ${d.done?'line-through':''}">${esc(d.title)}</div><div class="text-[11px] text-slate-400">${fmtD(d.date)}${d.hint?' · '+esc(d.hint):''}</div></div>${dueChip(d.date,d.done)}${d.id?`<button onclick="removeDeadline('${fid}','${d.id}')" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-xmark"></i></button>`:''}</div>`).join('')}</div>`:'<p class="text-sm text-slate-400">Süre yok.</p>',
         `<button onclick="openDeadlineModal('${fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-plus mr-1"></i>Süre ekle</button>`):''}
@@ -1275,7 +1298,7 @@ async function deleteFile(fid){
   const f=S.files[fid]; if (!f) return;
   if (prompt('Bu dosya, geçmişi ve tüm belgeleri kalıcı olarak silinecek.\nOnaylamak için SİL yazın:\n\n'+f.title)!=='SİL') return;
   try {
-    const upd = {['files/'+fid]:null, ['internal/'+fid]:null, ['docs/'+fid]:null};
+    const upd = {['files/'+fid]:null, ['internal/'+fid]:null, ['docs/'+fid]:null, ['forms/'+fid]:null, ['formPersonal/'+fid]:null};
     inventorsOf(f).forEach(p => { if (p.email) upd['userFiles/'+ek(p.email)+'/'+fid]=null; });
     if (f.createdBy) upd['userFiles/'+f.createdBy+'/'+fid]=null;
     await B.update('', upd); closeAllModals(); toast('Dosya silindi.','success');
@@ -1467,6 +1490,528 @@ async function saveFileForm(fid){
 }
 
 // ============================================================
+// BULUŞ BİLDİRİM FORMU (dijital form, Word çıktısı, içe/dışa aktarım)
+// ============================================================
+const BBF_Q = [
+  {k:'keywords', no:'1', t:'Buluş ile ilgili anahtar kelimeleri belirtiniz:', h:'(Buluşa dair en iyi ifade eden kelime veya kelime gruplarını yazınız.)', rows:3},
+  {k:'q2', no:'2', t:'Buluşun uygulama alanı nelerdir?', h:'(Buluşunuzun ait olduğu teknik alan hakkında genel bilgi veriniz. Örnek: buluşum x endüstrisinden, y proseslerinde, z ürünü kullanılarak meydana getirilen xy ürünüdür.)'},
+  {k:'q3', no:'3', t:'Mevcut uygulamaların eksiklikleri, yetersizlikleri nelerdir?', h:'(Buluşunuzu gerçekleştirmeden önceki benzer uygulamaları ve benzer uygulamalardaki dezavantajları, sorun ve yetersizlikleri eğer varsa şekil ve resimlerle açıklayınız. Benzer bir uygulama yoksa bu gerekçe ortadan kalkar. Aksi takdirde hazırlayacağımız dosyada bu eksikliklerden bahsetmezsek patent alma sürecinde araştırma ve inceleme safhalarında bu durum ortaya çıkarak bize sorun teşkil edebilir.)'},
+  {k:'q4', no:'4', t:'Buluşunuzdaki fark/ayrıcalıklar nelerdir? Mevcut tekniğe göre üstünlüklerini belirtiniz.', h:'(Buluşunuzun diğer ürünlere üstünlük sağlayan yanları nelerdir? Ayrıca buluşunuzun mevcut tekniğe kattığı artıların, ortaya çıkan sonucun ve sağladığı avantajların da mutlaka belirtilmesi gerekmektedir. Buluşunuzdaki yenilik; yeni bir ürün olduğu veya bilinen bir ürünün yeni bir metotla üretildiği ya da yeni bir metotla yeni bir ürün oluşturulduğu belirtilebilir.)'},
+  {k:'units', no:'5', t:'Buluşunuzda yer alan unsurlar', h:'(Aşağıda belirtilen tabloda buluşunuz için olmazsa olmaz unsurları alt alta belirterek ilgili kutucuklara işaretleme yapınız.)', table:true},
+  {k:'q6', no:'6', t:'Buluşu gerçekleştirirken araştırma yaptınız mı? Cevabınız evet ise aşağıdakilerden hangilerini yaptınız? Bulduğunuz sonuçları lütfen detaylı şekilde yazınız.', research:true},
+  {k:'q7', no:'7', t:'Buluş konunuz ile ilgili patent yayını/makale gibi yayınlardan haberdar mısınız? "Evet" ise lütfen hangi yayın/makale olduğunu belirtiniz.'},
+  {k:'q8', no:'8', t:'Buluşun kamuya duyurulması/ifşası gerçekleşti mi? Herhangi bir yerde sözlü-yazılı açıklanmasını, satışını, yayınını yaptınız mı? Nerede ve ne zaman? Yanıtınız hayır ise planlamış olduğunuz bir yayın/satış vb. durum var mı? İleriki zamanlarda bu eylemlerden biri gerçekleşecek ise lütfen planlanan yayın tarihini bildiriniz.'},
+  {k:'q9', no:'9', t:'Buluşunuz sanayiye uygulanabilir mi? Uygulama birimi nedir?'},
+  {k:'q10', no:'10', t:'Buluşunuzla ilgili çalışmaların ve araştırmaların yaygın olarak yapıldığı ülkeler?'},
+  {k:'q11', no:'11', t:'Buluşun Geliştirilme Tarihi', dates:true},
+  {k:'q12', no:'12', t:'Buluşa proje veya geliştirilme aşamasında sağlanan hibe/destek/kaynak var mı? Var ise lütfen fon sağlayan kuruluşu/tarih bilgilerini belirtiniz.'},
+  {k:'q13', no:'13', t:'Üçüncü kişiler tarafından üretilebilecek alternatifler nelerdir?', h:'(Buluşunuzun olağan yapısı haricinde üretilebilecek benzer uygulamaları ve buluşunuzun kullanılabileceği diğer sistem ve uygulamaları da belirtiniz.)'}
+];
+const RESEARCH_OPTS = [['patentTR','Patent araştırması: Yurt içi'],['patentAbroad','Patent araştırması: Yurt dışı'],['publication','Yayın, katalog vs. araştırması'],['internet','İnternet'],['competitors','Rakip firmalar araştırma']];
+const FIG_HELP = '(Buluş konusu ürünün genel görünümü, buluşunuzda ortaya çıkan yeniliklerin detaylı olarak gösterildiği diğer resimleri ve parçaları isimlendirilerek numaralandırılması ve şekilsel anlatımın yapılması gerekmektedir. Şekiller siyah beyaz formatta, 3 boyutlu (perspektif) görünümlü olması gerekmektedir.)';
+const DETAIL_HELP = '(Buluşunuzu nasıl gerçekleştirdiğinizi ve çalışma şeklini tam teknik detayları ile hazırlanan resimlerde kullanılan ve numaralandırılan tüm parçaların isimlerine atıflar yaparak açıklamanız gerekmektedir.)';
+const TOR_FIELDS = [
+  ['ozet','Buluşun Özet Açıklaması'],['amac','Amaç ve Hedefler'],['sektor','İlgili Sektör Dalı'],
+  ['trl','TRL Seviyesi (Teknoloji Hazırlık Seviyesi) nedir?'],['trlSure','Bir Sonraki TRL Seviyesi (Teknoloji Hazırlık Seviyesi) İçin Gereken Süre Nedir?'],['trlButce','Bir Sonraki TRL Seviyesi (Teknoloji Hazırlık Seviyesi) İçin Gereken Bütçe Nedir?'],
+  ['prototip','Prototip Maliyeti'],['tesis','Tesis Kurulum Maliyeti'],['uretim','Üretim Maliyeti'],
+  ['fiyat','Tahmini Piyasa Satış Fiyatı (TL)'],['muadilFiyat','Muadil Ürünlerin Satış Fiyatı (TL)'],['satisMiktar','Tahmini Satış Miktarı (Yıllık Adet)'],
+  ['pazarPayi','Pazar Payı (Yıllık-Adet-TL)'],['pazarBuyuklugu','İlgili Sektör Pazar Büyüklüğü (Yıllık-Adet-TL)'],['muadiller','Muadil Ürünler Nelerdir? (Marka ve Firma İsmi Verebilirsiniz)'],
+  ['ihracat','Ürünün İhracat-İthalat Durumu'],['avantaj','Avantajlarınız Nelerdir?'],['dezavantaj','Dezavantajlarınız Nelerdir?'],
+  ['lisans','Lisanslamaya İlişkin Görüş ve Öneriler (Ayrıntılı ve Gerekçeli Olarak Açıklanmalı)']
+];
+const FORM_EDIT_STAGES = ['basvuru','on_inceleme','eksik'];
+function trUpper(s){ return String(s||'').toLocaleUpperCase('tr'); }
+function tenantShortTTO(){ return (TENANT && TENANT.short ? TENANT.short : '')+' TTO'; }
+function tcValid(t){ t=String(t||'').trim(); if (!/^[1-9]\d{10}$/.test(t)) return false; const d=t.split('').map(Number);
+  const a=((d[0]+d[2]+d[4]+d[6]+d[8])*7-(d[1]+d[3]+d[5]+d[7])); if (((a%10)+10)%10!==d[9]) return false; return d.slice(0,10).reduce((x,y)=>x+y,0)%10===d[10]; }
+function canEditForm(f){ return isStaff() || (!!myInventorRec(f) && FORM_EDIT_STAGES.includes(f.stage)); }
+function blankForm(){ return {petition:{}, leadKey:null, units:[], q6:{}, q11:{}, figures:[], commercial:{}}; }
+
+// Doluluk oranı
+function formProgress(form, personal, f){
+  form = form||{}; const c = form.commercial||{};
+  const items = [];
+  BBF_Q.forEach(q => { if (q.table) items.push(list(form.units).some(u=>u&&u.name)); else if (q.research) items.push(!!(form.q6&&form.q6.text)); else if (q.dates) items.push(!!(form.q11&&form.q11.start)); else items.push(!!(form[q.k]||'').trim()); });
+  items.push(!!(form.detail||'').trim()); items.push(!!(form.figDesc||'').trim());
+  TOR_FIELDS.forEach(([k]) => items.push(!!(c[k]||'').trim()));
+  const invs = f ? inventorsOf(f) : [];
+  const pers = personal || {};
+  const tcOk = invs.filter(p => { const k=p.email?ek(p.email):null; return k && pers[k] && pers[k].tc; }).length;
+  const done = items.filter(Boolean).length;
+  return {pct: Math.round(done/items.length*100), done, total:items.length, tcOk, invCount:invs.length};
+}
+
+// ---------- Detay ekranındaki bölüm ----------
+function formSectionHtml(fid){
+  const f = S.files[fid]; const form = S.forms[fid];
+  if (form===undefined) return `<div class="text-sm text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Yükleniyor…</div>`;
+  const pr = formProgress(form||{}, null, f);
+  const can = canEditForm(f);
+  return `<div class="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
+    <div class="flex items-center justify-between text-xs mb-1.5"><span class="font-semibold text-slate-700">${form?'Form doluluğu':'Form henüz doldurulmadı'}</span><span class="text-slate-500">%${pr.pct}</span></div>
+    <div class="h-2 bg-white rounded-full overflow-hidden mb-3"><div class="h-full rounded-full ${pr.pct>=90?'bg-emerald-500':'bg-blue-500'}" style="width:${pr.pct}%"></div></div>
+    ${form&&form.updatedAt?`<div class="text-[11px] text-slate-400 mb-2">Son düzenleme: ${fmtTs(form.updatedAt)}${form.updatedByName?' · '+esc(form.updatedByName):''}</div>`:''}
+    <div class="flex flex-wrap gap-1.5">
+      <button onclick="openFormEditor('${fid}')" class="btn btn-p !py-1.5 text-xs"><i class="fas ${can?'fa-pen-to-square':'fa-eye'}"></i> ${can?(form?'Formu düzenle':'Formu doldur'):'Formu görüntüle'}</button>
+      ${form?`<button onclick="downloadWordFor('${fid}','all')" class="btn btn-s !py-1.5 text-xs"><i class="fas fa-file-word text-blue-600"></i> Word</button>`:''}
+    </div>
+    ${!can && !isStaff() ? '<p class="text-[11px] text-slate-400 mt-2">Dosya TTO ön inceleme aşamasını geçtiği için form yalnızca TTO tarafından düzenlenebilir.</p>':''}
+  </div>`;
+}
+function watchForm(fid){
+  if (S.formUnsubs[fid]) return;
+  S.formUnsubs[fid] = B.on('forms/'+fid, v => { S.forms[fid] = v||null; scheduleRender(); }, e => { console.warn('form', e); S.forms[fid]=null; scheduleRender(); });
+}
+function unwatchForm(fid){ if (S.formUnsubs[fid]) { S.formUnsubs[fid](); delete S.formUnsubs[fid]; } }
+
+// ---------- Form düzenleyici ----------
+let FE = null; // {fid, form, personal, tab, dirty, readOnly}
+async function loadFormData(fid){
+  const form = (await B.get('forms/'+fid)) || blankForm();
+  let personal = {};
+  if (isStaff()) personal = (await B.get('formPersonal/'+fid)) || {};
+  else { const mine = await B.get('formPersonal/'+fid+'/'+S.user.ek).catch(()=>null); if (mine) personal[S.user.ek] = mine; }
+  form.petition = form.petition||{}; form.units = form.units||[]; form.q6 = form.q6||{}; form.q11 = form.q11||{}; form.figures = form.figures||[]; form.commercial = form.commercial||{};
+  if (!Array.isArray(form.units)) form.units = list(form.units);
+  if (!Array.isArray(form.figures)) form.figures = list(form.figures);
+  return {form, personal};
+}
+async function openFormEditor(fid, tab){
+  const f = S.files[fid]; if (!f) return;
+  let data; try { data = await loadFormData(fid); } catch(e){ return toast('Form açılamadı: '+errMsg(e),'error'); }
+  const invs = inventorsOf(f);
+  if (!data.form.leadKey && invs[0]) data.form.leadKey = invs[0].email ? ek(invs[0].email) : null;
+  FE = {fid, form:data.form, personal:data.personal, tab:tab||'people', dirty:false, readOnly:!canEditForm(f)};
+  const id = openModal('', {wide:true, sticky:true, onClose: () => { FE=null; }});
+  S.modalStack[S.modalStack.length-1].formEditor = true;
+  renderFormEditor();
+}
+function feBody(){ const m = S.modalStack.find(x=>x.formEditor); return m ? $(m.id)?.querySelector('.modal-body') : null; }
+function closeFormEditor(){ if (FE && FE.dirty && !FE.readOnly && !confirm('Kaydedilmemiş değişiklikler var. Kapatılsın mı?')) return; const m=S.modalStack.find(x=>x.formEditor); if (m) closeModal(m.id); }
+function feSet(path, val){ // "q2", "petition.date", "commercial.ozet", "q6.patentTR"
+  if (!FE || FE.readOnly) return; const ps=path.split('.'); let o=FE.form; for (let i=0;i<ps.length-1;i++) { o[ps[i]] = o[ps[i]]||{}; o=o[ps[i]]; } o[ps[ps.length-1]] = val; FE.dirty=true; feMarkDirty();
+}
+function fePers(k, field, val){ if (!FE || !(isStaff() || k===S.user.ek)) return; FE.personal[k] = FE.personal[k]||{}; FE.personal[k][field]=val; FE.dirty=true; feMarkDirty(); if (field==='tc') feTcHint(k); }
+function feMarkDirty(){ const el=$('fe-dirty'); if (el) el.classList.toggle('hidden', !FE.dirty); updateFeProgress(); }
+function feTcHint(k){ const el=$('tc-hint-'+k.replace(/[^\w]/g,'_')); if (!el) return; const v=(FE.personal[k]||{}).tc||''; el.innerHTML = !v ? '' : (/^\d{11}$/.test(v) ? (tcValid(v)?'<span class="text-emerald-600"><i class="fas fa-check"></i> Geçerli</span>':'<span class="text-red-500">Geçersiz T.C. no</span>') : '<span class="text-slate-400">Pasaport/yabancı no</span>'); }
+function updateFeProgress(){ const el=$('fe-prog'); if (!el||!FE) return; const pr=formProgress(FE.form, FE.personal, S.files[FE.fid]); el.style.width=pr.pct+'%'; $('fe-prog-t').textContent='%'+pr.pct; }
+function ta(path, val, rows, ph){ const dis = FE.readOnly?'disabled':''; return `<textarea ${dis} rows="${rows||4}" class="inp leading-relaxed" placeholder="${esc(ph||'')}" oninput="feSet('${path}', this.value)">${esc(val||'')}</textarea>`; }
+function inp(path, val, ph, type){ const dis = FE.readOnly?'disabled':''; return `<input ${dis} type="${type||'text'}" class="inp" value="${esc(val||'')}" placeholder="${esc(ph||'')}" oninput="feSet('${path}', this.value)">`; }
+function renderFormEditor(){
+  const body = feBody(); if (!body || !FE) return;
+  const f = S.files[FE.fid]; const pr = formProgress(FE.form, FE.personal, f);
+  const tabs = [['people','fa-users','Dilekçe ve Buluşçular'],['questions','fa-list-ol','Form Soruları (1–13)'],['figures','fa-image','Çizimler ve Detaylı Anlatım'],['commercial','fa-chart-line','Ticarileştirme Ön Raporu'],['output','fa-file-word','Çıktı ve Aktarım']];
+  body.innerHTML = `
+  <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-4">
+    <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold text-blue-700 uppercase tracking-wide">Buluş Bildirim Formu ${FE.readOnly?'· <span class="text-slate-500">yalnızca görüntüleme</span>':''}</div><h3 class="font-bold text-lg truncate">${esc(f.title)}</h3></div>
+    <div class="w-40"><div class="flex justify-between text-[11px] text-slate-500 mb-0.5"><span>Doluluk</span><span id="fe-prog-t">%${pr.pct}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div id="fe-prog" class="h-full bg-blue-500 rounded-full" style="width:${pr.pct}%"></div></div></div>
+    <span id="fe-dirty" class="${FE.dirty?'':'hidden'}"><span class="chip bg-amber-100 text-amber-800">Kaydedilmedi</span></span>
+    ${FE.readOnly?'':`<button onclick="saveForm()" id="fe-save" class="btn btn-p"><i class="fas fa-floppy-disk"></i> Kaydet</button>`}
+    <button onclick="downloadWordFE('all')" class="btn btn-s"><i class="fas fa-file-word text-blue-600"></i> Word</button>
+    <button onclick="closeFormEditor()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-100"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="flex min-h-[70vh]">
+    <div class="w-56 border-r border-slate-100 p-3 space-y-1 flex-shrink-0 bg-slate-50/50">${tabs.map(([k,i,l])=>`<button onclick="feTab('${k}')" class="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${FE.tab===k?'bg-white shadow-sm font-semibold text-blue-700':'text-slate-600 hover:bg-white'}"><i class="fas ${i} w-4 text-center"></i>${l}</button>`).join('')}
+      <div class="pt-4 text-[11px] text-slate-400 leading-snug px-1"><i class="fas fa-lock mr-1"></i>T.C. kimlik no, adres ve telefon yalnızca TTO personeli ve bilginin sahibi buluşçu tarafından görülür.</div></div>
+    <div class="flex-1 p-6 overflow-y-auto" id="fe-pane">${FE_TABS[FE.tab]()}</div>
+  </div>`;
+  if (FE.tab==='people') inventorsOf(f).forEach(p => { if (p.email) feTcHint(ek(p.email)); });
+}
+function feTab(t){ FE.tab=t; renderFormEditor(); }
+const FE_TABS = {};
+FE_TABS.people = () => {
+  const f=S.files[FE.fid], F=FE.form, P=F.petition, invs=inventorsOf(f);
+  const opt = (sel) => invs.filter(p=>p.email).map(p=>`<option value="${esc(ek(p.email))}" ${sel===ek(p.email)?'selected':''}>${esc(p.name)}</option>`).join('');
+  const signer = P.signerKey || F.leadKey;
+  const dis = FE.readOnly?'disabled':'';
+  return `<div class="max-w-4xl space-y-6">
+    <div class="card p-5"><h4 class="font-bold mb-1">Dilekçe</h4><p class="text-xs text-slate-500 mb-4">${esc(TENANT?TENANT.name:'')} Teknoloji Transfer Ofisi Koordinatörlüğüne hitaben ön değerlendirme talebi. Dilekçe metni otomatik oluşturulur.</p>
+      <div class="grid grid-cols-3 gap-3">
+        <div><label class="lbl">Dilekçe tarihi</label>${inp('petition.date', P.date||today(), '', 'date')}</div>
+        <div><label class="lbl">Dilekçeyi imzalayan</label><select ${dis} class="inp" onchange="feSet('petition.signerKey', this.value)">${opt(signer)}</select></div>
+        <div><label class="lbl">Yürütücü (proje sorumlusu)</label><select ${dis} class="inp" onchange="feSet('leadKey', this.value)">${opt(F.leadKey)}</select></div>
+        <div class="col-span-3"><label class="lbl">Dilekçedeki adres (boşsa imzalayanın adresi kullanılır)</label>${inp('petition.address', P.address, 'Örn: Karabük Üniversitesi Mühendislik Fakültesi')}</div>
+        <div><label class="lbl">GSM (boşsa imzalayanın telefonu)</label>${inp('petition.phone', P.phone)}</div>
+        <div class="col-span-2"><label class="lbl">Ek açıklama (isteğe bağlı)</label>${inp('petition.extra', P.extra, 'Dilekçe metnine eklenecek cümle')}</div>
+      </div></div>
+    <div class="card p-5"><div class="flex items-center justify-between mb-1"><h4 class="font-bold">Buluşçular (${invs.length})</h4>${isStaff()?`<button onclick="openFileForm('${FE.fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-pen mr-1"></i>Buluşçu listesini / katkı paylarını düzenle</button>`:''}</div>
+      <p class="text-xs text-slate-500 mb-4">Ad, e-posta ve katkı payı dosya kaydından gelir. Kişisel bilgiler resmi formda yer alır.</p>
+      ${(() => { const tot = invs.reduce((a,p)=>a+(Number(p.share)||0),0); return invs.length && tot && tot!==100 ? `<div class="mb-3 text-xs rounded-lg bg-amber-50 text-amber-800 px-3 py-2"><i class="fas fa-triangle-exclamation mr-1"></i>Katkı paylarının toplamı %${tot}; %100 olmalı.</div>`:''; })()}
+      <div class="space-y-3">${invs.map((p,i) => { const k = p.email?ek(p.email):null; const mine = k && (isStaff() || k===S.user.ek); const pd = (k && FE.personal[k])||{}; const kid=(k||'x').replace(/[^\w]/g,'_');
+        const pdis = (!mine||FE.readOnly)?'disabled':'';
+        return `<div class="rounded-xl border ${k===F.leadKey?'border-blue-200 bg-blue-50/30':'border-slate-100'} p-4">
+          <div class="flex items-center gap-2 mb-3"><span class="w-7 h-7 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">${i+1}</span><b class="text-sm">${esc(p.name)}</b>${k===F.leadKey?'<span class="chip bg-blue-100 text-blue-700">Yürütücü</span>':''}<span class="text-xs text-slate-400 ml-auto">${esc(p.email||'e-posta yok')} · Katkı payı: <b>${p.share!=null&&p.share!==''?'%'+esc(p.share):'—'}</b></span></div>
+          ${!k?'<p class="text-xs text-amber-700">Bu buluşçunun e-postası yok; kişisel bilgileri Word çıktısında elle doldurulacak alan olarak bırakılır.</p>':
+          (mine?`<div class="grid grid-cols-3 gap-3"><div><label class="lbl">T.C. Kimlik No</label><input ${pdis} class="inp font-mono" maxlength="20" value="${esc(pd.tc||'')}" oninput="fePers('${k}','tc',this.value.trim())"><div id="tc-hint-${kid}" class="text-[11px] mt-0.5"></div></div>
+            <div><label class="lbl">Telefon</label><input ${pdis} class="inp" value="${esc(pd.phone||'')}" oninput="fePers('${k}','phone',this.value)"></div>
+            <div><label class="lbl">Birim</label><input class="inp bg-slate-50" value="${esc(p.unit||'')}" disabled></div>
+            <div class="col-span-3"><label class="lbl">Adres</label><input ${pdis} class="inp" value="${esc(pd.address||'')}" placeholder="Kurum / iş adresi" oninput="fePers('${k}','address',this.value)"></div></div>`
+          :`<p class="text-xs text-slate-400"><i class="fas fa-lock mr-1"></i>Bu buluşçunun kişisel bilgileri yalnızca kendisi ve TTO tarafından görülür. Word çıktısında TTO tarafından doldurulur.</p>`)}
+        </div>`; }).join('')}</div></div>
+  </div>`;
+};
+FE_TABS.questions = () => {
+  const F=FE.form, f=S.files[FE.fid], dis=FE.readOnly?'disabled':'';
+  return `<div class="max-w-4xl space-y-5">
+    <div class="card p-5"><label class="lbl">Buluş Başlığı (buluşu tanımlayan ve özetleyen şekilde)</label><div class="font-bold">${esc(f.title)}</div><p class="text-[11px] text-slate-400 mt-1">Başlık dosya kaydından gelir${isStaff()?'; değiştirmek için dosyayı düzenleyin':''}.</p></div>
+    ${BBF_Q.map(q => `<div class="card p-5"><div class="font-semibold text-sm mb-0.5">${q.no}. ${esc(q.t)}</div>${q.h?`<div class="text-[11px] italic text-slate-400 mb-2.5">${esc(q.h)}</div>`:'<div class="mb-2"></div>'}
+      ${q.table ? unitsEditor() : q.research ? `<div class="flex flex-wrap gap-x-5 gap-y-1.5 mb-3">${RESEARCH_OPTS.map(([k,l])=>`<label class="flex items-center gap-1.5 text-sm"><input ${dis} type="checkbox" ${F.q6[k]?'checked':''} onchange="feSet('q6.${k}', this.checked)"> ${l}</label>`).join('')}</div>${ta('q6.text', F.q6.text, 8, 'Araştırma sonuçları…')}`
+        : q.dates ? `<div class="grid grid-cols-2 gap-3"><div><label class="lbl">Başlangıç tarihi</label>${inp('q11.start', F.q11.start, 'Örn: Eylül 2026')}</div><div><label class="lbl">Bitiş tarihi</label>${inp('q11.end', F.q11.end, 'Örn: Çalışmalar devam etmektedir')}</div></div>`
+        : ta(q.k, F[q.k], q.rows||6)}</div>`).join('')}
+  </div>`;
+};
+function unitsEditor(){
+  const us = FE.form.units, dis = FE.readOnly?'disabled':'';
+  return `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-[10px] uppercase text-slate-500"><th class="p-1 w-10">No</th><th class="p-1 text-left">Unsur Adı</th><th class="p-1 w-14">Yeni</th><th class="p-1 w-20">Önceki Tekniğe Ait</th><th class="p-1 w-20">Buluşum İçin Çok Önemli</th><th class="p-1 text-left">Unsurun İşlevi</th><th class="w-8"></th></tr></thead><tbody>
+    ${us.map((u,i)=>`<tr class="border-t border-slate-100 align-top"><td class="p-1 text-center font-semibold pt-3">${i+1}</td>
+      <td class="p-1"><textarea ${dis} rows="2" class="inp" oninput="feUnit(${i},'name',this.value)">${esc(u.name||'')}</textarea></td>
+      ${['isNew','prior','critical'].map(c=>`<td class="p-1 text-center pt-3"><input ${dis} type="checkbox" ${u[c]?'checked':''} onchange="feUnit(${i},'${c}',this.checked)"></td>`).join('')}
+      <td class="p-1"><textarea ${dis} rows="2" class="inp" oninput="feUnit(${i},'func',this.value)">${esc(u.func||'')}</textarea></td>
+      <td class="p-1 pt-3">${FE.readOnly?'':`<button onclick="feUnitDel(${i})" class="text-slate-300 hover:text-red-500"><i class="fas fa-xmark"></i></button>`}</td></tr>`).join('')}
+    </tbody></table></div>${FE.readOnly?'':`<button onclick="feUnitAdd()" class="mt-2 text-xs font-semibold text-blue-600 hover:underline"><i class="fas fa-plus mr-1"></i>Unsur ekle</button>`}`;
+}
+function feUnit(i,k,v){ if (FE.readOnly) return; FE.form.units[i][k]=v; FE.dirty=true; feMarkDirty(); }
+function feUnitAdd(){ FE.form.units.push({name:'',isNew:false,prior:false,critical:false,func:''}); FE.dirty=true; renderFormEditor(); }
+function feUnitDel(i){ FE.form.units.splice(i,1); FE.dirty=true; renderFormEditor(); }
+function imageDocsOf(fid){
+  const f=S.files[fid], inr=S.internal[fid]||{}; const out=[];
+  Object.entries(f.pubDocs||{}).forEach(([id,d])=>{ if (['png','jpg','jpeg'].includes(fileExt(d.name))) out.push({id,...d,public:true}); });
+  if (isStaff()) Object.entries(inr.docs||{}).forEach(([id,d])=>{ if (['png','jpg','jpeg'].includes(fileExt(d.name))) out.push({id,...d,public:false}); });
+  return out;
+}
+FE_TABS.figures = () => {
+  const F=FE.form, imgs=imageDocsOf(FE.fid);
+  const sel = id => F.figures.find(x=>x.docId===id);
+  return `<div class="max-w-4xl space-y-5">
+    <div class="card p-5"><div class="font-semibold text-sm mb-0.5">Buluşa ait çizimler (veya formülsel bir gösterim)</div><div class="text-[11px] italic text-slate-400 mb-3">${esc(FIG_HELP)}</div>
+      <p class="text-xs text-slate-500 mb-3">Dosyaya yüklenmiş PNG/JPG görsellerden Word çıktısına girecek olanları işaretleyin ve şekil adını yazın. Görseller seçtiğiniz sırayla "Şekil 1, Şekil 2…" olarak eklenir.</p>
+      <div class="space-y-2">${imgs.map(d => { const s=sel(d.id); return `<div class="flex items-center gap-3 p-2 rounded-lg border ${s?'border-blue-200 bg-blue-50/40':'border-slate-100'}"><input ${FE.readOnly?'disabled':''} type="checkbox" ${s?'checked':''} onchange="feFig('${d.id}', this.checked)"><i class="fas ${fileIcon(d.name)}"></i><span class="text-sm flex-shrink-0 w-56 truncate" title="${esc(d.name)}">${esc(d.name)}</span>${s?`<input ${FE.readOnly?'disabled':''} class="inp" value="${esc(s.caption||'')}" placeholder="Şekil açıklaması (örn. Tam sistem genel görünümü)" oninput="feFigCap('${d.id}', this.value)">`:'<span class="text-xs text-slate-400">Word\'e eklenmez</span>'}</div>`; }).join('') || '<p class="text-sm text-slate-400">Dosyada henüz görsel yok.</p>'}</div>
+      ${FE.readOnly?'':`<label class="btn btn-s mt-3 cursor-pointer text-xs"><i class="fas fa-upload"></i> Görsel yükle (PNG/JPG)<input type="file" accept=".png,.jpg,.jpeg" multiple class="hidden" onchange="feUploadFig(this)"></label>`}
+    </div>
+    <div class="card p-5"><div class="font-semibold text-sm mb-2">Şekillerin Açıklaması</div>${ta('figDesc', F.figDesc, 6, 'Şekil 1, ... göstermektedir.\nŞekil 2, ...')}</div>
+    <div class="card p-5"><div class="font-semibold text-sm mb-0.5">Buluşun detaylı anlatımı</div><div class="text-[11px] italic text-slate-400 mb-2.5">${esc(DETAIL_HELP)}</div>${ta('detail', F.detail, 18)}</div>
+  </div>`;
+};
+function feFig(docId, on){ const F=FE.form; if (on) { if (!F.figures.find(x=>x.docId===docId)) F.figures.push({docId, caption:''}); } else F.figures = F.figures.filter(x=>x.docId!==docId); FE.dirty=true; renderFormEditor(); }
+function feFigCap(docId, v){ const x=FE.form.figures.find(y=>y.docId===docId); if (x) { x.caption=v; FE.dirty=true; feMarkDirty(); } }
+async function feUploadFig(input){
+  const files = Array.from(input.files||[]); input.value='';
+  for (const file of files) { const err=validateFile(file); if (err) { toast(file.name+': '+err,'error'); continue; }
+    try { const id = await uploadDoc(FE.fid, file, true); FE.form.figures.push({docId:id, caption:''}); FE.dirty=true; toast(file.name+' yüklendi.','success'); } catch(e){ toast(file.name+': '+errMsg(e),'error'); } }
+  setTimeout(renderFormEditor, 300);
+}
+FE_TABS.commercial = () => {
+  const C=FE.form.commercial, f=S.files[FE.fid], invs=inventorsOf(f), lead=invs.find(p=>p.email&&ek(p.email)===FE.form.leadKey);
+  return `<div class="max-w-4xl space-y-4">
+    <div class="card p-5"><h4 class="font-bold mb-1">Fikri Sınai Mülkiyet Hakları Ticarileştirme Ön Raporu</h4><p class="text-xs text-slate-500 mb-4">Buluş adı dosya kaydından gelir. Maliyet ve pazar alanlarına KDV dahil/hariç bilgisini yazmayı unutmayın.</p>
+      <div class="grid grid-cols-2 gap-3"><div><label class="lbl">Buluş Adı</label><input class="inp bg-slate-50" disabled value="${esc(f.title)}"></div><div><label class="lbl">Buluş Sahibi</label>${inp('commercial.owner', C.owner, lead?lead.name:'')}</div>
+      <div><label class="lbl">Raporu imzalayan (Ad-Soyad)</label>${inp('commercial.signer', C.signer, lead?lead.name:'')}</div><div><label class="lbl">Rapor tarihi</label>${inp('commercial.date', C.date, '', 'date')}</div></div></div>
+    ${TOR_FIELDS.map(([k,l])=>`<div class="card p-4"><div class="font-semibold text-sm mb-2">${esc(l)}</div>${ta('commercial.'+k, C[k], ['ozet','amac','lisans','avantaj','dezavantaj','pazarBuyuklugu','muadiller'].includes(k)?6:3)}</div>`).join('')}
+  </div>`;
+};
+FE_TABS.output = () => {
+  const f=S.files[FE.fid], pr=formProgress(FE.form, FE.personal, f);
+  const btn = (kind, icon, title, sub) => `<button onclick="downloadWordFE('${kind}')" class="card p-4 text-left hover:shadow-md hover:border-blue-200 transition flex items-start gap-3"><i class="fas ${icon} text-2xl text-blue-600 mt-0.5"></i><span><span class="block font-semibold">${title}</span><span class="text-xs text-slate-500">${sub}</span></span></button>`;
+  return `<div class="max-w-4xl space-y-5">
+    <div class="grid md:grid-cols-2 gap-3">
+      ${btn('all','fa-file-word','Tam başvuru dosyası (Word)','Dilekçe + Buluş Bildirim Formu + Ticarileştirme Ön Raporu, tek dosyada')}
+      ${btn('petition','fa-envelope-open-text','Dilekçe (Word)','TTO Koordinatörlüğüne ön değerlendirme dilekçesi')}
+      ${btn('bbf','fa-file-lines','Buluş Bildirim Formu (Word)','Buluşçular, 13 soru, çizimler, detaylı anlatım, beyan ve imzalar')}
+      ${btn('commercial','fa-chart-line','Ticarileştirme Ön Raporu (Word)','Maliyet, pazar, TRL ve lisanslama bilgileri')}
+    </div>
+    <div class="card p-4 bg-blue-50/50 border-blue-100 text-sm text-slate-700"><b><i class="fas fa-pen-nib mr-1 text-blue-700"></i>Islak imza ve paraf:</b> Word çıktısında her imza için boş imza alanı ve her sayfanın altında buluşçu paraf satırı bulunur. Çıktıyı yazdırıp tüm sayfaları paraflayın ve imza alanlarını <b>mavi mürekkepli kalemle</b> imzalayın. Taranmış imzalı nüshayı dosyaya belge olarak ekleyebilirsiniz.</div>
+    <div class="card p-4 text-sm"><div class="font-semibold mb-2">Kontrol listesi</div><ul class="space-y-1 text-xs">
+      <li>${pr.pct>=90?'✅':'⬜'} Form doluluğu: %${pr.pct} (${pr.done}/${pr.total} alan)</li>
+      <li>${pr.tcOk===pr.invCount?'✅':'⬜'} T.C. kimlik no girilen buluşçu: ${pr.tcOk}/${pr.invCount}${isStaff()?'':' (diğer buluşçuların bilgilerini yalnızca TTO görür)'}</li>
+      <li>${FE.form.figures.length?'✅':'⬜'} Word'e eklenecek şekil: ${FE.form.figures.length}</li>
+      <li>${(()=>{const t=inventorsOf(f).reduce((a,p)=>a+(Number(p.share)||0),0);return t===100?'✅':'⬜';})()} Katkı payları toplamı %100</li></ul>
+      <p class="text-[11px] text-slate-400 mt-2">Eksik alanlar Word çıktısında boş bırakılır; elle doldurulabilir.</p></div>
+    ${isStaff()?`<div class="card p-4 text-sm"><div class="font-semibold mb-1">Veri aktarımı</div><p class="text-xs text-slate-500 mb-3">Formu kişisel bilgilerle birlikte JSON dosyası olarak dışa aktarabilirsiniz (yedek veya başka sisteme taşıma). Dosya T.C. kimlik numaraları içerir; güvenli saklayın.</p><button onclick="exportFormJson('${FE.fid}')" class="btn btn-s text-xs"><i class="fas fa-file-export"></i> JSON olarak dışa aktar</button></div>`:''}
+  </div>`;
+};
+async function saveForm(){
+  if (!FE || FE.readOnly) return;
+  const btn=$('fe-save'); busy(btn,true);
+  try {
+    const form = JSON.parse(JSON.stringify(FE.form));
+    form.updatedAt = Date.now(); form.updatedByName = isStaff()?S.me.name:((S.profile&&S.profile.name)||S.user.email);
+    await B.set('forms/'+FE.fid, form);
+    const upd = {};
+    Object.entries(FE.personal).forEach(([k,v]) => { if (isStaff() || k===S.user.ek) upd['formPersonal/'+FE.fid+'/'+k] = {tc:(v.tc||'').trim()||null, address:(v.address||'').trim()||null, phone:(v.phone||'').trim()||null}; });
+    if (Object.keys(upd).length) await B.update('', upd);
+    FE.dirty=false; feMarkDirty(); toast('Form kaydedildi.','success');
+    if (!isStaff()) notifyStaff(form.updatedByName+' "'+S.files[FE.fid].title+'" buluş bildirim formunu güncelledi.', FE.fid).catch(()=>{});
+  } catch(e){ toast(errMsg(e),'error'); }
+  busy(btn,false);
+}
+
+// ---------- Word (DOCX) üretimi — harici kütüphane gerektirmez ----------
+async function downloadWordFE(kind){ if (!FE) return; await buildAndDownload(FE.fid, FE.form, FE.personal, kind); }
+async function downloadWordFor(fid, kind){ try { const d = await loadFormData(fid); await buildAndDownload(fid, d.form, d.personal, kind); } catch(e){ toast('Word oluşturulamadı: '+errMsg(e),'error'); } }
+async function buildAndDownload(fid, form, personal, kind){
+  const f = S.files[fid]; toast('Word dosyası hazırlanıyor…','info');
+  try {
+    const images = [];
+    if ((kind==='all'||kind==='bbf') && form.figures && form.figures.length) {
+      for (const fig of form.figures) { try { const img = await loadImageForDocx(fid, fig.docId); if (img) images.push({...img, caption:fig.caption}); } catch(e){ console.warn('görsel', e); } }
+    }
+    const bytes = buildDocx(f, form, personal||{}, kind, images);
+    const names = {all:'Basvuru_Dosyasi', petition:'Dilekce', bbf:'Bulus_Bildirim_Formu', commercial:'Ticarilestirme_On_Raporu'};
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));
+    a.download = asciiName((f.ttoNo?f.ttoNo+'_':'')+names[kind]+'_'+f.title.slice(0,40))+'.docx'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+  } catch(e){ console.error(e); toast('Word oluşturulamadı: '+errMsg(e),'error'); }
+}
+async function loadImageForDocx(fid, docId){
+  const base='docs/'+fid+'/'+docId; const meta = await B.get(base+'/meta'); if (!meta || !meta.complete) return null;
+  const chunks = (await B.get(base+'/chunks'))||{}; const parts=[]; for (let i=0;i<meta.chunks;i++) parts.push(b64ToBytes(chunks[i]));
+  const total = parts.reduce((a,p)=>a+p.length,0); const u8=new Uint8Array(total); let o=0; parts.forEach(p=>{u8.set(p,o);o+=p.length;});
+  const ext = fileExt(meta.name)==='png'?'png':'jpeg';
+  const dim = await new Promise(res => { const im=new Image(); im.onload=()=>res({w:im.naturalWidth,h:im.naturalHeight}); im.onerror=()=>res({w:800,h:600}); im.src=URL.createObjectURL(new Blob([u8],{type:'image/'+ext})); });
+  return {bytes:u8, ext, w:dim.w, h:dim.h};
+}
+// XML yardımcıları
+function xe(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function R(text, o={}){
+  const pr = `<w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.color?`<w:color w:val="${o.color}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>`:''}${o.u?'<w:u w:val="single"/>':''}</w:rPr>`;
+  return String(text==null?'':text).split('\n').map((ln,i)=>(i?`<w:r>${pr}<w:br/></w:r>`:'')+`<w:r>${pr}<w:t xml:space="preserve">${xe(ln)}</w:t></w:r>`).join('');
+}
+function P(runs, o={}){
+  const ppr = `<w:pPr>${o.style?`<w:pStyle w:val="${o.style}"/>`:''}${o.keepNext?'<w:keepNext/>':''}${o.pageBreak?'<w:pageBreakBefore/>':''}<w:spacing w:before="${o.before??0}" w:after="${o.after??80}" w:line="${o.line||264}" w:lineRule="auto"/>${(o.ind||o.first)?`<w:ind${o.ind?` w:left="${o.ind}"`:''}${o.first?` w:firstLine="${o.first}"`:''}/>`:''}${o.align?`<w:jc w:val="${o.align}"/>`:''}</w:pPr>`;
+  const body = Array.isArray(runs) ? runs.join('') : (String(runs).startsWith('<w:') ? runs : R(runs,o));
+  return `<w:p>${ppr}${body}</w:p>`;
+}
+function textParas(text, o={}){ const t=String(text||'').trim(); if (!t) return [P(R(o.empty||'', {i:true, color:'808080'}), o)]; return t.split(/\n+/).map(par=>par.trim()).filter(Boolean).map(par=>P(R(par, o), {align:'both', after:100, ...o})); }
+function TC(content, o={}){ // tablo hücresi
+  const paras = Array.isArray(content) ? content.join('') : content;
+  return `<w:tc><w:tcPr><w:tcW w:w="${o.w||0}" w:type="dxa"/>${o.span?`<w:gridSpan w:val="${o.span}"/>`:''}${o.shade?`<w:shd w:val="clear" w:color="auto" w:fill="${o.shade}"/>`:''}<w:vAlign w:val="${o.v||'center'}"/></w:tcPr>${paras||'<w:p/>'}</w:tc>`;
+}
+function TR(cells, o={}){ return `<w:tr><w:trPr>${o.h?`<w:trHeight w:val="${o.h}" w:hRule="atLeast"/>`:''}<w:cantSplit/></w:trPr>${cells.join('')}</w:tr>`; }
+function TBL(widths, rows, o={}){
+  const b = o.noBorder ? 'nil' : 'single';
+  const borders = ['top','left','bottom','right','insideH','insideV'].map(s=>`<w:${s} w:val="${b}" w:sz="4" w:space="0" w:color="000000"/>`).join('');
+  return `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a,c)=>a+c,0)}" w:type="dxa"/><w:tblBorders>${borders}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="40" w:type="dxa"/><w:left w:w="90" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="90" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>${P('',{after:60})}`;
+}
+const PAGE_W = 11906, MARG = 1020, CW = PAGE_W - 2*MARG; // A4, ~1.8 cm kenar
+function invInfo(p, personal){ const k = p.email?ek(p.email):null; const pd = (k && personal[k])||{}; return {name:p.name, tc:pd.tc||'', address:pd.address||p.unit||'', phone:pd.phone||'', email:p.email||'', share:(p.share!=null&&p.share!=='')?'%'+p.share:''}; }
+function sigLine(label){ return [P(R(label,{b:true}),{align:'center',after:20}), P(R('Tarih: ...../...../..........   İmza:',{sz:18,color:'404040'}),{align:'center',after:0})]; }
+
+function docPetition(f, form, personal){
+  const P_ = form.petition||{}, invs=inventorsOf(f);
+  const signer = invs.find(p=>p.email&&ek(p.email)===(P_.signerKey||form.leadKey)) || invs[0] || {name:''};
+  const si = invInfo(signer, personal);
+  const uni = trUpper(TENANT?TENANT.name:'');
+  const date = fmtD(P_.date||today()).replace(/\./g,'/');
+  const body = `Yapmış olduğum çalışmalar neticesinde elde edilen ve ekte sunulan "${f.title}" isimli buluşumun Türk Patent ve Marka Kurumu nezdindeki başvurularının yapılması, ticarileştirilmesi ve süreç işlemleri ile ilgili olarak ${TENANT?TENANT.name:''} Teknoloji Transfer Ofisinde ön değerlendirme sürecinin başlatılması hususunda gereğini arz ederim.${P_.extra?' '+P_.extra:''}`;
+  const out = [];
+  out.push(P(R(date),{align:'right', after:360}));
+  out.push(P(R('T.C.',{b:true}),{align:'center',after:0}), P(R(uni,{b:true}),{align:'center',after:0}), P(R('TEKNOLOJİ TRANSFER OFİSİ KOORDİNATÖRLÜĞÜNE',{b:true}),{align:'center',after:480}));
+  out.push(P(R(body),{align:'both', first:709, line:360, after:600}));
+  out.push(TBL([CW-4200, 4200], [TR([TC(P('')), TC([P(R(si.name,{b:true}),{align:'center',after:40}), P(R('İmza',{color:'808080',sz:18}),{align:'center',after:0})])],{h:1500})], {noBorder:true}));
+  out.push(P(R('Adres: ',{b:true})+R(P_.address||si.address),{after:40}), P(R('GSM: ',{b:true})+R(P_.phone||si.phone),{after:40}), P(R('E-Posta: ',{b:true})+R(si.email),{after:360}));
+  out.push(P(R('EKLER:',{b:true,u:true}),{after:40}), P(R('1- Buluş Bildirim Formu'),{after:20}), P(R('2- Fikri Sınai Mülkiyet Hakları Ticarileştirme Ön Raporu'),{after:20}));
+  if ((form.figures||[]).length) out.push(P(R('3- Buluşa ait çizimler'),{after:20}));
+  return out.join('');
+}
+function docBBF(f, form, personal, images, rels){
+  const invs = inventorsOf(f), out = [];
+  const L = 1900, C1 = 4700, C2 = CW-L-C1;
+  const lead = invs.find(p=>p.email&&ek(p.email)===form.leadKey);
+  const personRows = (title, p) => { const x=invInfo(p, personal); return [
+    TR([TC(P(R(title,{b:true,sz:18}),{after:0}),{w:L, shade:'F2F2F2'}), TC(P(R(x.name),{align:'center',after:0}),{w:C1}), TC(P(R('T.C. No: '+(x.tc||'')),{after:0}),{w:C2})]),
+    TR([TC(P(R('Adres',{sz:18}),{after:0}),{w:L}), TC(P(R(x.address),{after:0}),{w:C1+C2, span:2})]),
+    TR([TC(P(R('Telefon / E-Posta',{sz:18}),{after:0}),{w:L}), TC(P(R(x.phone),{after:0}),{w:C1}), TC(P(R(x.email),{after:0}),{w:C2})]),
+    TR([TC(P(R('Buluş üzerindeki katkı payı',{sz:18}),{after:0}),{w:L}), TC(P(R(x.share),{align:'center',after:0}),{w:C1+C2, span:2})])
+  ]; };
+  const rows = [];
+  if (lead) rows.push(...personRows('YÜRÜTÜCÜ\nAd-Soyad', lead));
+  invs.forEach((p,i) => rows.push(...personRows((i+1)+'.BULUŞÇU\nAd-Soyad', p)));
+  rows.push(TR([TC(P(''),{w:CW, span:3, shade:'000000'})],{h:200}));
+  rows.push(TR([TC([P(R('Buluş Başlığı',{b:true}),{align:'center',after:0}), P(R('(Buluşu tanımlayan ve özetleyen şekilde buluş başlığını yazınız.)',{i:true,sz:16}),{align:'center',after:0})],{w:L}), TC(P(R(trUpper(f.title),{b:true}),{align:'center',after:0}),{w:C1+C2, span:2})],{h:900}));
+  out.push(TBL([L,C1,C2], rows));
+  const qHead = q => P(R(q.no+(q.no.length===1?'.':'. ')+q.t+' ',{b:true})+(q.h?R(q.h,{i:true,sz:17}):''),{keepNext:true, after:100, before:120});
+  const box = (paras) => TBL([CW], [TR([TC(paras,{w:CW, v:'top'})])]);
+  const F = form;
+  BBF_Q.forEach(q => {
+    if (q.table) {
+      const W=[800, 2500, 800, 1100, 1100, CW-6300];
+      const head = TR(['Unsur No','Unsur Adı','Yeni','Önceki Tekniğe Ait','Buluşum İçin Çok Önemli','Unsurun İşlevi'].map((t,i)=>TC(P(R(t,{b:true,sz:18}),{align:'center',after:0}),{w:W[i], shade:'F2F2F2'})));
+      const us = (F.units||[]).filter(u=>u&&(u.name||u.func));
+      const body = (us.length?us:[{},{},{}]).map((u,i)=>TR([TC(P(R(us.length?String(i+1):''),{align:'center',after:0}),{w:W[0]}), TC(P(R(u.name||''),{align:'center',after:0}),{w:W[1]}),
+        ...['isNew','prior','critical'].map((c,j)=>TC(P(R(u[c]?'✓':''),{align:'center',after:0}),{w:W[2+j]})), TC(P(R(u.func||''),{align:'center',after:0}),{w:W[5]})],{h:us.length?0:500}));
+      out.push(P(R(q.no+'. '+q.t+' ',{b:true})+R(q.h,{i:true,sz:17}),{keepNext:true, before:120, after:80}));
+      out.push(TBL(W, [head, ...body]));
+    } else if (q.research) {
+      const q6=F.q6||{};
+      out.push(box([qHead(q), ...RESEARCH_OPTS.map(([k,l])=>P(R((q6[k]?'☒ ':'☐ ')+l),{ind:300, after:20})), P('',{after:60}), ...textParas(q6.text)]));
+    } else if (q.dates) {
+      const d=F.q11||{}; out.push(box([P(R(q.no+'.'+q.t+', ',{b:true})+R('Başlangıç tarihi: '+(d.start||'..........')+', Bitiş tarihi: '+(d.end||'..........')),{after:40})]));
+    } else out.push(box([qHead(q), ...textParas(F[q.k])]));
+  });
+  // Çizimler
+  const figParas = [P(R('Buluşa ait çizimler (veya formülsel bir gösterim)',{b:true}),{after:20}), P(R(FIG_HELP,{i:true,sz:17}),{after:120})];
+  images.forEach((im, i) => {
+    const maxW = (CW-400)*635, maxH = 9.5*360000; // EMU
+    let cx = im.w*9525, cy = im.h*9525; const sc = Math.min(1, maxW/cx, maxH/cy); cx=Math.round(cx*sc); cy=Math.round(cy*sc);
+    const rid = 'rIdImg'+(i+1); rels.push({id:rid, target:'media/sekil'+(i+1)+'.'+(im.ext==='png'?'png':'jpeg'), bytes:im.bytes, ext:im.ext==='png'?'png':'jpeg'});
+    figParas.push(`<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="120" w:after="40"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i+1}" name="Sekil ${i+1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${i+1}" name="sekil${i+1}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`);
+    figParas.push(P(R('Şekil '+(i+1)+(im.caption?': '+im.caption:''),{b:true,sz:18}),{align:'center',after:160}));
+  });
+  if (!images.length) figParas.push(P(R('Çizimler ekte sunulmuştur.',{i:true,color:'808080'}),{after:60}));
+  out.push(TBL([CW],[TR([TC(figParas,{w:CW,v:'top'})])]));
+  out.push(TBL([CW],[TR([TC([P(R('Şekillerin Açıklaması',{b:true}),{after:80}), ...textParas(F.figDesc)],{w:CW,v:'top'})])]));
+  out.push(TBL([CW],[TR([TC([P(R('Buluşun detaylı anlatımı',{b:true}),{after:20}), P(R(DETAIL_HELP,{i:true,sz:17}),{after:120}), ...textParas(F.detail)],{w:CW,v:'top'})])]));
+  // Beyan ve imzalar
+  const tto = tenantShortTTO();
+  out.push(P(R(`Bu başvuru formunu doldurmak sureti ile bilgilerini vermiş olduğum buluş hakkında, ${tto}'nun fikri mülkiyet hakkı sürecini izleme ve gerekiyorsa ilgili kuruluşlara başvuru yapma sürecini başlatmış olmaktayım. Söz konusu beyanım sürecin devamında da gerekli desteği ve bilgiyi vereceğim anlamına gelmektedir. Bu başvuruda verilen ve bundan sonra verilecek bilgilerin eksik, yanlış veya açık olmaması sonucunda doğabilecek maddi ve manevi zararlardan dolayı ${tto}'nun sorumluluğunun doğmayacağını kabul ederim. `)+R(`Bu formun kapsamı ile ilgili hususlarda ${tto}'nun herhangi bir sorumluluğunun bulunmadığını kabul eder, bu formun içeriğinde vermiş olduğum tüm bilgilerin doğru ve eksiksiz olduğunu beyan ederim.`,{b:true}),{align:'both', before:240, after:200, keepNext:true}));
+  const half = Math.floor(CW/2); const sig = [];
+  const cells = invs.map((p,i)=>TC(sigLine((i+1)+'. Buluşçu: '+p.name),{w:half, v:'top'}));
+  if (cells.length%2) cells.push(TC(P(''),{w:half}));
+  for (let i=0;i<cells.length;i+=2) sig.push(TR([cells[i],cells[i+1]],{h:1500}));
+  if (lead) sig.push(TR([TC(sigLine('Yürütücü: '+lead.name),{w:CW, span:2, v:'top'})],{h:1500}));
+  out.push(TBL([half, CW-half], sig));
+  out.push(P(R('Bu form ıslak imza (mavi mürekkepli kalem) ile imzalanmalı, tüm sayfaları buluşçular tarafından paraflanmalıdır.',{i:true,sz:16,color:'606060'}),{align:'center'}));
+  return out.join('');
+}
+function docCommercial(f, form){
+  const C = form.commercial||{}, invs=inventorsOf(f), lead=invs.find(p=>p.email&&ek(p.email)===form.leadKey)||invs[0]||{};
+  const L = 3200, Rw = CW-L, out=[];
+  const row = (label, val) => TR([TC(P(R(label,{b:true,sz:19}),{after:0}),{w:L, v:'top', shade:'F2F2F2'}), TC(textParas(val,{after:40, sz:19}),{w:Rw, v:'top'})]);
+  const rows = [row('Buluş Adı', f.title), row('Buluş Sahibi', C.owner||lead.name||'')];
+  TOR_FIELDS.forEach(([k,l]) => rows.push(row(l, C[k])));
+  out.push(TBL([L,Rw], rows));
+  const dateTxt = C.date ? fmtD(C.date) : '..../..../........';
+  out.push(TBL([CW-4200, 4200], [TR([TC(P('')), TC([P(R('Ad-Soyad: ',{b:true})+R(C.signer||lead.name||''),{after:60}), P(R('Tarih: ',{b:true})+R(dateTxt),{after:60}), P(R('İmza:',{b:true}),{after:0})],{v:'top'})],{h:1600})], {noBorder:true}));
+  return out.join('');
+}
+function headerXml(title){
+  const uni = trUpper(TENANT?TENANT.name:'');
+  const lines = ['T.C.', uni, 'TEKNOLOJİ TRANSFER OFİSİ', ...title.split('\n')];
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${lines.map((l,i)=>P(R(l,{b:true, sz:i===0?20:22}),{align:'center',after:0})).join('')}${P('',{after:60})}</w:hdr>`;
+}
+function plainName(n){ const T=['prof','doç','doc','dr','öğr','ogr','üyesi','uyesi','gör','gor','görevlisi','arş','ars','uzm','müh','muh','yrd','öğretim','üye']; const w=String(n||'').split(/\s+/).filter(t=>t && !T.includes(t.replace(/\./g,'').toLocaleLowerCase('tr'))); return w.join(' ') || n; }
+function footerXml(f){
+  const ini = inventorsOf(f).map(p=>initials(plainName(p.name))+' ______').join('   ');
+  const tab = `<w:tabs><w:tab w:val="right" w:pos="${CW}"/></w:tabs>`;
+  const fld = n => `<w:fldSimple w:instr=" ${n} "><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t>1</w:t></w:r></w:fldSimple>`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="999999"/></w:pBdr>${tab}<w:spacing w:after="0"/></w:pPr>${R('Paraf: '+ini,{sz:16,color:'404040'})}<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:tab/><w:t xml:space="preserve">${xe((f.ttoNo?f.ttoNo+'  ·  ':'')+'Sayfa ')}</w:t></w:r>${fld('PAGE')}<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve"> / </w:t></w:r>${fld('NUMPAGES')}</w:p></w:ftr>`;
+}
+function buildDocx(f, form, personal, kind, images){
+  const rels = []; // görseller
+  const sections = [];
+  if (kind==='all'||kind==='petition') sections.push({hdr:null, body:docPetition(f, form, personal)});
+  if (kind==='all'||kind==='bbf') sections.push({hdr:'BULUŞ BİLDİRİM FORMU', body:docBBF(f, form, personal, images, rels)});
+  if (kind==='all'||kind==='commercial') sections.push({hdr:'FİKRİ SINAİ MÜLKİYET HAKLARI\nTİCARİLEŞTİRME ÖN RAPORU', body:docCommercial(f, form)});
+  const files = {};
+  let hdrN = 0; const docRels = [
+    `<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`,
+    `<Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>`];
+  const sectPr = (hid) => `<w:sectPr>${hid?`<w:headerReference w:type="default" r:id="${hid}"/>`:''}<w:footerReference w:type="default" r:id="rIdFtr"/><w:type w:val="nextPage"/><w:pgSz w:w="${PAGE_W}" w:h="16838"/><w:pgMar w:top="${hid?1900:1300}" w:right="${MARG}" w:bottom="1100" w:left="${MARG}" w:header="500" w:footer="450" w:gutter="0"/></w:sectPr>`;
+  let body = '';
+  sections.forEach((s, i) => {
+    let hid = null;
+    if (s.hdr) { hdrN++; hid = 'rIdHdr'+hdrN; files['word/header'+hdrN+'.xml'] = headerXml(s.hdr); docRels.push(`<Relationship Id="${hid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header${hdrN}.xml"/>`); }
+    else { hdrN++; hid = 'rIdHdr'+hdrN; files['word/header'+hdrN+'.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p/></w:hdr>`; docRels.push(`<Relationship Id="${hid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header${hdrN}.xml"/>`); }
+    s.hid = hid;
+    body += s.body;
+    if (i < sections.length-1) body += `<w:p><w:pPr>${sectPr(hid)}</w:pPr></w:p>`;
+  });
+  body += sectPr(sections[sections.length-1].hid);
+  rels.forEach(r => { docRels.push(`<Relationship Id="${r.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${r.target}"/>`); files['word/'+r.target] = r.bytes; });
+  files['word/document.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${body}</w:body></w:document>`;
+  files['word/footer1.xml'] = footerXml(f);
+  files['word/styles.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+  files['word/_rels/document.xml.rels'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${docRels.join('')}</Relationships>`;
+  files['_rels/.rels'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  files['docProps/core.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xe(f.title)}</dc:title><dc:creator>TTO Takip</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0,19)}Z</dcterms:created></cp:coreProperties>`;
+  const ovr = Object.keys(files).filter(n=>/header\d+\.xml$/.test(n)).map(n=>`<Override PartName="/${n}" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>`).join('');
+  files['[Content_Types].xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>${ovr}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  const order = ['[Content_Types].xml','_rels/.rels', ...Object.keys(files).filter(n=>!['[Content_Types].xml','_rels/.rels'].includes(n))];
+  return zipStore(order.map(n => ({name:n, data: typeof files[n]==='string' ? new TextEncoder().encode(files[n]) : files[n]})));
+}
+// Sıkıştırmasız ZIP (DOCX kabı)
+const CRC_T = (()=>{ const t=new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(entries){
+  const enc=new TextEncoder(); const chunks=[]; const central=[]; let offset=0;
+  const d=new Date(); const dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(), tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  entries.forEach(e => {
+    const name=enc.encode(e.name), crc=crc32(e.data), size=e.data.length;
+    const lh=new DataView(new ArrayBuffer(30)); lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true); lh.setUint16(10,tm,true); lh.setUint16(12,dt,true); lh.setUint32(14,crc,true); lh.setUint32(18,size,true); lh.setUint32(22,size,true); lh.setUint16(26,name.length,true); lh.setUint16(28,0,true);
+    chunks.push(new Uint8Array(lh.buffer), name, e.data);
+    const ch=new DataView(new ArrayBuffer(46)); ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true); ch.setUint16(10,0,true); ch.setUint16(12,tm,true); ch.setUint16(14,dt,true); ch.setUint32(16,crc,true); ch.setUint32(20,size,true); ch.setUint32(24,size,true); ch.setUint16(28,name.length,true); ch.setUint32(42,offset,true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30+name.length+size;
+  });
+  const cdSize = central.reduce((a,c)=>a+c.length,0);
+  const end=new DataView(new ArrayBuffer(22)); end.setUint32(0,0x06054b50,true); end.setUint16(8,entries.length,true); end.setUint16(10,entries.length,true); end.setUint32(12,cdSize,true); end.setUint32(16,offset,true);
+  const all=[...chunks, ...central, new Uint8Array(end.buffer)]; const total=all.reduce((a,c)=>a+c.length,0); const out=new Uint8Array(total); let o=0; all.forEach(c=>{out.set(c,o);o+=c.length;}); return out;
+}
+
+// ---------- JSON içe / dışa aktarım (eski dosyaların dijitalleştirilmesi) ----------
+async function exportFormJson(fid){
+  const f=S.files[fid]; const d = await loadFormData(fid);
+  const inventors = inventorsOf(f).map(p => { const k=p.email?ek(p.email):null; const pd=(k&&d.personal[k])||{}; return {name:p.name, email:p.email||null, kind:p.kind||null, unit:p.unit||null, share:p.share??null, tc:pd.tc||null, address:pd.address||null, phone:pd.phone||null, lead:!!(k&&k===d.form.leadKey)}; });
+  const {leadKey, updatedAt, updatedByName, ...form} = d.form;
+  const out = {format:'tto-takip-bbf', version:1, exportedAt:new Date().toISOString(), kurum:TENANT?TENANT.id:null,
+    file:{ttoNo:f.ttoNo||null, type:f.type, title:f.title, summary:f.summary||null, owner:f.owner||null, ttoDate:ttoDateOf(f), stage:f.stage, stageDate:f.stageDate||null, tpAppDate:f.tpAppDate||null, tpAppNo:f.tpAppNo||null, pubDate:f.pubDate||null, regDate:f.regDate||null, regNo:f.regNo||null},
+    inventors, form:{...form, figures:undefined}};
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'})); a.download=asciiName((f.ttoNo||'dosya')+'_'+f.title.slice(0,30))+'.json'; a.click();
+}
+function openImportModal(){
+  openModal(modalHead('Eski dosyaları içe aktar','Kâğıt evraktan dijitale çevrilmiş TTO Takip veri dosyaları (.json)','fa-file-import') + `<div class="p-6 space-y-3">
+    <p class="text-sm text-slate-600">Elden alınan buluş bildirim formları ve dilekçeler, <b>ESKI_DOSYA_AKTARIMI.md</b> kılavuzundaki biçimde JSON dosyasına çevrildikten sonra buradan sisteme aktarılır. Her JSON dosyası bir TTO dosyası oluşturur ya da aynı TTO numaralı mevcut dosyayı günceller.</p>
+    <input id="imp-files" type="file" accept=".json,application/json" multiple class="inp" onchange="previewImport(this)">
+    <div id="imp-preview"></div></div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="imp-go" onclick="runImport()" class="btn btn-p" disabled><i class="fas fa-file-import"></i> Aktar</button></div>`, {mid:true});
+}
+let IMP = [];
+async function previewImport(input){
+  IMP = [];
+  for (const file of Array.from(input.files||[])) {
+    try { const j = JSON.parse(await file.text()); const items = Array.isArray(j)?j:[j];
+      items.forEach(x => { if (x.format!=='tto-takip-bbf' || !x.file || !x.file.title) throw new Error('Biçim tanınmadı (format: "tto-takip-bbf" bekleniyor)');
+        const match = list(S.files).find(f => (x.file.ttoNo && f.ttoNo===x.file.ttoNo) || (x.file.tpAppNo && f.tpAppNo===x.file.tpAppNo));
+        IMP.push({src:file.name, data:x, match:match?match.id:null, mode:match?'update':'new'}); });
+    } catch(e){ IMP.push({src:file.name, error:e.message}); }
+  }
+  $('imp-preview').innerHTML = `<div class="space-y-2">${IMP.map((it,i)=> it.error ? `<div class="p-3 rounded-lg bg-red-50 text-red-700 text-sm"><b>${esc(it.src)}</b>: ${esc(it.error)}</div>` :
+    `<div class="p-3 rounded-lg border border-slate-100 text-sm"><div class="font-semibold">${esc(it.data.file.title)}</div><div class="text-xs text-slate-500">${esc(it.data.file.ttoNo||'TTO no yok')} · ${esc((TYPES[it.data.file.type]||TYPES.diger).label)} · ${(it.data.inventors||[]).length} buluşçu · ${esc((STAGES[it.data.file.stage]||STAGES.basvuru).label)}</div>
+      <div class="text-xs mt-1">${it.match?`<label class="flex items-center gap-1.5"><input type="checkbox" checked onchange="IMP[${i}].mode=this.checked?'update':'new'"> Mevcut dosyayı güncelle: <b>${esc(S.files[it.match].ttoNo||'')} ${esc(S.files[it.match].title)}</b></label>`:'<span class="text-emerald-700"><i class="fas fa-plus mr-1"></i>Yeni dosya oluşturulacak</span>'}</div></div>`).join('')}</div>`;
+  $('imp-go').disabled = !IMP.some(x=>!x.error);
+}
+async function runImport(){
+  const btn=$('imp-go'); busy(btn,true); let ok=0;
+  for (const it of IMP.filter(x=>!x.error)) {
+    try { await importOne(it); ok++; } catch(e){ console.error(e); toast(it.data.file.title+': '+errMsg(e),'error'); }
+  }
+  busy(btn,false); closeModal(); toast(ok+' dosya aktarıldı.','success');
+}
+async function importOne(it){
+  const x = it.data, F = x.file;
+  const fid = it.mode==='update' && it.match ? it.match : B.newKey('files');
+  const old = S.files[fid];
+  const inv = {}; const pers = {}; let leadKey = null;
+  (x.inventors||[]).forEach((p,i) => { const email=(p.email||'').trim().toLowerCase()||null; const key = email?ek(email):'x'+pushId();
+    inv[key] = {name:p.name, email, kind:p.kind||'akademik', unit:p.unit||null, share:p.share==null||p.share===''?null:Number(String(p.share).replace('%','')), order:i};
+    if (email && (p.tc||p.address||p.phone)) pers[key] = {tc:p.tc||null, address:p.address||null, phone:p.phone||null};
+    if (p.lead && email) leadKey = key; });
+  const stage = STAGES[F.stage] ? F.stage : 'basvuru';
+  const base = {type:TYPES[F.type]?F.type:'patent', title:F.title, summary:F.summary||null, owner:F.owner||setting().ownerDefault, ttoDate:F.ttoDate||today(), stage, stageDate:F.stageDate||F.ttoDate||today(),
+    tpAppDate:F.tpAppDate||null, tpAppNo:F.tpAppNo||null, pubDate:F.pubDate||null, regDate:F.regDate||null, regNo:F.regNo||null, inventors:inv, updatedAt:Date.now()};
+  const upd = {};
+  if (old) { Object.entries(base).forEach(([k,v]) => upd['files/'+fid+'/'+k]=v); if (F.ttoNo) upd['files/'+fid+'/ttoNo']=F.ttoNo; }
+  else upd['files/'+fid] = {id:fid, ...base, ttoNo:F.ttoNo||null, source:'aktarim', createdAt:Date.now(), createdBy:S.user.ek, createdByName:S.me.name, responsible:S.user.ek, responsibleName:S.me.name,
+    history:{h0:{stage:'basvuru', date:base.ttoDate, at:Date.now()-1000, note:'Kâğıt evraktan dijital sisteme aktarıldı.', byName:S.me.name, by:S.user.ek}, ...(stage!=='basvuru'?{h1:{stage, date:base.stageDate, at:Date.now(), note:'Aktarım sırasındaki aşama.', byName:S.me.name, by:S.user.ek}}:{})}};
+  Object.keys(inv).forEach(k => { if (inv[k].email) upd['userFiles/'+k+'/'+fid]=true; });
+  const form = {...blankForm(), ...(x.form||{}), leadKey: leadKey || (Object.keys(inv).find(k=>inv[k].email)||null), figures:[], updatedAt:Date.now(), updatedByName:S.me.name+' (aktarım)'};
+  upd['forms/'+fid] = JSON.parse(JSON.stringify(form));
+  Object.entries(pers).forEach(([k,v]) => upd['formPersonal/'+fid+'/'+k] = v);
+  await B.update('', upd);
+  if (!old && !F.ttoNo) await assignTtoNo(fid).catch(()=>{});
+}
+
+// ============================================================
 // BULUŞÇU (BAŞVURU SAHİBİ) EKRANLARI
 // ============================================================
 VIEWS.myfiles = {
@@ -1487,7 +2032,7 @@ function myFileCard(f){
     <div class="flex items-start gap-4 mb-4"><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2 mb-1">${typeChip(f)} ${phaseChip(f)} ${ttoNoHtml(f)}</div>
       <h3 class="font-bold text-lg leading-snug">${esc(f.title)}</h3>
       <p class="text-xs text-slate-500 mt-1"><i class="fas fa-users mr-1"></i>${inv.map(p=>esc(p.name)+(p.email&&ek(p.email)===S.user.ek?' <b>(siz)</b>':'')).join(', ')}</p></div>
-      <button onclick="openDetail('${f.id}')" class="btn btn-s flex-shrink-0"><i class="fas fa-up-right-from-square"></i> Ayrıntılar</button></div>
+      <div class="flex flex-col gap-1.5 flex-shrink-0"><button onclick="openDetail('${f.id}')" class="btn btn-s"><i class="fas fa-up-right-from-square"></i> Ayrıntılar</button><button onclick="openFormEditor('${f.id}')" class="btn btn-s"><i class="fas fa-file-signature text-blue-600"></i> Bildirim Formu</button></div></div>
     ${stepperHtml(f, false)}
     <div class="grid md:grid-cols-2 gap-3 mt-4">${waitBox(f)}
       <div class="rounded-xl bg-slate-50 border border-slate-100 p-4"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><i class="fas fa-message mr-1"></i>Son güncelleme</div>${lastPub?`<div class="text-sm"><b>${esc((STAGES[lastPub.stage]||{}).label||'')}</b> · <span class="text-slate-400 text-xs">${fmtD(lastPub.date)}</span></div>${lastPub.note?`<div class="text-sm text-slate-600 mt-1">${esc(lastPub.note)}</div>`:''}`:'<div class="text-sm text-slate-400">—</div>'}
@@ -1498,7 +2043,7 @@ function myFileCard(f){
 VIEWS.newapp = {
   mount(){
     setTop('Yeni Başvuru', 'Buluş, faydalı model, tasarım veya marka bildirimi', '');
-    $('view').innerHTML = `<div class="max-w-4xl"><div class="card p-4 mb-4 bg-blue-50/60 border-blue-100 text-sm text-blue-900"><i class="fas fa-circle-info mr-1"></i>Başvurunuz TTO'ya ulaşınca <b>Başvuru Alındı</b> aşamasında görünür. TTO ön incelemeyi yapar, gerekirse sizden ek bilgi ister. Birlikte çalıştığınız diğer buluşçuları e-postalarıyla ekleyin; onlar da aynı e-postayla kayıt olunca dosyayı görür.</div>
+    $('view').innerHTML = `<div class="max-w-4xl"><div class="card p-4 mb-4 bg-blue-50/60 border-blue-100 text-sm text-blue-900"><i class="fas fa-circle-info mr-1"></i>Başvuruyu gönderdikten sonra <b>Buluş Bildirim Formu</b> açılır; formu doldurup dilekçe, bildirim formu ve ticarileştirme ön raporunu Word olarak alabilirsiniz. Başvurunuz TTO'ya ulaşınca <b>Başvuru Alındı</b> aşamasında görünür. TTO ön incelemeyi yapar, gerekirse sizden ek bilgi ister. Birlikte çalıştığınız diğer buluşçuları e-postalarıyla ekleyin; onlar da aynı e-postayla kayıt olunca dosyayı görür.</div>
       <div class="card">${fileFormHtml(null, true)}<div class="px-6 py-4 border-t border-slate-100 flex items-center gap-3"><div id="na-prog" class="hidden flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width:0%"></div></div><button id="na-save" onclick="submitApplication()" class="btn btn-p ml-auto"><i class="fas fa-paper-plane"></i> Başvuruyu Gönder</button></div></div></div>`;
   }
 };
@@ -1522,9 +2067,11 @@ async function submitApplication(){
     for (const d of docs) { await uploadDoc(id, d, true, p => { prog.firstElementChild.style.width = Math.round(((i+p)/docs.length)*100)+'%'; }); i++; }
     await notifyStaff(S.profile.name+' portal üzerinden yeni başvuru yaptı: "'+title+'"', id).catch(e=>console.warn(e));
     toast('Başvurunuz TTO\'ya iletildi.','success');
-    goto('myfiles'); openWhenLoaded(id);
+    goto('myfiles'); openFormWhenLoaded(id);
   } catch(e){ toast(errMsg(e),'error'); busy(btn,false); }
 }
+
+function openFormWhenLoaded(fid, tries=0){ if (S.files[fid]) { toast('Şimdi Buluş Bildirim Formunu doldurun; Word çıktısını buradan alabilirsiniz.','info'); return openFormEditor(fid); } if (tries<25) setTimeout(()=>openFormWhenLoaded(fid, tries+1), 120); }
 
 VIEWS.profile = {
   mount(){

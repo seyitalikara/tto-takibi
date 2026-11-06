@@ -1,0 +1,148 @@
+{
+  "format": "tto-takip-bbf",
+  "version": 1,
+  "exportedAt": null,
+  "kurum": "karabuk",
+  "file": {
+    "ttoNo": null,
+    "type": "patent",
+    "title": "Hidrojen katkılı doğal gaz hatları için akış ölçer düzeneği",
+    "summary": "Hidrojen–doğal gaz karışımlarında diyafram ömrünü uzatan ölçüm düzeneği. Sanayi ortağıyla ortak buluş.",
+    "owner": "Karabük Üniversitesi",
+    "ttoDate": "2026-08-03",
+    "stage": "kurul",
+    "stageDate": "2026-10-27",
+    "tpAppDate": null,
+    "tpAppNo": null,
+    "pubDate": null,
+    "regDate": null,
+    "regNo": null
+  },
+  "inventors": [
+    {
+      "name": "Dr. Öğr. Üyesi Can Özkan",
+      "email": "akademisyen@tto.demo",
+      "kind": "akademik",
+      "unit": "Mühendislik Fak. / Makine Müh.",
+      "share": 25,
+      "tc": "Buraya 11 haneli T.C. kimlik no",
+      "address": "Mühendislik Fakültesi, Demir Çelik Kampüsü",
+      "phone": null,
+      "lead": true
+    },
+    {
+      "name": "Prof. Dr. Ali Vural",
+      "email": "ali.vural@ornek.edu.tr",
+      "kind": "akademik",
+      "unit": "Mühendislik Fak. / Makine Müh.",
+      "share": 20,
+      "tc": null,
+      "address": null,
+      "phone": null,
+      "lead": false
+    },
+    {
+      "name": "Elif Şahin",
+      "email": "ogrenci@tto.demo",
+      "kind": "ogrenci",
+      "unit": "Mekatronik Müh. (Yüksek Lisans)",
+      "share": 15,
+      "tc": null,
+      "address": null,
+      "phone": null,
+      "lead": false
+    },
+    {
+      "name": "Burak Aydın",
+      "email": "harici@tto.demo",
+      "kind": "harici",
+      "unit": "ABC Makina Ltd. Şti. (örnek)",
+      "share": 15,
+      "tc": null,
+      "address": null,
+      "phone": null,
+      "lead": false
+    },
+    {
+      "name": "Dr. Selin Acar",
+      "email": "selin.acar@ornek.edu.tr",
+      "kind": "akademik",
+      "unit": "Teknoloji Fak. / Enerji Sist. Müh.",
+      "share": 15,
+      "tc": null,
+      "address": null,
+      "phone": null,
+      "lead": false
+    },
+    {
+      "name": "Murat Tekin",
+      "email": "murat.tekin@ornek.edu.tr",
+      "kind": "ogrenci",
+      "unit": "Bilgisayar Müh. (Lisans)",
+      "share": 10,
+      "tc": null,
+      "address": null,
+      "phone": null,
+      "lead": false
+    }
+  ],
+  "form": {
+    "petition": {
+      "date": "2026-08-03",
+      "signerKey": "akademisyen@tto,demo"
+    },
+    "keywords": "Hidrojen–doğal gaz karışımı; diyaframlı gaz sayacı; akış ölçümü; diyafram ömrü; hidrojen uyumlu malzeme",
+    "q2": "Buluş, doğal gaz dağıtım şebekelerinde kullanılan ölçüm cihazları alanındadır. Hidrojen katkılı doğal gaz taşıyan konut ve ticari hatlarda tüketim ölçümü için kullanılır.",
+    "q3": "Mevcut diyaframlı sayaçlar saf doğal gaz için tasarlanmıştır. Hidrojen oranı arttıkça diyafram malzemesinde geçirgenlik ve yaşlanma artar, ölçüm hatası büyür.",
+    "q4": "Diyafram çevresine yerleştirilen koruyucu katman ve akış düzenleyici kanal sayesinde hidrojen katkılı gazda ölçüm doğruluğu korunur ve diyafram ömrü uzar.",
+    "units": [
+      {
+        "name": "Koruyucu katmanlı diyafram",
+        "isNew": true,
+        "critical": true,
+        "func": "Hidrojen geçirgenliğini azaltır."
+      },
+      {
+        "name": "Akış düzenleyici kanal",
+        "isNew": true,
+        "critical": true,
+        "func": "Diyafram üzerindeki basınç dalgalanmasını sönümler."
+      },
+      {
+        "name": "Sayaç gövdesi",
+        "prior": true,
+        "func": "Ölçüm odalarını taşır."
+      }
+    ],
+    "q6": {
+      "patentTR": true,
+      "patentAbroad": true,
+      "internet": true,
+      "text": "TÜRKPATENT ve Espacenet veri tabanlarında \"hydrogen gas meter diaphragm\" anahtar kelimeleriyle tarama yapılmıştır. Bulunan yayınlar koruyucu katman ve akış düzenleyici birleşimini içermemektedir. (Örnek demo metni.)"
+    },
+    "q7": "Evet. Hidrojen–doğal gaz karışımlarının ölçüm cihazlarına etkisini inceleyen akademik yayınlardan haberdarız.",
+    "q8": "Buluş kamuya açıklanmamıştır. Patent başvurusundan sonra bildiri olarak sunulması planlanmaktadır.",
+    "q9": "Evet. Sayaç üreticileri tarafından mevcut üretim hatlarında küçük değişikliklerle üretilebilir.",
+    "q10": "Almanya, Hollanda, Birleşik Krallık, Japonya ve Güney Kore.",
+    "q11": {
+      "start": "Mart 2026",
+      "end": "Çalışmalar devam etmektedir"
+    },
+    "q12": "Bulunmamaktadır.",
+    "q13": "Koruyucu katman farklı polimer kaplamalarla, akış düzenleyici farklı kanal geometrileriyle üretilebilir.",
+    "figDesc": "Şekil 1, sayacın genel görünümünü göstermektedir.\nŞekil 2, koruyucu katmanlı diyaframın kesit görünümünü göstermektedir.",
+    "detail": "Buluş; sayaç gövdesi (1), ölçüm odaları (2), koruyucu katmanlı diyafram (3) ve akış düzenleyici kanaldan (4) oluşur. (Örnek demo metni.)",
+    "commercial": {
+      "ozet": "Hidrojen katkılı doğal gaz hatlarında ölçüm doğruluğunu koruyan diyaframlı sayaç düzeneği.",
+      "amac": "Şebekelerde hidrojen katkısına geçişte sayaç değişim maliyetini azaltmak.",
+      "sektor": "Enerji, doğal gaz dağıtımı, ölçüm cihazları",
+      "trl": "TRL 3 – Kavram kanıtı laboratuvar ölçekte yapılmıştır.",
+      "trlSure": "9–12 ay",
+      "trlButce": "Yaklaşık 400.000 TL (KDV hariç)",
+      "prototip": "Yaklaşık 150.000 TL",
+      "avantaj": "Mevcut üretim hatlarına uyumlu, düşük ek maliyet.",
+      "dezavantaj": "Uzun süreli saha testleri gereklidir.",
+      "lisans": "Sayaç üreticilerine münhasır olmayan lisans önerilir."
+    }
+  }
+}
