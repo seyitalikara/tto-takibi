@@ -1,3 +1,5 @@
+Kullanım için:https://seyitalikara.github.io/tto-takibi/
+
 # 💡 TTO Takip — Fikri Mülkiyet Dosya Takibi
 
 Teknoloji Transfer Ofisi (TTO) için buluş, faydalı model, endüstriyel tasarım ve marka dosyalarının **hangi aşamada** olduğunu ve **nerede beklediğini** gösteren web uygulaması. JellyFish altyapısı (tek dosya `index.html` + Firebase Realtime Database + parçalı belge saklama) üzerine kuruldu.
