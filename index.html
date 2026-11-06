@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTO Takip — Üniversite Teknoloji Transfer Ofisi Platformu</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="kurumlar.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif}
+    ::-webkit-scrollbar{width:7px;height:7px}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+    @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}100%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
+    .fade-in{animation:fadeIn .18s ease}
+    .slide-in{animation:slideIn .22s ease}
+    .step-cur{animation:pulseRing 1.6s infinite}
+    .nav-item.active{background:rgba(255,255,255,.12);color:#fff}
+    .modal-overlay{background:rgba(15,23,42,.55);backdrop-filter:blur(2px)}
+    input:focus,select:focus,textarea:focus{outline:2px solid #3b82f6;outline-offset:0}
+    .inp{width:100%;border:1px solid #e2e8f0;border-radius:.6rem;padding:.55rem .8rem;font-size:.875rem;background:#fff}
+    .lbl{display:block;font-size:.7rem;font-weight:600;color:#64748b;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.03em}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;font-weight:600;padding:.5rem .9rem;border-radius:.6rem;transition:all .15s;white-space:nowrap}
+    .btn-p{background:#2563eb;color:#fff}.btn-p:hover{background:#1d4ed8}
+    .btn-s{background:#fff;color:#334155;border:1px solid #e2e8f0}.btn-s:hover{background:#f8fafc}
+    .btn-d{background:#fff;color:#dc2626;border:1px solid #fecaca}.btn-d:hover{background:#fef2f2}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .card{background:#fff;border:1px solid #eef2f7;border-radius:1rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .tbl th{font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:600;text-align:left;padding:.6rem .75rem;background:#f8fafc;position:sticky;top:0;z-index:1}
+    .tbl td{padding:.6rem .75rem;border-top:1px solid #f1f5f9;font-size:.85rem;vertical-align:top}
+    .tbl tr.row:hover td{background:#f8fafc;cursor:pointer}
+    .chip{display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;white-space:nowrap}
+    .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden">
+
+<!-- DEMO ŞERİDİ -->
+<div id="demo-band" class="hidden fixed top-0 inset-x-0 z-[60] bg-amber-400 text-amber-950 text-xs font-semibold px-4 py-1.5 flex items-center justify-center gap-3">
+  <span><i class="fas fa-flask mr-1"></i>DEMO MODU — <span id="demo-tname"></span> için örnek verilerle çalışıyorsunuz; kayıtlar yalnızca bu tarayıcıda tutulur.</span>
+  <button onclick="demoReset()" class="underline hover:no-underline">Demoyu sıfırla</button>
+  <button onclick="goPortal()" class="underline hover:no-underline">Kurum seçimine dön</button>
+</div>
+
+<!-- EKRAN: KURUM SEÇİMİ -->
+<div id="scr-portal" class="hidden fixed inset-0 overflow-y-auto bg-slate-50">
+  <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%)" class="relative">
+    <div class="absolute inset-0 opacity-10 pointer-events-none"><svg width="100%" height="100%"><defs><pattern id="g0" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="white"/></pattern></defs><rect width="100%" height="100%" fill="url(#g0)"/></svg></div>
+    <div class="relative max-w-5xl mx-auto px-6 pt-14 pb-24 text-center text-white">
+      <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg"><i class="fas fa-lightbulb"></i></div>
+      <h1 id="pt-name" class="text-4xl font-bold">TTO Takip</h1>
+      <p id="pt-tagline" class="text-slate-300 mt-2"></p>
+      <p class="text-slate-400 text-sm mt-6">Devam etmek için kurumunuzu seçin</p>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-6 -mt-14 relative pb-16">
+    <div class="card p-3 mb-5 shadow-lg"><div class="relative"><i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input id="pt-q" oninput="renderPortal()" placeholder="Üniversite adı veya şehir ara…" class="inp !py-3 pl-11 !border-0"></div></div>
+    <div id="pt-last"></div>
+    <div id="pt-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <div id="pt-contact" class="text-center mt-10 text-sm text-slate-500"></div>
+  </div>
+</div>
+
+<!-- EKRAN: GİRİŞ -->
+<div id="scr-login" class="hidden fixed inset-0 overflow-y-auto" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 55%,#0f172a 100%)">
+  <div class="absolute inset-0 opacity-10 pointer-events-none"><svg width="100%" height="100%"><defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="white"/></pattern></defs><rect width="100%" height="100%" fill="url(#g)"/></svg></div>
+  <div class="relative min-h-full flex items-center justify-center p-4 py-12">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-7">
+      <div id="login-brand" class="flex justify-center mb-3"></div>
+      <h1 id="login-tname" class="text-2xl font-bold text-white"></h1>
+      <p class="text-slate-400 mt-1 text-sm">Teknoloji Transfer Ofisi · Fikri Mülkiyet Dosya Takibi</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex border-b border-slate-100 text-sm font-semibold">
+        <button id="lt-login" onclick="setLoginTab('login')" class="flex-1 py-3.5">Giriş Yap</button>
+        <button id="lt-register" onclick="setLoginTab('register')" class="flex-1 py-3.5">Kayıt Ol</button>
+      </div>
+      <div class="p-6">
+        <!-- giriş -->
+        <div id="lf-login">
+          <div class="mb-3"><label class="lbl">E-posta</label><input id="li-email" type="email" autocomplete="username" class="inp py-3" placeholder="ad.soyad@karabuk.edu.tr"></div>
+          <div class="mb-1"><label class="lbl">Şifre</label><input id="li-pass" type="password" autocomplete="current-password" class="inp py-3" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+          <div class="text-right mb-4"><button onclick="doForgot()" class="text-xs text-blue-600 hover:underline">Şifremi unuttum</button></div>
+          <button id="btn-login" onclick="doLogin()" class="btn btn-p w-full justify-center py-3"><i class="fas fa-arrow-right-to-bracket"></i> Giriş Yap</button>
+          <p class="text-[11px] text-slate-400 mt-3 leading-snug text-center">TTO personeli, akademik/idari personel, öğrenciler ve üniversite dışı buluşçular aynı ekrandan girer. Yetkiniz e-posta adresinize göre belirlenir.</p>
+        </div>
+        <!-- kayıt -->
+        <div id="lf-register" class="hidden">
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="col-span-2"><label class="lbl">Ad Soyad</label><input id="rg-name" class="inp" placeholder="Ad Soyad"></div>
+            <div class="col-span-2"><label class="lbl">E-posta</label><input id="rg-email" type="email" class="inp" placeholder="Kurumsal e-posta tercih edin"></div>
+            <div><label class="lbl">Şifre</label><input id="rg-pass" type="password" class="inp" placeholder="En az 6 karakter"></div>
+            <div><label class="lbl">Şifre (tekrar)</label><input id="rg-pass2" type="password" class="inp"></div>
+            <div class="col-span-2"><label class="lbl">Kullanıcı türü</label>
+              <select id="rg-kind" class="inp" onchange="document.getElementById('rg-unit-l').textContent=this.value==='harici'?'Kurum / Firma':'Birim / Bölüm'">
+                <option value="akademik">Akademik Personel</option><option value="ogrenci">Öğrenci</option><option value="idari">İdari Personel</option><option value="harici">Harici (Üniversite dışı)</option>
+              </select></div>
+            <div class="col-span-2"><label class="lbl" id="rg-unit-l">Birim / Bölüm</label><input id="rg-unit" class="inp" placeholder="Örn: Mühendislik Fak. / Makine Müh."></div>
+            <div class="col-span-2"><label class="lbl">Telefon (isteğe bağlı)</label><input id="rg-phone" class="inp"></div>
+          </div>
+          <button id="btn-register" onclick="doRegister()" class="btn btn-p w-full justify-center py-3"><i class="fas fa-user-plus"></i> Hesap Oluştur</button>
+          <p class="text-[11px] text-slate-400 mt-3 leading-snug">Kayıttan sonra e-postanıza doğrulama bağlantısı gelir. Buluşçu olarak yer aldığınız dosyaları görebilmeniz için <b>TTO'ya bildirdiğiniz e-posta adresiyle</b> kayıt olun.</p>
+        </div>
+        <p id="login-msg" class="hidden text-center text-xs mt-3"></p>
+      </div>
+    </div>
+    <div id="demo-quick" class="hidden mt-5 bg-white/10 border border-white/15 rounded-2xl p-4 text-white">
+      <p class="text-xs font-semibold mb-2 text-amber-300"><i class="fas fa-flask mr-1"></i> Demo hesapları (şifre: 123456)</p>
+      <div class="grid grid-cols-2 gap-2 text-xs" id="demo-quick-list"></div>
+    </div>
+    <p class="text-center mt-4"><button onclick="goPortal()" class="text-xs text-slate-400 hover:text-white underline"><i class="fas fa-building-columns mr-1"></i>Kurum değiştir</button></p>
+  </div>
+  </div>
+</div>
+
+<!-- EKRAN: E-POSTA DOĞRULAMA -->
+<div id="scr-verify" class="hidden fixed inset-0 bg-slate-100 flex items-center justify-center p-4">
+  <div class="card p-8 max-w-md w-full text-center">
+    <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mx-auto mb-4"><i class="fas fa-envelope-circle-check"></i></div>
+    <h2 class="text-xl font-bold mb-2">E-postanızı doğrulayın</h2>
+    <p class="text-sm text-slate-500 mb-1"><b id="vf-email"></b> adresine doğrulama bağlantısı gönderdik.</p>
+    <p class="text-sm text-slate-500 mb-6">Bağlantıya tıkladıktan sonra aşağıdaki düğmeye basın. E-posta gelmediyse istenmeyen (spam) klasörüne bakın.</p>
+    <div class="flex flex-col gap-2">
+      <button onclick="checkVerified()" class="btn btn-p justify-center py-3"><i class="fas fa-check"></i> Doğruladım, devam et</button>
+      <button onclick="resendVerify()" class="btn btn-s justify-center"><i class="fas fa-paper-plane"></i> Bağlantıyı yeniden gönder</button>
+      <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 mt-2">Çıkış yap</button>
+    </div>
+  </div>
+</div>
+
+<!-- EKRAN: UYGULAMA -->
+<div id="scr-app" class="hidden h-screen flex">
+  <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 select-none">
+    <div class="px-5 py-4 border-b border-slate-700/50 flex items-center gap-3">
+      <div id="sb-brand" class="flex-shrink-0"></div>
+      <div class="min-w-0"><div id="sb-tname" class="font-bold text-[13px] leading-tight">TTO Takip</div><div id="sb-org" class="text-[11px] text-slate-400 truncate">Teknoloji Transfer Ofisi</div></div>
+    </div>
+    <div class="px-5 py-3 border-b border-slate-700/50 flex items-center gap-2.5">
+      <div id="sb-avatar" class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold flex-shrink-0">?</div>
+      <div class="min-w-0"><div id="sb-name" class="text-sm font-medium truncate"></div><div id="sb-role" class="text-[11px] text-slate-400 truncate"></div></div>
+    </div>
+    <nav id="sb-nav" class="flex-1 overflow-y-auto py-3 px-3 space-y-0.5"></nav>
+    <div class="border-t border-slate-700/50 px-3 py-3 flex items-center gap-1">
+      <button onclick="openNotifs()" class="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 text-sm relative">
+        <i class="fas fa-bell"></i><span class="text-xs">Bildirimler</span>
+        <span id="notif-badge" class="hidden ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"></span>
+      </button>
+      <button onclick="doLogout()" title="Çıkış" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"><i class="fas fa-right-from-bracket"></i></button>
+    </div>
+  </aside>
+  <main class="flex-1 flex flex-col min-w-0">
+    <header class="bg-white border-b border-slate-100 px-6 py-3.5 flex items-center gap-4 flex-shrink-0">
+      <div class="min-w-0 flex-1"><h1 id="tb-title" class="text-lg font-bold truncate"></h1><p id="tb-sub" class="text-xs text-slate-400 truncate"></p></div>
+      <div id="tb-actions" class="flex items-center gap-2 flex-shrink-0"></div>
+    </header>
+    <div id="banner" class="hidden"></div>
+    <div id="view" class="flex-1 overflow-y-auto p-6"></div>
+  </main>
+</div>
+
+<!-- BİLDİRİM PANELİ -->
+<div id="panel-notif" class="hidden fixed inset-0 z-40" onclick="if(event.target===this)closeNotifs()">
+  <div class="absolute left-64 bottom-3 w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col slide-in">
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"><h3 class="font-bold text-sm">Bildirimler</h3><button onclick="markAllNotifsRead()" class="text-xs text-blue-600 hover:underline">Tümünü okundu say</button></div>
+    <div id="notif-list" class="overflow-y-auto flex-1"></div>
+  </div>
+</div>
+
+<!-- MODAL YIĞINI -->
+<div id="modals"></div>
+<!-- TOAST -->
+<div id="toasts" class="fixed bottom-4 right-4 z-[80] flex flex-col gap-2 items-end"></div>
+
+<script>
+// ============================================================
+// KURUMLAR (kurumlar.js dosyasından okunur; dosya yoksa bu liste kullanılır)
+// ============================================================
+const PLATFORM = Object.assign({name:'TTO Takip', tagline:'Üniversiteler için Teknoloji Transfer Ofisi Dosya Takip Platformu', contact:''}, window.TTO_PLATFORM||{});
+const KURUMLAR = (Array.isArray(window.TTO_KURUMLAR) && window.TTO_KURUMLAR.length) ? window.TTO_KURUMLAR : [
+  {id:'karabuk', name:'Karabük Üniversitesi', short:'KBÜ', city:'Karabük', color:'#1d4ed8', firebase:null},
+  {id:'itu', name:'İstanbul Teknik Üniversitesi', short:'İTÜ', city:'İstanbul', color:'#0f766e', firebase:null},
+  {id:'hacettepe', name:'Hacettepe Üniversitesi', short:'HÜ', city:'Ankara', color:'#b91c1c', firebase:null}
+];
+let TENANT = null; // seçili kurum
+const APP_VERSION = '1.1';
+
+// ============================================================
+// SABİTLER
+// ============================================================
+const TYPES = {
+  patent:  {label:'Patent (Buluş)',       short:'Patent',   icon:'fa-lightbulb',      cls:'bg-blue-100 text-blue-700'},
+  faydali: {label:'Faydalı Model',        short:'F. Model', icon:'fa-gears',          cls:'bg-cyan-100 text-cyan-700'},
+  tasarim: {label:'Endüstriyel Tasarım',  short:'Tasarım',  icon:'fa-pen-ruler',      cls:'bg-pink-100 text-pink-700'},
+  marka:   {label:'Marka',                short:'Marka',    icon:'fa-copyright',      cls:'bg-violet-100 text-violet-700'},
+  diger:   {label:'Diğer (Yazılım, Coğrafi İşaret…)', short:'Diğer', icon:'fa-folder', cls:'bg-slate-100 text-slate-600'}
+};
+const PHASES = {
+  tto: {label:"TTO'da İnceleniyor",   short:"TTO'da",      cls:'bg-amber-100 text-amber-800',   bar:'#f59e0b', icon:'fa-building-columns'},
+  tp:  {label:'TÜRKPATENT Sürecinde', short:'TÜRKPATENT\'te', cls:'bg-indigo-100 text-indigo-700', bar:'#6366f1', icon:'fa-hourglass-half'},
+  son: {label:'Sonuçlandı',           short:'Sonuçlandı',  cls:'bg-emerald-100 text-emerald-700', bar:'#10b981', icon:'fa-flag-checkered'}
+};
+const STAGES = {
+  basvuru:      {label:'Başvuru Alındı',                       phase:'tto', icon:'fa-inbox'},
+  on_inceleme:  {label:'TTO Ön İnceleme',                      phase:'tto', icon:'fa-magnifying-glass'},
+  eksik:        {label:'Buluşçudan Bilgi/Belge Bekleniyor',    phase:'tto', icon:'fa-file-circle-question', side:true},
+  kurul:        {label:'Değerlendirme / Hak Talebi Kararı',    phase:'tto', icon:'fa-scale-balanced'},
+  hazirlik:     {label:'Başvuru Hazırlığı (Vekil/Tarifname)',  phase:'tto', icon:'fa-file-pen'},
+  tp_basvuru:   {label:"TÜRKPATENT'e Başvuruldu",              phase:'tp',  icon:'fa-paper-plane'},
+  tp_arastirma: {label:'Araştırma Raporu Bekleniyor',          phase:'tp',  icon:'fa-microscope'},
+  tp_yayin:     {label:'Bültende Yayın / İtiraz Süresi',       phase:'tp',  icon:'fa-newspaper'},
+  tp_inceleme:  {label:'İnceleme (Esasa İlişkin)',             phase:'tp',  icon:'fa-list-check'},
+  tescil:       {label:'Tescil Edildi',                         phase:'son', icon:'fa-award', ok:true},
+  red:          {label:'Reddedildi',                            phase:'son', icon:'fa-circle-xmark', side:true, bad:true},
+  geri:         {label:'Geri Çekildi / Vazgeçildi',             phase:'son', icon:'fa-rotate-left', side:true, bad:true},
+  serbest:      {label:'Hak Talep Edilmedi (Buluşçuya Bırakıldı)', phase:'son', icon:'fa-hand-holding', side:true}
+};
+const FLOW = {
+  patent:  ['basvuru','on_inceleme','kurul','hazirlik','tp_basvuru','tp_arastirma','tp_yayin','tp_inceleme','tescil'],
+  faydali: ['basvuru','on_inceleme','kurul','hazirlik','tp_basvuru','tp_arastirma','tp_yayin','tescil'],
+  tasarim: ['basvuru','on_inceleme','hazirlik','tp_basvuru','tp_yayin','tescil'],
+  marka:   ['basvuru','on_inceleme','hazirlik','tp_basvuru','tp_yayin','tescil'],
+  diger:   ['basvuru','on_inceleme','hazirlik','tp_basvuru','tescil']
+};
+const ROLES = {
+  koordinator:     'Koordinatör',
+  koordinator_yrd: 'Koordinatör Yardımcısı',
+  sef:             'Şef',
+  personel:        'Personel / Uzman'
+};
+const KINDS = {akademik:'Akademik Personel', ogrenci:'Öğrenci', idari:'İdari Personel', harici:'Harici (Üniversite dışı)'};
+// Varsayılan beklenen TÜRKPATENT süreleri (ay) — Ayarlar ekranından değiştirilebilir
+let DEFAULT_SETTINGS = {
+  orgName: 'Teknoloji Transfer Ofisi',
+  ownerDefault: '',
+  expected: {patent:30, faydali:12, tasarim:6, marka:7, diger:12},
+  claimMonths: 4
+};
+// Rüçhan (yurt dışı öncelik) süresi, ay — SMK
+const PRIORITY_MONTHS = {patent:12, faydali:12, tasarim:6, marka:6};
+const CHUNK = 300000;               // bayt (base64 ≈ 400 KB)
+const MAX_FILE = 10*1024*1024;      // 10 MB (Firebase)
+const MAX_FILE_DEMO = 1.5*1024*1024;// demo: tarayıcı depolaması sınırlı
+const FILE_EXTS = ['pdf','doc','docx','xls','xlsx','ppt','pptx','odt','ods','txt','rtf','png','jpg','jpeg','gif','webp','svg','dwg','dxf','step','stp','stl','igs','iges','sldprt','sldasm','zip','rar','7z'];
+
+// ============================================================
+// YARDIMCILAR
+// ============================================================
+const $ = id => document.getElementById(id);
+function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function ek(email){ return String(email||'').trim().toLowerCase().replace(/\./g, ','); }
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
+function list(v){ return v ? Object.values(v).filter(x=>x!=null) : []; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function today(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function toDate(s){ if(!s) return null; const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function dStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fmtD(s){ if(!s) return ''; const [y,m,d]=s.split('-'); return d+'.'+m+'.'+y; }
+function fmtTs(ts){ if(!ts) return ''; const d=new Date(ts); return d.toLocaleDateString('tr-TR')+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
+function addMonths(s, m){ const d=toDate(s); if(!d) return null; const day=d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+m); const last=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); d.setDate(Math.min(day,last)); return dStr(d); }
+function daysBetween(a, b){ const A=toDate(a), B=toDate(b); if(!A||!B) return null; return Math.round((B-A)/86400000); }
+function durText(days){
+  if (days==null) return '';
+  const neg = days<0; days=Math.abs(days);
+  const y=Math.floor(days/365), m=Math.floor((days%365)/30.44), d=Math.round(days-y*365-m*30.44);
+  const parts=[]; if(y) parts.push(y+' yıl'); if(m) parts.push(m+' ay'); if(!y && (d||!parts.length)) parts.push(Math.max(0,d)+' gün');
+  return (neg?'-':'')+parts.join(' ');
+}
+function timeAgo(ts){ const s=Math.floor((Date.now()-ts)/1000); if(s<60) return 'az önce'; if(s<3600) return Math.floor(s/60)+' dk önce'; if(s<86400) return Math.floor(s/3600)+' sa önce'; if(s<86400*30) return Math.floor(s/86400)+' gün önce'; return new Date(ts).toLocaleDateString('tr-TR'); }
+function fileExt(n){ const m=/\.([^.]+)$/.exec(n||''); return m?m[1].toLowerCase():''; }
+function fmtSize(b){ if(b==null) return ''; if(b<1024) return b+' B'; if(b<1048576) return Math.round(b/1024)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function fileIcon(n){ const e=fileExt(n);
+  if(e==='pdf') return 'fa-file-pdf text-red-500'; if(['doc','docx','odt','rtf','txt'].includes(e)) return 'fa-file-word text-blue-600';
+  if(['xls','xlsx','ods'].includes(e)) return 'fa-file-excel text-green-600'; if(['ppt','pptx'].includes(e)) return 'fa-file-powerpoint text-orange-500';
+  if(['png','jpg','jpeg','gif','webp','svg'].includes(e)) return 'fa-file-image text-purple-500'; if(['zip','rar','7z'].includes(e)) return 'fa-file-zipper text-amber-600';
+  return 'fa-file-lines text-slate-500'; }
+function bytesToB64(u8){ let s=''; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); }
+function b64ToBytes(b){ const s=atob(b); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+function asciiName(s){ const map={'ç':'c','Ç':'C','ğ':'g','Ğ':'G','ı':'i','İ':'I','ö':'o','Ö':'O','ş':'s','Ş':'S','ü':'u','Ü':'U'}; return String(s||'dosya').replace(/[çÇğĞıİöÖşŞüÜ]/g,c=>map[c]).replace(/[^\w.\-]+/g,'_'); }
+function initials(n){ const p=String(n||'?').trim().split(/\s+/); return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toLocaleUpperCase('tr'); }
+const PUSH_CHARS='-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+function pushId(){ let t=Date.now(), s=''; for(let i=0;i<8;i++){ s=PUSH_CHARS.charAt(t%64)+s; t=Math.floor(t/64); } for(let i=0;i<12;i++) s+=PUSH_CHARS.charAt(Math.floor(Math.random()*64)); return s; }
+function isPermErr(e){ return e && /permission[_ ]denied/i.test(String(e.code||'')+' '+String(e.message||'')); }
+function errMsg(e){
+  const c = e && e.code || '';
+  const M = {
+    'auth/invalid-credential':'E-posta veya şifre hatalı.', 'auth/wrong-password':'E-posta veya şifre hatalı.', 'auth/user-not-found':'Bu e-posta ile kayıtlı hesap yok. Önce "Kayıt Ol" sekmesinden hesap açın.',
+    'auth/invalid-login-credentials':'E-posta veya şifre hatalı.',
+    'auth/email-already-in-use':'Bu e-posta ile zaten bir hesap var. "Giriş Yap" sekmesini kullanın.', 'auth/weak-password':'Şifre en az 6 karakter olmalı.',
+    'auth/invalid-email':'E-posta adresi geçersiz.', 'auth/too-many-requests':'Çok fazla deneme yapıldı. Biraz bekleyip tekrar deneyin.',
+    'auth/operation-not-allowed':'Firebase\'de E-posta/Şifre girişi kapalı. Authentication → Sign-in method → Email/Password\'u açın.',
+    'auth/network-request-failed':'İnternet bağlantısı kurulamadı.'
+  };
+  if (M[c]) return M[c];
+  if (isPermErr(e)) return 'Bu işlem için yetkiniz yok.';
+  return e && e.message ? e.message : String(e);
+}
+
+// ============================================================
+// ARKA UÇ: FIREBASE
+// ============================================================
+function makeFirebaseBackend(cfg, name){
+  const app = firebase.apps.find(a=>a.name===name) || firebase.initializeApp(cfg, name);
+  const auth = app.auth(), db = app.database();
+  const u2 = u => u ? {email:u.email, verified:u.emailVerified} : null;
+  return {
+    kind: 'firebase',
+    onAuth(cb){ return auth.onAuthStateChanged(u => cb(u2(u))); },
+    async signIn(e,p){ await auth.signInWithEmailAndPassword(e,p); },
+    async signUp(e,p){ const c = await auth.createUserWithEmailAndPassword(e,p); try { await c.user.sendEmailVerification(); } catch(err){ console.warn(err); } },
+    async sendVerify(){ if (auth.currentUser) await auth.currentUser.sendEmailVerification(); },
+    async refreshUser(){ const u=auth.currentUser; if(!u) return null; await u.reload(); await u.getIdToken(true); return u2(auth.currentUser); },
+    async resetPass(e){ await auth.sendPasswordResetEmail(e); },
+    async signOut(){ await auth.signOut(); },
+    async get(p){ const s = await db.ref(p).get(); return s.exists() ? s.val() : null; },
+    set(p,v){ return db.ref(p).set(v); },
+    update(p,v){ return db.ref(p||undefined).update(v); },
+    remove(p){ return db.ref(p).remove(); },
+    newKey(p){ return db.ref(p).push().key; },
+    on(p, cb, err){ const r=db.ref(p); const h=s=>cb(s.exists()?s.val():null); r.on('value', h, err||(e=>console.warn('dinleme', p, e))); return ()=>r.off('value', h); },
+    async txn(p, fn){ const r = await db.ref(p).transaction(fn); return r.snapshot.val(); }
+  };
+}
+
+// ============================================================
+// ARKA UÇ: DEMO (tarayıcı içi, localStorage)
+// ============================================================
+function makeDemoBackend(slug){
+  const KEY='tto_demo_db_v1_'+slug, SKEY='tto_demo_session_'+slug;
+  let tree; try { tree = JSON.parse(localStorage.getItem(KEY)); } catch(e){}
+  if (!tree || !tree.__auth) { tree = demoSeed(); save(); }
+  let listeners = [], authCbs = [];
+  let cur = null; try { cur = JSON.parse(localStorage.getItem(SKEY)); } catch(e){}
+  if (cur && !(tree.__auth && tree.__auth[ek(cur.email)])) cur = null;
+  const parts = p => String(p||'').split('/').filter(Boolean);
+  const clone = v => v==null ? null : JSON.parse(JSON.stringify(v));
+  function clean(v){ if (v==null) return null; if (typeof v!=='object') return v; const o={}; let any=false; for (const [k,x] of Object.entries(v)) { const c=clean(x); if (c!=null) { o[k]=c; any=true; } } return any?o:null; }
+  function getAt(p){ let n=tree; for (const k of parts(p)) { if (n==null||typeof n!=='object') return null; n=n[k]; } return n===undefined?null:clone(n); }
+  function setAt(p, v){
+    const ks = parts(p); v = clean(clone(v));
+    if (!ks.length) { tree = v || {}; return; }
+    let n = tree; const chain=[];
+    for (let i=0;i<ks.length-1;i++) { if (n[ks[i]]==null || typeof n[ks[i]]!=='object') n[ks[i]]={}; chain.push([n,ks[i]]); n=n[ks[i]]; }
+    const last = ks[ks.length-1];
+    if (v==null) delete n[last]; else n[last]=v;
+    for (let i=chain.length-1;i>=0;i--) { const [par,k]=chain[i]; if (par[k] && typeof par[k]==='object' && !Object.keys(par[k]).length) delete par[k]; else break; }
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(tree)); } catch(e){ toast('Demo depolama alanı doldu. "Demoyu sıfırla" ile temizleyin.','error'); throw new Error('Demo depolama alanı doldu'); } }
+  const rel = (a,b) => a===b || !a || !b || a.startsWith(b+'/') || b.startsWith(a+'/');
+  function notify(paths){
+    setTimeout(() => { listeners.slice().forEach(l => { if (paths.some(p => rel(l.path, p))) { try { l.cb(getAt(l.path)); } catch(e){ console.error(e); } } }); }, 0);
+  }
+  const norm = p => parts(p).join('/');
+  const delay = () => new Promise(r=>setTimeout(r, 40));
+  const emitAuth = () => setTimeout(()=>authCbs.forEach(cb=>cb(cur?{...cur}:null)),0);
+  return {
+    kind: 'demo',
+    onAuth(cb){ authCbs.push(cb); setTimeout(()=>cb(cur?{...cur}:null),0); return ()=>{ authCbs=authCbs.filter(x=>x!==cb); }; },
+    async signIn(e,p){ await delay(); const a = tree.__auth && tree.__auth[ek(e)]; if (!a || a.pass!==p) { const er=new Error('x'); er.code = a?'auth/wrong-password':'auth/user-not-found'; throw er; } cur={email:a.email, verified:true}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
+    async signUp(e,p){ await delay(); const k=ek(e); if (tree.__auth && tree.__auth[k]) { const er=new Error('x'); er.code='auth/email-already-in-use'; throw er; } if ((p||'').length<6) { const er=new Error('x'); er.code='auth/weak-password'; throw er; }
+      setAt('__auth/'+k, {email:e.trim().toLowerCase(), pass:p}); save(); cur={email:e.trim().toLowerCase(), verified:true}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
+    async sendVerify(){},
+    async refreshUser(){ return cur?{...cur}:null; },
+    async resetPass(){ await delay(); },
+    async signOut(){ cur=null; localStorage.removeItem(SKEY); emitAuth(); },
+    async get(p){ await delay(); return getAt(norm(p)); },
+    async set(p,v){ setAt(norm(p), v); save(); notify([norm(p)]); },
+    async update(p,v){ const base=norm(p); const ch=[]; for (const [k,x] of Object.entries(v||{})) { const full=norm((base?base+'/':'')+k); setAt(full, x); ch.push(full); } save(); notify(ch); },
+    async remove(p){ setAt(norm(p), null); save(); notify([norm(p)]); },
+    newKey(){ return pushId(); },
+    on(p, cb){ const l={path:norm(p), cb}; listeners.push(l); setTimeout(()=>cb(getAt(l.path)),0); return ()=>{ listeners=listeners.filter(x=>x!==l); }; },
+    async txn(p, fn){ const v = fn(getAt(norm(p))); setAt(norm(p), v); save(); notify([norm(p)]); return v; }
+  };
+}
+
+// ============================================================
+// DEMO ÖRNEK VERİLERİ
+// ============================================================
+function demoSeed(){
+  const ago = n => { const d=new Date(); d.setDate(d.getDate()-n); return dStr(d); };
+  const ts = s => toDate(s).getTime()+10*3600000;
+  const T = {__auth:{}, staff:{}, users:{}, files:{}, internal:{}, userFiles:{}, notifs:{}, staffNotifs:{}, docs:{},
+    meta:{hasCoordinator:true}, settings:JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), counters:{'2023':9,'2024':3,'2025':12,'2026':5}};
+  const acct = (email) => { T.__auth[ek(email)] = {email, pass:'123456'}; };
+  const staff = (email, name, role) => { acct(email); T.staff[ek(email)] = {email, name, role, active:true, addedAt:Date.now()}; };
+  staff('koordinator@tto.demo','Prof. Dr. Ayşe Demir','koordinator');
+  staff('yardimci@tto.demo','Doç. Dr. Mehmet Kaya','koordinator_yrd');
+  staff('sef@tto.demo','Fatma Yıldız','sef');
+  staff('uzman1@tto.demo','Emre Çelik','personel');
+  staff('uzman2@tto.demo','Zeynep Arslan','personel');
+  const P = {
+    can:   {name:'Dr. Öğr. Üyesi Can Özkan', email:'akademisyen@tto.demo', kind:'akademik', unit:'Mühendislik Fak. / Makine Müh.'},
+    elif:  {name:'Elif Şahin', email:'ogrenci@tto.demo', kind:'ogrenci', unit:'Mekatronik Müh. (Yüksek Lisans)'},
+    hasan: {name:'Hasan Koç', email:'idari@tto.demo', kind:'idari', unit:'Yapı İşleri ve Teknik Daire Bşk.'},
+    burak: {name:'Burak Aydın', email:'harici@tto.demo', kind:'harici', unit:'ABC Makina Ltd. Şti. (örnek)'},
+    ali:   {name:'Prof. Dr. Ali Vural', email:'ali.vural@ornek.edu.tr', kind:'akademik', unit:'Mühendislik Fak. / Makine Müh.'},
+    selin: {name:'Dr. Selin Acar', email:'selin.acar@ornek.edu.tr', kind:'akademik', unit:'Teknoloji Fak. / Enerji Sist. Müh.'},
+    murat: {name:'Murat Tekin', email:'murat.tekin@ornek.edu.tr', kind:'ogrenci', unit:'Bilgisayar Müh. (Lisans)'}
+  };
+  ['can','elif','hasan','burak'].forEach(k => { acct(P[k].email); T.users[ek(P[k].email)] = {...P[k], phone:'', createdAt:Date.now()-86400000*200}; });
+  const resp = {e:'uzman1@tto.demo', n:'Emre Çelik'}, resp2 = {e:'uzman2@tto.demo', n:'Zeynep Arslan'}, resp3={e:'sef@tto.demo', n:'Fatma Yıldız'};
+  let n = 0;
+  function file(o){
+    const id = 'demo'+String(++n).padStart(3,'0');
+    const inv = {}; o.inv.forEach((k,i) => { const p=P[k]; inv[ek(p.email)] = {...p, order:i, share: o.shares?o.shares[i]:null}; });
+    const history = {};
+    o.hist.forEach(([st, d, note], i) => { history['h'+i] = {stage:st, date:d, at:ts(d), note:note||'', byName:(o.r||resp).n}; });
+    const last = o.hist[o.hist.length-1];
+    T.files[id] = {id, ttoNo:o.no||null, title:o.title, type:o.type, summary:o.summary||'', owner:o.owner||DEFAULT_SETTINGS.ownerDefault,
+      inventors:inv, stage:last[0], stageDate:last[1], ttoDate:o.hist[0][1], tpAppDate:o.tpd||null, tpAppNo:o.tpn||null,
+      pubDate:o.pub||null, regDate:o.reg||null, regNo:o.regn||null, responsible:ek((o.r||resp).e), responsibleName:(o.r||resp).n,
+      source:o.portal?'portal':'tto', createdAt:ts(o.hist[0][1]), createdBy:o.portal?ek(P[o.inv[0]].email):ek((o.r||resp).e), createdByName:o.portal?P[o.inv[0]].name:(o.r||resp).n,
+      updatedAt:ts(last[1]), history};
+    Object.keys(inv).forEach(k => { (T.userFiles[k] = T.userFiles[k]||{})[id] = true; });
+    if (o.notes || o.dl) T.internal[id] = {notes:{}, deadlines:{}};
+    (o.notes||[]).forEach(([d,t],i) => T.internal[id].notes['n'+i] = {at:ts(d), byName:(o.r||resp).n, text:t});
+    (o.dl||[]).forEach(([t,d,done],i) => T.internal[id].deadlines['d'+i] = {title:t, date:d, done:!!done});
+    return id;
+  }
+  file({no:'TTO-2024-003', type:'patent', title:'Auxetik yapılı enerji sönümleyici çarpışma kutusu', inv:['can','elif','ali'], shares:[40,30,30],
+    summary:'Negatif Poisson oranına sahip hücresel yapı ile çarpışma enerjisini kademeli sönümleyen taşıt çarpışma kutusu.',
+    tpd:ago(420), tpn:'2024/012345',
+    hist:[['basvuru',ago(520),'Buluş bildirim formu alındı.'],['on_inceleme',ago(505)],['kurul',ago(470),'Kurul, üniversite adına tam hak talebinde bulunulmasına karar verdi.'],['hazirlik',ago(450),'Tarifname patent vekiliyle hazırlanıyor.'],['tp_basvuru',ago(420),"Başvuru TÜRKPATENT'e yapıldı."],['tp_arastirma',ago(300),'Araştırma talebi yapıldı, rapor bekleniyor.']],
+    notes:[[ago(300),'Araştırma ücreti ödendi, dekont dosyada.']], dl:[['İnceleme talebi için takip', ago(-40)]]});
+  file({no:'TTO-2025-001', type:'faydali', title:'Hızlı ayarlanabilir tezgâh mengenesi', inv:['hasan','can'], r:resp2,
+    tpd:ago(260), tpn:'2025/004567', pub:ago(25),
+    hist:[['basvuru',ago(330)],['on_inceleme',ago(318)],['kurul',ago(300)],['hazirlik',ago(285)],['tp_basvuru',ago(260)],['tp_arastirma',ago(200)],['tp_yayin',ago(25),'Bültende yayımlandı; 3 aylık itiraz süresi başladı.']]});
+  file({no:'TTO-2025-004', type:'tasarim', title:'Ergonomik laboratuvar taburesi', inv:['elif'], r:resp2,
+    tpd:ago(330), tpn:'2025/000890', pub:ago(250), reg:ago(160), regn:'2025 01234',
+    hist:[['basvuru',ago(370)],['on_inceleme',ago(360)],['hazirlik',ago(345)],['tp_basvuru',ago(330)],['tp_yayin',ago(250)],['tescil',ago(160),'Tasarım tescil belgesi alındı. Tebrikler!']]});
+  file({no:'TTO-2025-007', type:'marka', title:(TENANT?TENANT.short:'TTO')+' InnoLab', inv:['can'], r:resp3, summary:'Üniversite inovasyon laboratuvarı için marka başvurusu (9, 41, 42. sınıflar).',
+    tpd:ago(110), tpn:'2025/098765', pub:ago(20),
+    hist:[['basvuru',ago(150)],['on_inceleme',ago(140)],['hazirlik',ago(125)],['tp_basvuru',ago(110)],['tp_yayin',ago(20),'Marka bültende yayımlandı; 2 aylık itiraz süresi devam ediyor.']]});
+  file({no:'TTO-2026-002', type:'patent', title:'Hidrojen katkılı doğal gaz hatları için akış ölçer düzeneği', inv:['can','ali','elif','burak','selin','murat'], shares:[25,20,15,15,15,10],
+    summary:'Hidrojen–doğal gaz karışımlarında diyafram ömrünü uzatan ölçüm düzeneği. Sanayi ortağıyla ortak buluş.',
+    hist:[['basvuru',ago(95),'Buluş bildirim formu 6 buluşçu imzasıyla alındı.'],['on_inceleme',ago(80),'Ön araştırma yapıldı; benzer 3 patent bulundu, farklılıklar raporlandı.'],['kurul',ago(10),'Fikri Mülkiyet Değerlendirme Kurulu gündemine alındı.']],
+    notes:[[ago(70),'Sanayi ortağıyla hak paylaşım protokolü taslağı hazırlanmalı.']], dl:[['Kurul toplantısı', ago(-6)]]});
+  file({no:'TTO-2026-005', type:'patent', title:'Akıllı sulama için TinyML tabanlı toprak nemi tahmin sistemi', inv:['murat','can'], r:resp2,
+    hist:[['basvuru',ago(30)],['on_inceleme',ago(20)],['eksik',ago(5),'Buluşun çalışma prensibini gösteren şekiller ve deney verileri bekleniyor.']],
+    dl:[['Eksik belge hatırlatması', ago(2)]]});
+  file({type:'patent', title:'Titreşim sönümleyici ray altı elastomer ped', inv:['hasan','burak'], portal:true,
+    summary:'Demiryolu traversi altında rezonans genliğini azaltan çok katmanlı ped.',
+    hist:[['basvuru',ago(2),'Başvuru TTO portalı üzerinden yapıldı.']]});
+  file({no:'TTO-2023-009', type:'patent', title:'Kompozit takviyeli gaz sayacı diyaframı', inv:['ali','can'], r:resp3,
+    tpd:ago(1200), tpn:'2023/007788', pub:ago(1000), reg:ago(250), regn:'TR 2023 007788 B',
+    hist:[['basvuru',ago(1290)],['on_inceleme',ago(1280)],['kurul',ago(1250)],['hazirlik',ago(1225)],['tp_basvuru',ago(1200)],['tp_arastirma',ago(1150)],['tp_yayin',ago(1000)],['tp_inceleme',ago(700)],['tescil',ago(250),'Patent tescil edildi.']],
+    dl:[['4. yıl yıllık ücret ödemesi', ago(-15)]]});
+  file({no:'TTO-2025-010', type:'patent', title:'Atık ısı geri kazanımlı endüksiyon fırını kontrol yöntemi', inv:['selin','hasan'], r:resp3,
+    tpd:ago(980), tpn:'2023/021212', pub:ago(780),
+    hist:[['basvuru',ago(1060)],['on_inceleme',ago(1050)],['kurul',ago(1020)],['hazirlik',ago(1000)],['tp_basvuru',ago(980)],['tp_arastirma',ago(930)],['tp_yayin',ago(780)],['tp_inceleme',ago(500),'İnceleme talebi yapıldı.']]});
+  file({no:'TTO-2025-012', type:'faydali', title:'Katlanabilir öğrenci çizim masası', inv:['murat'], r:resp2,
+    tpd:ago(300), tpn:'2025/011223',
+    hist:[['basvuru',ago(360)],['on_inceleme',ago(350)],['kurul',ago(330)],['hazirlik',ago(315)],['tp_basvuru',ago(300)],['tp_arastirma',ago(200)],['red',ago(40),'Araştırma raporunda yenilik bulunamadığı için başvuru reddedildi.']]});
+  file({no:'TTO-2026-003', type:'tasarim', title:'Modüler güneş paneli taşıyıcı ayak seti', inv:['elif','selin'],
+    hist:[['basvuru',ago(45)],['on_inceleme',ago(35)],['hazirlik',ago(12),'Görseller tasarımcıdan bekleniyor.']]});
+  T.staffNotifs.s1 = {at:Date.now()-2*86400000, text:'Hasan Koç portal üzerinden yeni başvuru yaptı: "Titreşim sönümleyici ray altı elastomer ped"', fid:'demo007', fromEk:ek(P.hasan.email)};
+  T.notifs[ek(P.can.email)] = {
+    a1:{at:Date.now()-10*86400000, text:'"Hidrojen katkılı doğal gaz hatları için akış ölçer düzeneği" dosyası → Değerlendirme / Hak Talebi Kararı', fid:'demo005', read:false},
+    a2:{at:Date.now()-20*86400000, text:'"'+(TENANT?TENANT.short:'TTO')+' InnoLab" dosyası → Bültende Yayın / İtiraz Süresi', fid:'demo004', read:false}
+  };
+  return T;
+}
+
+// ============================================================
+// DURUM
+// ============================================================
+let B = null; // arka uç
+const S = {
+  user:null, role:null, me:null, profile:null,
+  files:{}, internal:{}, staff:{}, users:{}, userFilesAll:{}, staffNotifs:{}, notifs:{}, settings:{...DEFAULT_SETTINGS}, meta:{},
+  myFileIds:[], fileUnsubs:{}, unsubs:[], loaded:{},
+  view:null, fileMode:'table', filters:{q:'',type:'',phase:'',stage:'',resp:'',year:''}, peopleQ:'', peopleKind:'',
+  detailId:null, modalStack:[]
+};
+const isStaff = () => S.role==='staff';
+const myRole = () => isStaff() && S.me ? S.me.role : null;
+const isMgr = () => ['koordinator','koordinator_yrd'].includes(myRole());
+const isCoord = () => myRole()==='koordinator';
+const setting = () => ({...DEFAULT_SETTINGS, ...(S.settings||{}), expected:{...DEFAULT_SETTINGS.expected, ...((S.settings||{}).expected||{})}});
+
+// ============================================================
+// BAŞLATMA
+// ============================================================
+function show(id){ ['scr-portal','scr-login','scr-verify','scr-app'].forEach(s => $(s).classList.toggle('hidden', s!==id)); }
+function findTenant(id){ id=String(id||'').toLowerCase(); return KURUMLAR.find(k=>k.id===id) || null; }
+function tenantUrl(id, demo){ return location.pathname+'?kurum='+encodeURIComponent(id)+(demo?'&demo=1':''); }
+function brandMark(t, size){
+  size = size||48; const r = Math.round(size*0.28), fs = Math.round(size*(String(t.short||'').length>3?0.26:0.32));
+  const mono = `<div style="width:${size}px;height:${size}px;border-radius:${r}px;background:${esc(t.color||'#2563eb')};font-size:${fs}px" class="text-white font-bold flex items-center justify-center tracking-tight shadow-sm">${esc(t.short||initials(t.name))}</div>`;
+  if (!t.logo) return mono;
+  return `<div style="width:${size}px;height:${size}px;border-radius:${r}px" class="bg-white flex items-center justify-center overflow-hidden shadow-sm"><img src="${esc(t.logo)}" alt="${esc(t.name)}" style="max-width:88%;max-height:88%;object-fit:contain" onerror="this.parentNode.outerHTML=decodeURIComponent('${encodeURIComponent(mono)}')"></div>`;
+}
+function boot(){
+  const q = new URLSearchParams(location.search);
+  TENANT = findTenant(q.get('kurum'));
+  if (!TENANT) { showPortal(q.get('kurum')); return; }
+  try { localStorage.setItem('tto_last_kurum', TENANT.id); } catch(e){}
+  DEFAULT_SETTINGS = {...DEFAULT_SETTINGS, orgName: TENANT.name+' Teknoloji Transfer Ofisi', ownerDefault: TENANT.name};
+  document.title = TENANT.name+' — TTO Takip';
+  $('login-brand').innerHTML = brandMark(TENANT, 72); $('login-tname').textContent = TENANT.name;
+  $('sb-brand').innerHTML = brandMark(TENANT, 36); $('sb-tname').textContent = TENANT.name;
+  $('demo-tname').textContent = TENANT.name;
+  const cfg = TENANT.firebase;
+  const demo = q.get('demo')==='1' || !cfg || !cfg.apiKey;
+  if (demo) B = makeDemoBackend(TENANT.id);
+  else {
+    if (typeof firebase==='undefined') { show('scr-login'); toast('Firebase kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.','error'); return; }
+    try { B = makeFirebaseBackend(cfg, 'tto-'+TENANT.id); } catch(e){ console.error(e); show('scr-login'); toast('Bağlantı kurulamadı: '+errMsg(e),'error'); return; }
+  }
+  $('demo-band').classList.toggle('hidden', B.kind!=='demo');
+  if (B.kind==='demo') { document.body.style.paddingTop='28px'; $('scr-app').style.height='calc(100vh - 28px)'; renderDemoQuick(); }
+  setLoginTab('login');
+  B.onAuth(onAuthChange);
+}
+function goPortal(){ location.href = location.pathname; }
+function showPortal(unknown){
+  show('scr-portal');
+  document.title = PLATFORM.name+' — Kurum Seçimi';
+  $('pt-name').textContent = PLATFORM.name; $('pt-tagline').textContent = PLATFORM.tagline;
+  $('pt-contact').innerHTML = PLATFORM.contact ? `Kurumunuz listede yok mu? <a class="text-blue-600 font-semibold hover:underline" href="mailto:${esc(PLATFORM.contact)}?subject=${encodeURIComponent(PLATFORM.name+' - kurum başvurusu')}">Platforma katılmak için bize yazın</a>` : '';
+  if (unknown) toast('"'+unknown+'" adlı kurum bulunamadı. Listeden seçin.','error');
+  renderPortal();
+}
+function renderPortal(){
+  const q = ($('pt-q').value||'').trim().toLocaleLowerCase('tr');
+  const ks = KURUMLAR.filter(k => k.listed!==false && (!q || (k.name+' '+(k.city||'')+' '+(k.short||'')).toLocaleLowerCase('tr').includes(q)))
+    .sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  let last=null; try { last = findTenant(localStorage.getItem('tto_last_kurum')); } catch(e){}
+  $('pt-last').innerHTML = (last && !q) ? `<a href="${esc(tenantUrl(last.id))}" class="card p-4 mb-5 flex items-center gap-4 hover:shadow-md hover:border-blue-200 transition border-blue-100 bg-blue-50/40">${brandMark(last,44)}<div class="flex-1 min-w-0"><div class="text-[11px] font-semibold text-blue-700 uppercase tracking-wide">Son girdiğiniz kurum</div><div class="font-bold truncate">${esc(last.name)}</div></div><span class="btn btn-p">Devam et <i class="fas fa-arrow-right"></i></span></a>` : '';
+  $('pt-grid').innerHTML = ks.map(k => { const live = k.firebase && k.firebase.apiKey;
+    return `<a href="${esc(tenantUrl(k.id))}" class="card p-5 flex items-center gap-4 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition group">
+      ${brandMark(k, 60)}
+      <div class="flex-1 min-w-0"><div class="font-bold text-slate-800 leading-snug group-hover:text-blue-700">${esc(k.name)}</div>
+        <div class="text-xs text-slate-400 mt-0.5"><i class="fas fa-location-dot mr-1"></i>${esc(k.city||'')}</div>
+        <div class="mt-2">${live?'<span class="chip bg-emerald-50 text-emerald-700"><i class="fas fa-circle-check"></i>Aktif</span>':'<span class="chip bg-amber-50 text-amber-700"><i class="fas fa-flask"></i>Demo</span>'}</div></div>
+      <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500"></i></a>`; }).join('') || '<div class="col-span-full text-center text-slate-400 py-10">Kurum bulunamadı.</div>';
+}
+function demoReset(){ if (!confirm('Bu kurumun demo verileri silinip örnek veriler yeniden yüklensin mi?')) return; localStorage.removeItem('tto_demo_db_v1_'+TENANT.id); localStorage.removeItem('tto_demo_session_'+TENANT.id); location.reload(); }
+function renderDemoQuick(){
+  $('demo-quick').classList.remove('hidden');
+  const acc = [['koordinator@tto.demo','Koordinatör','fa-user-tie'],['uzman1@tto.demo','TTO Personeli','fa-id-badge'],['akademisyen@tto.demo','Akademisyen (6 dosya)','fa-chalkboard-user'],['ogrenci@tto.demo','Öğrenci','fa-user-graduate'],['idari@tto.demo','İdari Personel','fa-briefcase'],['harici@tto.demo','Harici Buluşçu','fa-industry']];
+  $('demo-quick-list').innerHTML = acc.map(([e,l,i]) => `<button onclick="demoLogin('${e}')" class="text-left bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2"><i class="fas ${i} mr-1.5 text-amber-300"></i>${l}</button>`).join('');
+}
+async function demoLogin(e){ $('li-email').value=e; $('li-pass').value='123456'; setLoginTab('login'); await doLogin(); }
+
+// ============================================================
+// GİRİŞ / KAYIT
+// ============================================================
+let loginTab='login';
+function setLoginTab(t){
+  loginTab=t;
+  $('lf-login').classList.toggle('hidden', t!=='login'); $('lf-register').classList.toggle('hidden', t!=='register');
+  const on='flex-1 py-3.5 text-blue-600 border-b-2 border-blue-600', off='flex-1 py-3.5 text-slate-400 border-b-2 border-transparent hover:text-slate-600';
+  $('lt-login').className = t==='login'?on:off; $('lt-register').className = t==='register'?on:off;
+  $('login-msg').classList.add('hidden');
+}
+function loginMsg(msg, ok){ const el=$('login-msg'); el.textContent=msg; el.className='text-center text-xs mt-3 '+(ok?'text-emerald-600':'text-red-500'); }
+function busy(btn, on, html){ if (on) { btn.dataset.html = btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Lütfen bekleyin…'; } else { btn.disabled=false; btn.innerHTML = html || btn.dataset.html; } }
+async function doLogin(){
+  const e=$('li-email').value.trim(), p=$('li-pass').value;
+  if (!validEmail(e)) return loginMsg('Geçerli bir e-posta girin.');
+  if (!p) return loginMsg('Şifrenizi girin.');
+  busy($('btn-login'), true);
+  try { await B.signIn(e,p); } catch(err){ loginMsg(errMsg(err)); }
+  busy($('btn-login'), false);
+}
+async function doRegister(){
+  const g = id => $(id).value.trim();
+  const name=g('rg-name'), email=g('rg-email').toLowerCase(), p=$('rg-pass').value, p2=$('rg-pass2').value, kind=$('rg-kind').value, unit=g('rg-unit'), phone=g('rg-phone');
+  if (name.length<3) return loginMsg('Adınızı ve soyadınızı yazın.');
+  if (!validEmail(email)) return loginMsg('Geçerli bir e-posta girin.');
+  if (p.length<6) return loginMsg('Şifre en az 6 karakter olmalı.');
+  if (p!==p2) return loginMsg('Şifreler eşleşmiyor.');
+  localStorage.setItem('tto_pending_profile', JSON.stringify({email, name, kind, unit, phone}));
+  busy($('btn-register'), true);
+  try { await B.signUp(email, p); } catch(err){ loginMsg(errMsg(err)); }
+  busy($('btn-register'), false);
+}
+async function doForgot(){
+  const e = $('li-email').value.trim();
+  if (!validEmail(e)) return loginMsg('Önce e-posta adresinizi yazın, sonra "Şifremi unuttum"a basın.');
+  try { await B.resetPass(e); loginMsg(B.kind==='demo'?'Demo modunda e-posta gönderilmez. Tüm demo şifreleri: 123456':'Şifre sıfırlama bağlantısı e-postanıza gönderildi.', true); }
+  catch(err){ loginMsg(errMsg(err)); }
+}
+async function resendVerify(){ try { await B.sendVerify(); toast('Doğrulama bağlantısı yeniden gönderildi.','success'); } catch(e){ toast(errMsg(e),'error'); } }
+async function checkVerified(){ try { const u = await B.refreshUser(); if (u && u.verified) onAuthChange(u); else toast('E-posta henüz doğrulanmamış görünüyor. Bağlantıya tıkladığınızdan emin olun.','error'); } catch(e){ toast(errMsg(e),'error'); } }
+async function doLogout(){ teardown(); try { await B.signOut(); } catch(e){} }
+
+let authSeq = 0;
+async function onAuthChange(u){
+  const seq = ++authSeq;
+  if (!u) { teardown(); S.user=null; show('scr-login'); return; }
+  try { if (B.kind==='firebase') { const f = await B.refreshUser(); if (f) u = f; } } catch(e){ console.warn(e); }
+  if (seq!==authSeq) return;
+  S.user = {email:u.email.toLowerCase(), ek:ek(u.email), verified:u.verified};
+  if (!u.verified) { $('vf-email').textContent = u.email; show('scr-verify'); return; }
+  try { await enterApp(); } catch(e){ console.error(e); toast('Uygulama açılamadı: '+errMsg(e),'error'); show('scr-login'); }
+}
+
+async function enterApp(){
+  teardown();
+  const me = S.user.ek;
+  const [meta, staffRec, profile, settings] = await Promise.all([
+    B.get('meta').catch(()=>null), B.get('staff/'+me).catch(()=>null), B.get('users/'+me).catch(()=>null), B.get('settings').catch(()=>null)
+  ]);
+  S.meta = meta||{}; S.settings = settings||{};
+  S.role = staffRec && staffRec.active ? 'staff' : 'applicant';
+  S.me = staffRec; S.profile = profile;
+  // kayıt sırasında girilen profil bilgisi (doğrulamadan önce yazılamaz)
+  const pend = (()=>{ try { return JSON.parse(localStorage.getItem('tto_pending_profile')); } catch(e){ return null; } })();
+  if (!profile && pend && pend.email===S.user.email) {
+    const p = {email:S.user.email, name:pend.name, kind:pend.kind, unit:pend.unit||'', phone:pend.phone||'', createdAt:Date.now()};
+    try { await B.set('users/'+me, p); S.profile = p; localStorage.removeItem('tto_pending_profile'); } catch(e){ console.warn(e); }
+  }
+  show('scr-app');
+  updateSidebarUser(); buildNav(); startListeners();
+  goto(isStaff() ? 'dashboard' : 'myfiles');
+  if (!isStaff() && !S.profile) openProfileModal(true);
+  renderBanner();
+}
+function teardown(){
+  S.unsubs.forEach(f=>{ try{f();}catch(e){} }); S.unsubs=[];
+  Object.values(S.fileUnsubs).forEach(f=>{ try{f();}catch(e){} }); S.fileUnsubs={};
+  Object.assign(S, {files:{}, internal:{}, staff:{}, users:{}, userFilesAll:{}, staffNotifs:{}, notifs:{}, myFileIds:[], loaded:{}, role:null, me:null, profile:null, view:null, detailId:null});
+  closeAllModals(); closeNotifs(); $('toasts').innerHTML='';
+}
+function updateSidebarUser(){
+  const name = isStaff() ? S.me.name : (S.profile && S.profile.name) || S.user.email;
+  $('sb-name').textContent = name;
+  $('sb-role').textContent = isStaff() ? ROLES[S.me.role] : (S.profile ? KINDS[S.profile.kind]||'Buluşçu' : 'Buluşçu');
+  $('sb-avatar').textContent = initials(name);
+  $('sb-avatar').className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 '+(isStaff()?'bg-blue-500':'bg-emerald-500');
+  $('sb-org').textContent = 'Teknoloji Transfer Ofisi';
+}
+function renderBanner(){
+  const el = $('banner');
+  if (!S.meta.hasCoordinator && B) {
+    el.className = 'bg-blue-50 border-b border-blue-200 px-6 py-3 text-sm text-blue-900 flex items-center gap-3';
+    el.innerHTML = `<i class="fas fa-circle-info"></i><span class="flex-1"><b>İlk kurulum:</b> Sistemde henüz TTO koordinatörü tanımlı değil. Siz koordinatörseniz kendinizi tanımlayın; ardından diğer personeli <b>Personel</b> ekranından eklersiniz.</span><button onclick="becomeCoordinator()" class="btn btn-p"><i class="fas fa-user-tie"></i> Beni koordinatör yap</button>`;
+  } else { el.className='hidden'; el.innerHTML=''; }
+}
+async function becomeCoordinator(){
+  const name = (S.profile && S.profile.name) || prompt('Adınız Soyadınız:');
+  if (!name) return;
+  if (!confirm(S.user.email+' adresi TTO Koordinatörü olarak tanımlanacak. Onaylıyor musunuz?')) return;
+  try {
+    await B.set('staff/'+S.user.ek, {email:S.user.email, name, role:'koordinator', active:true, addedAt:Date.now()});
+    await B.set('meta/hasCoordinator', true);
+    if (!S.settings || !S.settings.orgName) await B.set('settings', DEFAULT_SETTINGS);
+    toast('Koordinatör olarak tanımlandınız.','success');
+    await enterApp();
+  } catch(e){ toast('Tanımlanamadı: '+errMsg(e)+' (Sistemde başka bir koordinatör olabilir.)','error'); }
+}
+
+// ============================================================
+// DİNLEYİCİLER
+// ============================================================
+let renderQueued=false;
+function scheduleRender(){ if (renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; refreshView(); renderNotifBadge(); refreshModals(); }); }
+function listen(path, key, transform){
+  S.unsubs.push(B.on(path, v => { S[key] = transform ? transform(v) : (v||{}); S.loaded[key]=true; scheduleRender(); if (key==='files'||key==='userFilesAll') scheduleIndexSync(); },
+    e => { console.warn(path, e); S.loaded[key]=true; scheduleRender(); }));
+}
+function startListeners(){
+  const me = S.user.ek;
+  S.unsubs.push(B.on('settings', v => { S.settings=v||{}; updateSidebarUser(); scheduleRender(); }));
+  S.unsubs.push(B.on('meta', v => { S.meta=v||{}; renderBanner(); }));
+  if (isStaff()) {
+    listen('files','files'); listen('internal','internal'); listen('staff','staff'); listen('users','users');
+    listen('staffNotifs','staffNotifs'); listen('userFiles','userFilesAll');
+    S.unsubs.push(B.on('staff/'+me, v => { if (!v || !v.active) { toast('Personel yetkiniz kaldırıldı.','error'); enterApp(); } else { S.me=v; updateSidebarUser(); } }));
+  } else {
+    listen('notifs/'+me, 'notifs');
+    S.unsubs.push(B.on('users/'+me, v => { if (v) { S.profile=v; updateSidebarUser(); } }));
+    S.unsubs.push(B.on('staff/'+me, v => { if (v && v.active) { toast('Personel yetkiniz tanımlandı, yeniden yükleniyor…','success'); setTimeout(enterApp, 600); } }));
+    S.unsubs.push(B.on('userFiles/'+me, v => {
+      const ids = Object.keys(v||{}); S.myFileIds = ids; S.loaded.myIndex = true;
+      Object.keys(S.fileUnsubs).forEach(fid => { if (!ids.includes(fid)) { S.fileUnsubs[fid](); delete S.fileUnsubs[fid]; delete S.files[fid]; } });
+      ids.forEach(fid => { if (S.fileUnsubs[fid]) return;
+        S.fileUnsubs[fid] = B.on('files/'+fid, f => { if (f) S.files[fid]=f; else delete S.files[fid]; scheduleRender(); }, e => { console.warn('dosya', fid, e); delete S.files[fid]; scheduleRender(); });
+      });
+      scheduleRender();
+    }, e => { console.warn(e); S.loaded.myIndex=true; scheduleRender(); }));
+  }
+}
+// Personel: buluşçuların dosya dizinini (userFiles) dosyalardaki buluşçu listesiyle eşitler.
+// Böylece portaldan gelen başvurudaki diğer buluşçular da dosyayı görür.
+let indexTimer=null;
+function scheduleIndexSync(){ if (!isStaff()) return; clearTimeout(indexTimer); indexTimer=setTimeout(syncIndexes, 1200); }
+async function syncIndexes(){
+  if (!isStaff() || !S.loaded.files || !S.loaded.userFilesAll) return;
+  const want = {}; // ek -> {fid:true}
+  list(S.files).forEach(f => { Object.entries(f.inventors||{}).forEach(([k,p]) => { if (p && p.email) (want[k]=want[k]||{})[f.id]=true; }); if (f.createdBy && f.source==='portal') (want[f.createdBy]=want[f.createdBy]||{})[f.id]=true; });
+  const upd = {}; const have = S.userFilesAll||{};
+  Object.entries(want).forEach(([k,fs]) => Object.keys(fs).forEach(fid => { if (!(have[k]&&have[k][fid])) upd['userFiles/'+k+'/'+fid]=true; }));
+  Object.entries(have).forEach(([k,fs]) => Object.keys(fs||{}).forEach(fid => { if (!(want[k]&&want[k][fid])) upd['userFiles/'+k+'/'+fid]=null; }));
+  if (Object.keys(upd).length) { try { await B.update('', upd); } catch(e){ console.warn('dizin eşitleme', e); } }
+}
+
+// ============================================================
+// NAVİGASYON
+// ============================================================
+function buildNav(){
+  const items = isStaff() ? [
+    ['dashboard','fa-gauge-high','Genel Bakış'], ['files','fa-folder-open','Dosyalar'], ['people','fa-users','Buluşçular'],
+    ['staff','fa-id-badge','Personel'], ['settings','fa-sliders','Ayarlar']
+  ] : [
+    ['myfiles','fa-folder-open','Dosyalarım'], ['newapp','fa-circle-plus','Yeni Başvuru'], ['profile','fa-user','Profilim'], ['help','fa-circle-question','Süreç Nasıl İşler?']
+  ];
+  $('sb-nav').innerHTML = items.map(([v,i,l]) => `<button id="nav-${v}" onclick="goto('${v}')" class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/10 transition"><i class="fas ${i} w-4 text-center"></i><span class="flex-1 text-left">${l}</span><span id="navb-${v}" class="hidden bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"></span></button>`).join('')
+    + (isStaff() ? `<div class="pt-4 px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Hızlı Filtre</div>`
+      + Object.entries(PHASES).map(([k,p]) => `<button onclick="quickPhase('${k}')" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/10"><span class="w-2 h-2 rounded-full" style="background:${p.bar}"></span><span class="flex-1 text-left">${p.label}</span><span id="navc-${k}" class="text-slate-500"></span></button>`).join('') : '');
+}
+function quickPhase(ph){ S.filters = {q:'',type:'',phase:ph,stage:'',resp:'',year:''}; goto('files'); }
+function goto(v){
+  S.view = v;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  $('nav-'+v)?.classList.add('active');
+  $('view').scrollTop = 0;
+  mountView();
+}
+function setTop(title, sub, actions){ $('tb-title').textContent=title; $('tb-sub').textContent=sub||''; $('tb-actions').innerHTML=actions||''; }
+function mountView(){
+  const V = VIEWS[S.view]; if (!V) return;
+  V.mount(); V.update && V.update();
+  updateNavBadges();
+}
+function refreshView(){ const V = VIEWS[S.view]; if (V && V.update) V.update(); updateNavBadges(); }
+function updateNavBadges(){
+  if (!isStaff()) { const b=$('navb-myfiles'); if (b) { const n=list(S.files).length; b.textContent=n; b.className = n?'bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full':'hidden'; } return; }
+  const fs = list(S.files);
+  Object.keys(PHASES).forEach(k => { const el=$('navc-'+k); if (el) el.textContent = fs.filter(f=>phaseOf(f)===k).length; });
+  const newCount = fs.filter(f=>f.stage==='basvuru').length; const b=$('navb-files');
+  if (b) { b.textContent=newCount; b.className = newCount ? 'bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full' : 'hidden'; }
+}
+
+// ============================================================
+// ALAN MANTIĞI
+// ============================================================
+function stageOf(f){ return STAGES[f.stage] || STAGES.basvuru; }
+function phaseOf(f){ return stageOf(f).phase; }
+function typeOf(f){ return TYPES[f.type] || TYPES.diger; }
+function inventorsOf(f){ return list(f.inventors).sort((a,b)=>(a.order??99)-(b.order??99)); }
+function historyOf(f){ return Object.entries(f.history||{}).map(([id,h])=>({id,...h})).sort((a,b)=>(a.at||0)-(b.at||0)); }
+function ttoDateOf(f){ return f.ttoDate || (historyOf(f)[0]||{}).date || (f.createdAt?dStr(new Date(f.createdAt)):null); }
+function tpStartOf(f){ if (f.tpAppDate) return f.tpAppDate; const h = historyOf(f).find(x => (STAGES[x.stage]||{}).phase==='tp'); return h ? h.date : null; }
+function myInventorRec(f){ return f.inventors && f.inventors[S.user.ek]; }
+function typeChip(f){ const t=typeOf(f); return `<span class="chip ${t.cls}"><i class="fas ${t.icon}"></i>${t.short}</span>`; }
+function phaseChip(f){ const st=stageOf(f), p=PHASES[st.phase]; let cls=p.cls;
+  if (st.phase==='son') cls = st.ok?'bg-emerald-100 text-emerald-700':(st.bad?'bg-red-100 text-red-700':'bg-slate-200 text-slate-700');
+  return `<span class="chip ${cls}"><i class="fas ${st.phase==='son'?st.icon:p.icon}"></i>${st.phase==='son'?st.label:p.short}</span>`; }
+function stageChip(f){ const st=stageOf(f); const cls = st.side? (st.bad?'bg-red-50 text-red-700 ring-1 ring-red-200':'bg-orange-50 text-orange-700 ring-1 ring-orange-200') : 'bg-slate-100 text-slate-700';
+  return `<span class="chip ${cls}"><i class="fas ${st.icon}"></i>${st.label}</span>`; }
+function ttoNoHtml(f){ return f.ttoNo ? `<span class="font-mono text-xs text-slate-500">${esc(f.ttoNo)}</span>` : `<span class="text-[11px] text-amber-600 font-semibold">Numara atanmadı</span>`; }
+
+// TÜRKPATENT bekleme bilgisi
+function tpWait(f){
+  const start = tpStartOf(f); if (!start) return null;
+  const st = stageOf(f), exp = setting().expected[f.type] || 12;
+  const end = st.phase==='son' ? (f.regDate || f.stageDate || today()) : today();
+  const days = Math.max(0, daysBetween(start, end));
+  const months = days/30.44; const pct = Math.min(100, Math.round(months/exp*100));
+  return {start, days, months, exp, pct, over: st.phase==='tp' && months>exp, finished: st.phase==='son', ok: st.ok};
+}
+function waitBox(f, compact){
+  const ph = phaseOf(f);
+  if (ph==='tto') {
+    const d = daysBetween(ttoDateOf(f), today());
+    return compact ? `<span class="text-xs text-amber-700"><i class="fas fa-building-columns mr-1"></i>TTO'da ${durText(d)}</span>`
+      : `<div class="rounded-xl bg-amber-50 border border-amber-200 p-4"><div class="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-1"><i class="fas fa-building-columns mr-1"></i>TTO'da inceleniyor</div><div class="text-sm text-amber-900">Dosya ${fmtD(ttoDateOf(f))} tarihinden beri TTO'da · <b>${durText(d)}</b></div><div class="text-xs text-amber-800/80 mt-1">${esc(stageOf(f).label)} aşamasında.</div></div>`;
+  }
+  const w = tpWait(f); if (!w) return '';
+  const exp = w.exp, t = typeOf(f);
+  if (w.finished) {
+    if (!w.ok) return compact ? '' : `<div class="rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-600">TÜRKPATENT süreci ${durText(w.days)} sürdü ve <b>${esc(stageOf(f).label.toLowerCase())}</b> ile sonuçlandı.</div>`;
+    return compact ? `<span class="text-xs text-emerald-700"><i class="fas fa-award mr-1"></i>${durText(w.days)}da tescil</span>`
+      : `<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4"><div class="text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-1"><i class="fas fa-award mr-1"></i>Tescil edildi</div><div class="text-sm text-emerald-900">TÜRKPATENT başvurusundan (${fmtD(w.start)}) tescile kadar <b>${durText(w.days)}</b> geçti.</div></div>`;
+  }
+  const color = w.over ? '#f59e0b' : '#6366f1';
+  if (compact) return `<div class="min-w-[140px]"><div class="flex justify-between text-[11px] ${w.over?'text-amber-700 font-semibold':'text-slate-500'}"><span>${durText(w.days)}</span><span>~${exp} ay</span></div><div class="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-0.5"><div class="h-full rounded-full" style="width:${w.pct}%;background:${color}"></div></div></div>`;
+  return `<div class="rounded-xl ${w.over?'bg-amber-50 border-amber-200':'bg-indigo-50 border-indigo-200'} border p-4">
+    <div class="flex items-center justify-between gap-3 mb-1"><div class="text-xs font-semibold ${w.over?'text-amber-800':'text-indigo-800'} uppercase tracking-wide"><i class="fas fa-hourglass-half mr-1"></i>TÜRKPATENT sürecinde bekliyor</div><div class="text-xs ${w.over?'text-amber-800':'text-indigo-700'}">Ortalama: ~${exp} ay</div></div>
+    <div class="text-sm ${w.over?'text-amber-900':'text-indigo-900'}">${fmtD(w.start)} tarihinde başvuruldu · <b>${durText(w.days)}</b>dır TÜRKPATENT'te${w.over?' — <b>ortalama süre aşıldı</b>, kurumdan durum sorgulanabilir':''}.</div>
+    <div class="h-2.5 bg-white/70 rounded-full overflow-hidden mt-2.5"><div class="h-full rounded-full" style="width:${w.pct}%;background:${color}"></div></div>
+    <div class="text-[11px] mt-1.5 ${w.over?'text-amber-800/80':'text-indigo-800/70'}">${t.short} başvurularında süre; araştırma, yayın, itiraz ve inceleme adımlarına göre değişir. Bu sürede TTO'nun yapması gereken bir işlem yoksa dosya bu aşamada bekler.</div>
+  </div>`;
+}
+
+// Stepper (aşama çizgisi)
+function reachedIndex(f){
+  const flow = FLOW[f.type]||FLOW.diger; let idx = flow.indexOf(f.stage);
+  if (idx<0) historyOf(f).forEach(h => { const i=flow.indexOf(h.stage); if (i>idx) idx=i; });
+  return idx;
+}
+function stepperHtml(f, small){
+  const flow = FLOW[f.type]||FLOW.diger, st=stageOf(f), idx=reachedIndex(f), hist=historyOf(f);
+  const dateOf = s => { const h=[...hist].reverse().find(x=>x.stage===s); return h?h.date:null; };
+  const circle = small ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs';
+  const out = flow.map((s,i) => {
+    const done = i<idx || (i===idx && st.ok), cur = i===idx && !st.side && !st.ok;
+    const frozen = i===idx && st.side;
+    let c = 'bg-slate-100 text-slate-400 border border-slate-200';
+    if (done) c='bg-emerald-500 text-white'; if (cur) c='bg-blue-600 text-white step-cur'; if (frozen) c = st.bad?'bg-red-500 text-white':'bg-orange-400 text-white';
+    const ph = STAGES[s].phase; const d = dateOf(s);
+    const line = i<flow.length-1 ? `<div class="flex-1 h-0.5 ${small?'mt-3':'mt-4'} ${i<idx?'bg-emerald-400':'bg-slate-200'}"></div>` : '';
+    return `<div class="flex flex-col items-center ${small?'w-14':'w-20'} flex-shrink-0 text-center"><div class="${circle} rounded-full flex items-center justify-center ${c}"><i class="fas ${done?'fa-check':(frozen?STAGES[f.stage].icon:STAGES[s].icon)}"></i></div>
+      ${small?'':`<div class="text-[10.5px] leading-tight mt-1.5 ${cur?'text-blue-700 font-bold':(done?'text-slate-700':'text-slate-400')}">${esc(STAGES[s].label)}</div><div class="text-[10px] text-slate-400">${d?fmtD(d):''}</div>`}</div>${line}`;
+  }).join('');
+  const phaseBar = small ? '' : (() => { // faz başlıkları
+    const counts = {}; flow.forEach(s => counts[STAGES[s].phase]=(counts[STAGES[s].phase]||0)+1);
+    return `<div class="flex gap-1 mb-2 text-[10px] font-semibold uppercase tracking-wide">${Object.entries(counts).map(([p,n]) => `<div style="flex:${n}" class="px-2 py-1 rounded ${phaseOf(f)===p?PHASES[p].cls:'bg-slate-50 text-slate-400'}"><i class="fas ${PHASES[p].icon} mr-1"></i>${p==='son'?'Sonuç':PHASES[p].label}</div>`).join('')}</div>`;
+  })();
+  const side = st.side ? `<div class="mt-3 text-xs rounded-lg px-3 py-2 ${st.bad?'bg-red-50 text-red-700':'bg-orange-50 text-orange-700'}"><i class="fas ${st.icon} mr-1"></i><b>${esc(st.label)}</b>${f.stageDate?' · '+fmtD(f.stageDate):''}</div>` : '';
+  return `<div class="overflow-x-auto pb-1">${phaseBar}<div class="flex items-start min-w-max">${out}</div></div>${side}`;
+}
+
+// Süreler: otomatik + elle girilen
+function deadlinesOf(f){
+  const out = []; const ph=phaseOf(f), cfg=setting();
+  if (ph==='tto' && ['patent','faydali'].includes(f.type) && ['basvuru','on_inceleme','eksik','kurul'].includes(f.stage) && ttoDateOf(f)) {
+    out.push({auto:true, title:'Hak talebi kararı için önerilen son gün', date:addMonths(ttoDateOf(f), cfg.claimMonths), hint:'TTO\'ya bildirim + '+cfg.claimMonths+' ay (Ayarlar)'});
+  }
+  const pm = PRIORITY_MONTHS[f.type];
+  if (pm && f.tpAppDate && ph!=='son') { const d=addMonths(f.tpAppDate, pm); if (daysBetween(today(), d) > -30) out.push({auto:true, title:'Rüçhan (yurt dışı başvuru) son günü', date:d, hint:'TÜRKPATENT başvurusu + '+pm+' ay'}); }
+  const inr = S.internal[f.id];
+  if (inr && inr.deadlines) Object.entries(inr.deadlines).forEach(([id,d]) => out.push({id, title:d.title, date:d.date, done:d.done}));
+  return out.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+function dueChip(date, done){
+  if (done) return `<span class="chip bg-slate-100 text-slate-500"><i class="fas fa-check"></i>Tamam</span>`;
+  const d = daysBetween(today(), date);
+  if (d<0) return `<span class="chip bg-red-100 text-red-700">${-d} gün geçti</span>`;
+  if (d===0) return `<span class="chip bg-red-100 text-red-700">Bugün</span>`;
+  if (d<=14) return `<span class="chip bg-amber-100 text-amber-800">${d} gün kaldı</span>`;
+  return `<span class="chip bg-slate-100 text-slate-600">${d} gün kaldı</span>`;
+}
+
+// TTO numarası
+async function assignTtoNo(fid){
+  const f = S.files[fid] || await B.get('files/'+fid); if (!f) return null; if (f.ttoNo) return f.ttoNo;
+  const y = String(new Date().getFullYear());
+  const n = await B.txn('counters/'+y, v => (v||0)+1);
+  const no = 'TTO-'+y+'-'+String(n).padStart(3,'0');
+  await B.update('files/'+fid, {ttoNo:no});
+  return no;
+}
+
+// Bildirim
+async function notifyInventors(f, text){
+  const upd = {};
+  inventorsOf(f).forEach(p => { if (p.email) { const k=ek(p.email); upd['notifs/'+k+'/'+B.newKey('notifs/'+k)] = {at:Date.now(), text, fid:f.id, read:false}; } });
+  if (Object.keys(upd).length) await B.update('', upd);
+}
+async function notifyStaff(text, fid){
+  await B.set('staffNotifs/'+B.newKey('staffNotifs'), {at:Date.now(), text, fid:fid||null, fromEk:S.user.ek});
+}
+function myNotifs(){
+  if (isStaff()) return Object.entries(S.staffNotifs||{}).map(([id,n])=>({id, ...n, read: !!(n.readBy && n.readBy[S.user.ek])})).sort((a,b)=>b.at-a.at);
+  return Object.entries(S.notifs||{}).map(([id,n])=>({id,...n})).sort((a,b)=>b.at-a.at);
+}
+function renderNotifBadge(){ const n = myNotifs().filter(x=>!x.read).length; const b=$('notif-badge'); b.textContent=n>99?'99+':n; b.classList.toggle('hidden', !n); }
+function openNotifs(){ $('panel-notif').classList.remove('hidden'); renderNotifList(); }
+function closeNotifs(){ $('panel-notif').classList.add('hidden'); }
+function renderNotifList(){
+  const ns = myNotifs();
+  $('notif-list').innerHTML = ns.length ? ns.slice(0,60).map(n => `<button onclick="notifClick('${n.id}')" class="w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 flex gap-3 ${n.read?'':'bg-blue-50/50'}"><span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${n.read?'bg-transparent':'bg-blue-500'}"></span><span class="flex-1"><span class="block text-sm text-slate-700">${esc(n.text)}</span><span class="text-[11px] text-slate-400">${timeAgo(n.at)}</span></span></button>`).join('')
+    : '<div class="p-8 text-center text-sm text-slate-400"><i class="fas fa-bell-slash text-2xl mb-2 block"></i>Bildirim yok</div>';
+}
+async function markRead(id){ try { if (isStaff()) await B.set('staffNotifs/'+id+'/readBy/'+S.user.ek, true); else await B.set('notifs/'+S.user.ek+'/'+id+'/read', true); } catch(e){ console.warn(e); } }
+async function notifClick(id){ const n = myNotifs().find(x=>x.id===id); if (!n) return; if (!n.read) markRead(id); closeNotifs(); if (n.fid) { if (S.files[n.fid]) openDetail(n.fid); else toast('Dosya bulunamadı veya erişiminiz yok.','info'); } }
+async function markAllNotifsRead(){
+  const upd={}; myNotifs().filter(n=>!n.read).forEach(n => { if (isStaff()) upd['staffNotifs/'+n.id+'/readBy/'+S.user.ek]=true; else upd['notifs/'+S.user.ek+'/'+n.id+'/read']=true; });
+  if (Object.keys(upd).length) { try { await B.update('', upd); } catch(e){ toast(errMsg(e),'error'); } }
+}
+
+// ============================================================
+// BELGELER (Realtime Database içinde parçalı saklama)
+// ============================================================
+function maxFileSize(){ return B.kind==='demo' ? MAX_FILE_DEMO : MAX_FILE; }
+function validateFile(file){
+  if (!FILE_EXTS.includes(fileExt(file.name))) return 'Bu dosya türü desteklenmiyor: .'+fileExt(file.name);
+  if (file.size > maxFileSize()) return 'Dosya en fazla '+fmtSize(maxFileSize())+' olabilir'+(B.kind==='demo'?' (demo modu sınırı)':'')+'.';
+  if (!file.size) return 'Dosya boş.';
+  return null;
+}
+async function uploadDoc(fid, file, isPublic, onProgress){
+  const docId = B.newKey('docs/'+fid);
+  const base = 'docs/'+fid+'/'+docId;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const n = Math.max(1, Math.ceil(bytes.length/CHUNK));
+  const byName = isStaff() ? S.me.name : ((S.profile&&S.profile.name)||S.user.email);
+  const meta = {name:file.name, type:file.type||'application/octet-stream', size:file.size, chunks:n, public:!!isPublic, by:S.user.ek, byName, complete:false, at:Date.now()};
+  try {
+    await B.set(base+'/meta', meta);
+    for (let i=0;i<n;i++) { await B.set(base+'/chunks/'+i, bytesToB64(bytes.subarray(i*CHUNK,(i+1)*CHUNK))); onProgress && onProgress((i+1)/n); }
+    await B.set(base+'/meta/complete', true);
+  } catch(e){ try { await B.remove(base); } catch(_){} throw e; }
+  const idx = {name:file.name, size:file.size, at:Date.now(), by:S.user.ek, byName, public:!!isPublic};
+  await B.set((isPublic?'files/'+fid+'/pubDocs/':'internal/'+fid+'/docs/')+docId, idx);
+  return docId;
+}
+async function downloadDoc(fid, docId, mode){
+  const win = mode==='view' ? window.open('', '_blank') : null;
+  if (win) win.document.write('<p style="font-family:sans-serif;padding:2rem">Dosya hazırlanıyor…</p>'); else toast('Dosya hazırlanıyor…','info');
+  try {
+    const base='docs/'+fid+'/'+docId; const meta = await B.get(base+'/meta');
+    if (!meta) throw new Error('Dosya bulunamadı.'); if (!meta.complete) throw new Error('Dosya yüklemesi tamamlanmamış.');
+    const chunks = (await B.get(base+'/chunks')) || {}; const parts=[];
+    for (let i=0;i<meta.chunks;i++) { if (chunks[i]==null) throw new Error('Dosya eksik.'); parts.push(b64ToBytes(chunks[i])); }
+    const url = URL.createObjectURL(new Blob(parts, {type:meta.type||'application/octet-stream'}));
+    if (win) win.location.href = url; else { const a=document.createElement('a'); a.href=url; a.download=asciiName(meta.name); document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(()=>URL.revokeObjectURL(url), 120000);
+  } catch(e){ if (win) win.close(); toast('Dosya açılamadı: '+errMsg(e),'error'); }
+}
+async function deleteDoc(fid, docId, isPublic){
+  if (!confirm('Belge silinsin mi?')) return;
+  try { await B.remove((isPublic?'files/'+fid+'/pubDocs/':'internal/'+fid+'/docs/')+docId); await B.remove('docs/'+fid+'/'+docId); toast('Belge silindi.','success'); }
+  catch(e){ toast(errMsg(e),'error'); }
+}
+
+// ============================================================
+// MODAL / TOAST
+// ============================================================
+function openModal(html, opts={}){
+  const id = 'm'+Date.now()+Math.floor(Math.random()*1000);
+  const wrap = document.createElement('div');
+  wrap.id = id; wrap.className = 'fixed inset-0 z-50 modal-overlay flex items-start justify-center p-4 overflow-y-auto';
+  wrap.innerHTML = `<div class="bg-white rounded-2xl shadow-2xl w-full ${opts.wide?'max-w-5xl':(opts.mid?'max-w-3xl':'max-w-lg')} my-8 fade-in" onclick="event.stopPropagation()"><div class="modal-body">${html}</div></div>`;
+  wrap.addEventListener('mousedown', e => { if (e.target===wrap) wrap.dataset.down='1'; });
+  wrap.addEventListener('mouseup', e => { if (e.target===wrap && wrap.dataset.down==='1' && !opts.sticky) closeModal(id); wrap.dataset.down=''; });
+  $('modals').appendChild(wrap);
+  S.modalStack.push({id, refresh:opts.refresh||null});
+  return id;
+}
+function closeModal(id){
+  if (!id) { const top=S.modalStack[S.modalStack.length-1]; if (!top) return; id=top.id; }
+  const el=$(id); if (el) el.remove(); S.modalStack = S.modalStack.filter(m=>m.id!==id);
+  if (!S.modalStack.some(m=>m.detail)) S.detailId=null;
+}
+function closeAllModals(){ S.modalStack.slice().forEach(m=>closeModal(m.id)); }
+function refreshModals(){ S.modalStack.forEach(m => { if (m.refresh) { const el=$(m.id); if (el) m.refresh(el.querySelector('.modal-body')); } }); }
+function modalHead(title, sub, icon){ return `<div class="px-6 py-4 border-b border-slate-100 flex items-start gap-3"><div class="flex-1 min-w-0"><h3 class="font-bold text-lg">${icon?`<i class="fas ${icon} mr-2 text-blue-600"></i>`:''}${title}</h3>${sub?`<p class="text-xs text-slate-400 mt-0.5">${sub}</p>`:''}</div><button onclick="closeModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"><i class="fas fa-xmark"></i></button></div>`; }
+function toast(msg, type='info'){
+  const c = {success:'bg-emerald-600', error:'bg-red-600', info:'bg-slate-800'}[type]||'bg-slate-800';
+  const el = document.createElement('div');
+  el.className = c+' text-white text-sm px-4 py-2.5 rounded-xl shadow-lg max-w-sm slide-in';
+  el.textContent = msg; $('toasts').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, type==='error'?6000:3500);
+}
+
+// ============================================================
+// GÖRÜNÜMLER
+// ============================================================
+const VIEWS = {};
+function emptyState(icon, title, text, btn){ return `<div class="text-center py-16"><div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-4"><i class="fas ${icon}"></i></div><h3 class="font-bold text-slate-700 mb-1">${title}</h3><p class="text-sm text-slate-400 mb-5 max-w-md mx-auto">${text}</p>${btn||''}</div>`; }
+function loading(){ return '<div class="py-20 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i></div>'; }
+function stat(label, val, icon, color, onclick){ return `<button ${onclick?`onclick="${onclick}"`:''} class="card p-4 text-left hover:shadow-md transition ${onclick?'':'cursor-default'}"><div class="flex items-center justify-between mb-2"><span class="text-xs font-semibold text-slate-500">${label}</span><span class="w-8 h-8 rounded-lg flex items-center justify-center ${color}"><i class="fas ${icon} text-sm"></i></span></div><div class="text-2xl font-bold text-slate-800">${val}</div></button>`; }
+
+// ---------- GENEL BAKIŞ ----------
+VIEWS.dashboard = {
+  mount(){ setTop('Genel Bakış', setting().orgName, `<button onclick="openFileForm()" class="btn btn-p"><i class="fas fa-plus"></i> Yeni Dosya</button>`); $('view').innerHTML = loading(); },
+  update(){
+    if (!S.loaded.files) return;
+    const fs = list(S.files), byPh = k => fs.filter(f=>phaseOf(f)===k);
+    const newOnes = fs.filter(f=>f.stage==='basvuru').sort((a,b)=>b.createdAt-a.createdAt);
+    const reg = fs.filter(f=>f.stage==='tescil').length;
+    const tp = byPh('tp').map(f=>({f, w:tpWait(f)})).filter(x=>x.w).sort((a,b)=>b.w.days-a.w.days);
+    const dl = []; fs.forEach(f => { if (phaseOf(f)==='son' && !S.internal[f.id]) return; deadlinesOf(f).forEach(d => { if (!d.done && d.date && daysBetween(today(), d.date) <= 60) dl.push({...d, f}); }); });
+    dl.sort((a,b)=>a.date.localeCompare(b.date));
+    const recent = []; fs.forEach(f => historyOf(f).forEach(h => recent.push({...h, f}))); recent.sort((a,b)=>(b.at||0)-(a.at||0));
+    const typeRows = Object.entries(TYPES).map(([k,t]) => { const xs=fs.filter(f=>f.type===k); return {k,t,n:xs.length, tto:xs.filter(f=>phaseOf(f)==='tto').length, tp:xs.filter(f=>phaseOf(f)==='tp').length, son:xs.filter(f=>phaseOf(f)==='son').length}; }).filter(r=>r.n);
+    const maxN = Math.max(1, ...typeRows.map(r=>r.n));
+    $('view').innerHTML = `
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        ${stat('Toplam Dosya', fs.length, 'fa-folder', 'bg-slate-100 text-slate-600', "quickPhase('')")}
+        ${stat("TTO'da İnceleniyor", byPh('tto').length, 'fa-building-columns', 'bg-amber-100 text-amber-700', "quickPhase('tto')")}
+        ${stat('TÜRKPATENT Sürecinde', byPh('tp').length, 'fa-hourglass-half', 'bg-indigo-100 text-indigo-700', "quickPhase('tp')")}
+        ${stat('Tescil Edildi', reg, 'fa-award', 'bg-emerald-100 text-emerald-700', "S.filters={q:'',type:'',phase:'',stage:'tescil',resp:'',year:''};goto('files')")}
+        ${stat('Yeni Başvuru', newOnes.length, 'fa-inbox', 'bg-blue-100 text-blue-700', "S.filters={q:'',type:'',phase:'',stage:'basvuru',resp:'',year:''};goto('files')")}
+      </div>
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 space-y-5">
+          ${newOnes.length?`<div class="card p-5 border-blue-200"><h3 class="font-bold mb-3"><i class="fas fa-inbox mr-2 text-blue-600"></i>İşlem bekleyen yeni başvurular</h3><div class="divide-y divide-slate-100">${newOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${f.source==='portal'?'<span class="text-blue-600 font-semibold">Portal başvurusu</span>':'TTO kaydı'} · ${timeAgo(f.createdAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-3"><h3 class="font-bold"><i class="fas fa-hourglass-half mr-2 text-indigo-600"></i>TÜRKPATENT'te bekleyen dosyalar</h3><span class="text-xs text-slate-400">en uzun bekleyen üstte</span></div>
+            ${tp.length?`<div class="divide-y divide-slate-100">${tp.slice(0,8).map(({f,w})=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 grid grid-cols-12 gap-3 items-center hover:bg-slate-50 rounded-lg px-2"><span class="col-span-6 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${esc(f.ttoNo||'')} · ${esc(stageOf(f).label)}</span></span><span class="col-span-2">${typeChip(f)}</span><span class="col-span-4">${waitBox(f,true)}</span></button>`).join('')}</div>`:'<p class="text-sm text-slate-400">TÜRKPATENT sürecinde dosya yok.</p>'}
+          </div>
+          <div class="card p-5"><h3 class="font-bold mb-4"><i class="fas fa-chart-simple mr-2 text-slate-500"></i>Türe göre dağılım</h3>
+            ${typeRows.length?`<div class="space-y-3">${typeRows.map(r=>`<div><div class="flex justify-between text-xs mb-1"><span class="font-semibold text-slate-600"><i class="fas ${r.t.icon} mr-1"></i>${r.t.label}</span><span class="text-slate-400">${r.n} dosya · TTO ${r.tto} · TÜRKPATENT ${r.tp} · Sonuç ${r.son}</span></div><div class="h-3 bg-slate-100 rounded-full overflow-hidden flex" style="width:${Math.max(8,r.n/maxN*100)}%">${['tto','tp','son'].map(p=>r[p]?`<div title="${PHASES[p].label}: ${r[p]}" style="width:${r[p]/r.n*100}%;background:${PHASES[p].bar}"></div>`:'').join('')}</div></div>`).join('')}</div>
+            <div class="flex gap-4 mt-4 text-[11px] text-slate-500">${Object.values(PHASES).map(p=>`<span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1 align-middle" style="background:${p.bar}"></span>${p.label}</span>`).join('')}</div>`:'<p class="text-sm text-slate-400">Henüz dosya yok.</p>'}
+          </div>
+        </div>
+        <div class="space-y-5">
+          <div class="card p-5"><h3 class="font-bold mb-3"><i class="fas fa-calendar-days mr-2 text-red-500"></i>Yaklaşan süreler <span class="text-xs font-normal text-slate-400">(60 gün)</span></h3>
+            ${dl.length?`<div class="space-y-2">${dl.slice(0,12).map(d=>`<button onclick="openDetail('${d.f.id}')" class="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-slate-100"><div class="flex items-center justify-between gap-2 mb-0.5"><span class="text-xs font-semibold text-slate-700">${esc(d.title)}${d.auto?' <i class="fas fa-wand-magic-sparkles text-slate-300" title="Otomatik hesaplandı"></i>':''}</span>${dueChip(d.date)}</div><div class="text-[11px] text-slate-400 truncate">${fmtD(d.date)} · ${esc(d.f.ttoNo||'')} ${esc(d.f.title)}</div></button>`).join('')}</div>`:'<p class="text-sm text-slate-400">Önümüzdeki 60 günde süre yok.</p>'}
+          </div>
+          <div class="card p-5"><h3 class="font-bold mb-3"><i class="fas fa-clock-rotate-left mr-2 text-slate-500"></i>Son hareketler</h3>
+            ${recent.length?`<div class="space-y-3">${recent.slice(0,8).map(h=>`<button onclick="openDetail('${h.f.id}')" class="w-full text-left flex gap-2.5"><span class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-[11px] flex-shrink-0"><i class="fas ${(STAGES[h.stage]||{}).icon||'fa-circle'}"></i></span><span class="min-w-0"><span class="block text-xs font-semibold text-slate-700 truncate">${esc(h.f.title)}</span><span class="block text-[11px] text-slate-500">→ ${esc((STAGES[h.stage]||{}).label||h.stage)}</span><span class="text-[10px] text-slate-400">${fmtD(h.date)} · ${esc(h.byName||'')}</span></span></button>`).join('')}</div>`:'<p class="text-sm text-slate-400">Hareket yok.</p>'}
+          </div>
+        </div>
+      </div>`;
+  }
+};
+
+// ---------- DOSYALAR ----------
+function filteredFiles(){
+  const F = S.filters, q = F.q.trim().toLocaleLowerCase('tr');
+  return list(S.files).filter(f => {
+    if (F.type && f.type!==F.type) return false;
+    if (F.phase && phaseOf(f)!==F.phase) return false;
+    if (F.stage && f.stage!==F.stage) return false;
+    if (F.resp && f.responsible!==F.resp) return false;
+    if (F.year && !(ttoDateOf(f)||'').startsWith(F.year)) return false;
+    if (q) { const hay = [f.title, f.ttoNo, f.tpAppNo, f.regNo, f.summary, ...inventorsOf(f).map(p=>p.name+' '+(p.email||'')+' '+(p.unit||''))].join(' ').toLocaleLowerCase('tr'); if (!hay.includes(q)) return false; }
+    return true;
+  }).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+}
+VIEWS.files = {
+  mount(){
+    setTop('Dosyalar', 'Buluş, faydalı model, tasarım ve marka dosyaları', `<button onclick="exportCsv()" class="btn btn-s"><i class="fas fa-file-csv"></i> Excel'e aktar</button><button onclick="openFileForm()" class="btn btn-p"><i class="fas fa-plus"></i> Yeni Dosya</button>`);
+    const F = S.filters;
+    const years = [...new Set(list(S.files).map(f=>(ttoDateOf(f)||'').slice(0,4)).filter(Boolean))].sort().reverse();
+    const staffOpts = list(S.staff).map(s=>`<option value="${esc(ek(s.email))}" ${F.resp===ek(s.email)?'selected':''}>${esc(s.name)}</option>`).join('');
+    $('view').innerHTML = `
+      <div class="card p-3 mb-4 flex flex-wrap items-center gap-2">
+        <div class="relative flex-1 min-w-[220px]"><i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i><input id="f-q" value="${esc(F.q)}" oninput="S.filters.q=this.value;VIEWS.files.update()" placeholder="Başlık, dosya/başvuru no, buluşçu adı veya e-posta ara…" class="inp pl-9"></div>
+        <select class="inp !w-auto" onchange="S.filters.type=this.value;VIEWS.files.update()"><option value="">Tüm türler</option>${Object.entries(TYPES).map(([k,t])=>`<option value="${k}" ${F.type===k?'selected':''}>${t.label}</option>`).join('')}</select>
+        <select class="inp !w-auto" onchange="S.filters.phase=this.value;VIEWS.files.update()"><option value="">Tüm durumlar</option>${Object.entries(PHASES).map(([k,p])=>`<option value="${k}" ${F.phase===k?'selected':''}>${p.label}</option>`).join('')}</select>
+        <select class="inp !w-auto" onchange="S.filters.stage=this.value;VIEWS.files.update()"><option value="">Tüm aşamalar</option>${Object.entries(STAGES).map(([k,s])=>`<option value="${k}" ${F.stage===k?'selected':''}>${s.label}</option>`).join('')}</select>
+        <select class="inp !w-auto" onchange="S.filters.resp=this.value;VIEWS.files.update()"><option value="">Tüm sorumlular</option>${staffOpts}</select>
+        <select class="inp !w-auto" onchange="S.filters.year=this.value;VIEWS.files.update()"><option value="">Tüm yıllar</option>${years.map(y=>`<option ${F.year===y?'selected':''}>${y}</option>`).join('')}</select>
+        <div class="flex rounded-lg border border-slate-200 overflow-hidden ml-auto">
+          <button onclick="S.fileMode='table';VIEWS.files.update()" id="fm-table" class="px-3 py-2 text-sm"><i class="fas fa-table-list"></i></button>
+          <button onclick="S.fileMode='board';VIEWS.files.update()" id="fm-board" class="px-3 py-2 text-sm"><i class="fas fa-table-columns"></i></button>
+        </div>
+      </div>
+      <div id="files-out"></div>`;
+  },
+  update(){
+    const out = $('files-out'); if (!out) return;
+    if (!S.loaded.files) { out.innerHTML = loading(); return; }
+    ['table','board'].forEach(m => { const b=$('fm-'+m); if (b) b.className='px-3 py-2 text-sm '+(S.fileMode===m?'bg-blue-600 text-white':'bg-white text-slate-500 hover:bg-slate-50'); });
+    const fs = filteredFiles(); const total=list(S.files).length;
+    const anyFilter = Object.values(S.filters).some(Boolean);
+    const head = `<div class="flex items-center justify-between mb-2 text-xs text-slate-500"><span><b>${fs.length}</b> / ${total} dosya</span>${anyFilter?`<button onclick="S.filters={q:'',type:'',phase:'',stage:'',resp:'',year:''};VIEWS.files.mount();VIEWS.files.update()" class="text-blue-600 hover:underline"><i class="fas fa-filter-circle-xmark mr-1"></i>Filtreleri temizle</button>`:''}</div>`;
+    if (!total) { out.innerHTML = emptyState('fa-folder-open','Henüz dosya yok','İlk dosyayı ekleyin ya da buluşçuların portal üzerinden başvuru yapmasını bekleyin.', `<button onclick="openFileForm()" class="btn btn-p"><i class="fas fa-plus"></i> Yeni Dosya</button>`); return; }
+    if (S.fileMode==='board') {
+      out.innerHTML = head + `<div class="grid md:grid-cols-3 gap-4">${Object.entries(PHASES).map(([k,p]) => { const xs = fs.filter(f=>phaseOf(f)===k);
+        return `<div class="bg-slate-100/70 rounded-2xl p-3"><div class="flex items-center gap-2 px-1 mb-3"><span class="w-2.5 h-2.5 rounded-full" style="background:${p.bar}"></span><span class="font-semibold text-sm">${p.label}</span><span class="ml-auto text-xs bg-white px-2 py-0.5 rounded-full text-slate-500">${xs.length}</span></div><div class="space-y-2.5">${xs.map(boardCard).join('') || '<div class="text-xs text-slate-400 text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">Dosya yok</div>'}</div></div>`; }).join('')}</div>`;
+      return;
+    }
+    out.innerHTML = head + `<div class="card overflow-hidden"><div class="overflow-x-auto"><table class="tbl w-full min-w-[960px]"><thead><tr><th>Dosya</th><th>Tür</th><th>Buluşçular</th><th>Durum / Aşama</th><th>TÜRKPATENT</th><th>Tescil</th><th>Bekleme</th><th>Sorumlu</th></tr></thead><tbody>
+      ${fs.map(f => { const inv=inventorsOf(f); return `<tr class="row" onclick="openDetail('${f.id}')">
+        <td class="max-w-[260px]"><div class="font-semibold text-slate-800 leading-snug">${esc(f.title)}</div>${ttoNoHtml(f)}${f.source==='portal'&&f.stage==='basvuru'?' <span class="chip bg-blue-100 text-blue-700 ml-1">Portal</span>':''}</td>
+        <td>${typeChip(f)}</td>
+        <td class="text-xs text-slate-600 max-w-[200px]">${inv.slice(0,3).map(p=>esc(p.name)).join('<br>')}${inv.length>3?`<br><span class="text-slate-400">+${inv.length-3} kişi</span>`:''}</td>
+        <td><div class="space-y-1">${phaseChip(f)}<div class="text-xs text-slate-600">${esc(stageOf(f).label)}</div><div class="text-[11px] text-slate-400">${fmtD(f.stageDate)}</div></div></td>
+        <td class="text-xs">${f.tpAppNo?`<div class="font-mono">${esc(f.tpAppNo)}</div>`:''}${f.tpAppDate?`<div class="text-slate-400">${fmtD(f.tpAppDate)}</div>`:'<span class="text-slate-300">—</span>'}</td>
+        <td class="text-xs">${f.regDate?`<div class="text-emerald-700 font-semibold">${fmtD(f.regDate)}</div><div class="font-mono text-slate-400">${esc(f.regNo||'')}</div>`:'<span class="text-slate-300">—</span>'}</td>
+        <td>${waitBox(f,true)}</td>
+        <td class="text-xs text-slate-600">${esc(f.responsibleName||'—')}</td></tr>`; }).join('')}
+      </tbody></table></div></div>`;
+  }
+};
+function boardCard(f){
+  const inv=inventorsOf(f);
+  return `<button onclick="openDetail('${f.id}')" class="w-full text-left bg-white rounded-xl border border-slate-100 p-3 shadow-sm hover:shadow-md hover:border-blue-200 transition">
+    <div class="flex items-center justify-between gap-2 mb-1.5">${typeChip(f)}${ttoNoHtml(f)}</div>
+    <div class="font-semibold text-sm text-slate-800 leading-snug mb-1.5">${esc(f.title)}</div>
+    <div class="text-xs text-slate-500 mb-2">${esc(stageOf(f).label)}</div>
+    ${waitBox(f,true)}
+    <div class="flex items-center gap-1 mt-2.5">${inv.slice(0,5).map(p=>`<span title="${esc(p.name)}" class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center">${esc(initials(p.name))}</span>`).join('')}${inv.length>5?`<span class="text-[11px] text-slate-400 ml-1">+${inv.length-5}</span>`:''}</div>
+  </button>`;
+}
+function exportCsv(){
+  const rows = [['TTO No','Tür','Başlık','Buluşçular','Buluşçu Sayısı','Durum','Aşama','Aşama Tarihi',"TTO'ya Başvuru",'TÜRKPATENT Başvuru Tarihi','Başvuru No','Yayın Tarihi','Tescil Tarihi','Tescil No','TÜRKPATENT\'te Geçen Gün','Sorumlu','Hak Sahibi']];
+  filteredFiles().forEach(f => { const w=tpWait(f); const inv=inventorsOf(f); rows.push([f.ttoNo||'', typeOf(f).label, f.title, inv.map(p=>p.name).join(', '), inv.length, PHASES[phaseOf(f)].label, stageOf(f).label, fmtD(f.stageDate), fmtD(ttoDateOf(f)), fmtD(f.tpAppDate), f.tpAppNo||'', fmtD(f.pubDate), fmtD(f.regDate), f.regNo||'', w?w.days:'', f.responsibleName||'', f.owner||'']); });
+  const csv = '﻿' + rows.map(r => r.map(c => { const s=String(c==null?'':c); return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(';')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='TTO_dosyalar_'+today()+'.csv'; a.click();
+}
+
+// ---------- BULUŞÇULAR ----------
+function peopleIndex(){
+  const map = {};
+  const keyOf = p => p.email ? ek(p.email) : 'n:'+String(p.name||'').trim().toLocaleLowerCase('tr');
+  list(S.files).forEach(f => inventorsOf(f).forEach(p => { const k=keyOf(p); const m = map[k] || (map[k] = {key:k, name:p.name, email:p.email||'', kind:p.kind, unit:p.unit, files:[]}); m.files.push(f); if (!m.unit && p.unit) m.unit=p.unit; }));
+  Object.entries(S.users||{}).forEach(([k,u]) => { const m = map[k] || (map[k] = {key:k, name:u.name, email:u.email, kind:u.kind, unit:u.unit, files:[]}); m.account = u; m.name = m.name||u.name; m.kind = u.kind||m.kind; m.unit = u.unit||m.unit; });
+  return Object.values(map).sort((a,b)=>b.files.length-a.files.length || String(a.name).localeCompare(String(b.name),'tr'));
+}
+VIEWS.people = {
+  mount(){
+    setTop('Buluşçular', 'Dosyalarda yer alan kişiler ve kayıtlı kullanıcılar', '');
+    $('view').innerHTML = `<div class="card p-3 mb-4 flex flex-wrap gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i><input value="${esc(S.peopleQ)}" oninput="S.peopleQ=this.value;VIEWS.people.update()" placeholder="Ad, e-posta veya birim ara…" class="inp pl-9"></div>
+      <select class="inp !w-auto" onchange="S.peopleKind=this.value;VIEWS.people.update()"><option value="">Tüm kişiler</option>${Object.entries(KINDS).map(([k,l])=>`<option value="${k}" ${S.peopleKind===k?'selected':''}>${l}</option>`).join('')}<option value="multi" ${S.peopleKind==='multi'?'selected':''}>Birden fazla dosyada olanlar</option><option value="noacc" ${S.peopleKind==='noacc'?'selected':''}>Hesabı olmayanlar</option></select></div><div id="people-out"></div>`;
+  },
+  update(){
+    const out=$('people-out'); if (!out) return; if (!S.loaded.files) { out.innerHTML=loading(); return; }
+    const q = S.peopleQ.trim().toLocaleLowerCase('tr');
+    const ps = peopleIndex().filter(p => {
+      if (S.peopleKind==='multi') { if (p.files.length<2) return false; } else if (S.peopleKind==='noacc') { if (p.account || !p.files.length) return false; } else if (S.peopleKind && p.kind!==S.peopleKind) return false;
+      return !q || [p.name,p.email,p.unit].join(' ').toLocaleLowerCase('tr').includes(q); });
+    out.innerHTML = `<div class="text-xs text-slate-500 mb-2"><b>${ps.length}</b> kişi</div><div class="card overflow-hidden"><table class="tbl w-full"><thead><tr><th>Kişi</th><th>Tür</th><th>Birim / Kurum</th><th>Dosyalar</th><th>Hesap</th></tr></thead><tbody>
+      ${ps.map(p => `<tr><td><div class="flex items-center gap-2.5"><span class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center flex-shrink-0">${esc(initials(p.name))}</span><div><div class="font-semibold">${esc(p.name)}</div><div class="text-xs text-slate-400">${esc(p.email||'e-posta yok')}</div></div></div></td>
+        <td class="text-xs">${esc(KINDS[p.kind]||'—')}</td><td class="text-xs text-slate-600">${esc(p.unit||'—')}</td>
+        <td><div class="flex flex-wrap gap-1 max-w-[420px]">${p.files.length?p.files.map(f=>`<button onclick="openDetail('${f.id}')" title="${esc(f.title)} — ${esc(stageOf(f).label)}" class="chip ${phaseOf(f)==='tp'?'bg-indigo-50 text-indigo-700':phaseOf(f)==='tto'?'bg-amber-50 text-amber-800':'bg-emerald-50 text-emerald-700'} hover:ring-1 ring-current">${esc(f.ttoNo||'Yeni')} · ${esc(f.title.length>28?f.title.slice(0,28)+'…':f.title)}</button>`).join(''):'<span class="text-xs text-slate-300">Dosya yok</span>'}</div></td>
+        <td class="text-xs">${p.account?'<span class="chip bg-emerald-50 text-emerald-700"><i class="fas fa-circle-check"></i>Kayıtlı</span>':(p.email?'<span class="chip bg-slate-100 text-slate-500">Kayıt olmadı</span>':'<span class="text-slate-300">—</span>')}</td></tr>`).join('') || '<tr><td colspan="5" class="text-center text-slate-400 py-10">Kişi bulunamadı.</td></tr>'}
+      </tbody></table></div>
+      <p class="text-xs text-slate-400 mt-3"><i class="fas fa-circle-info mr-1"></i>Buluşçular, dosyada yazan e-posta adresiyle <b>Kayıt Ol</b> ekranından hesap açtıklarında yalnızca kendi dosyalarını görürler. Birden fazla dosyada yer alan kişi, tüm dosyalarını tek hesapta görür.</p>`;
+  }
+};
+
+// ---------- PERSONEL ----------
+VIEWS.staff = {
+  mount(){ setTop('TTO Personeli', 'Koordinatör, koordinatör yardımcısı, şef ve personel hesapları', isCoord()?`<button onclick="openStaffForm()" class="btn btn-p"><i class="fas fa-user-plus"></i> Personel Ekle</button>`:''); $('view').innerHTML='<div id="staff-out"></div>'; },
+  update(){
+    const out=$('staff-out'); if (!out) return;
+    const order = Object.keys(ROLES);
+    const ss = list(S.staff).sort((a,b)=>order.indexOf(a.role)-order.indexOf(b.role) || (b.active?1:0)-(a.active?1:0));
+    const count = k => list(S.files).filter(f=>f.responsible===ek(k) && phaseOf(f)!=='son').length;
+    out.innerHTML = `<div class="card overflow-hidden"><table class="tbl w-full"><thead><tr><th>Ad Soyad</th><th>Görev</th><th>E-posta</th><th>Açık dosya</th><th>Durum</th><th></th></tr></thead><tbody>
+      ${ss.map(s => `<tr><td class="font-semibold">${esc(s.name)}${s.email===S.user.email?' <span class="text-xs text-slate-400">(siz)</span>':''}</td><td><span class="chip ${s.role==='koordinator'?'bg-blue-100 text-blue-700':s.role==='koordinator_yrd'?'bg-sky-100 text-sky-700':s.role==='sef'?'bg-violet-100 text-violet-700':'bg-slate-100 text-slate-600'}">${ROLES[s.role]||s.role}</span></td><td class="text-xs">${esc(s.email)}</td><td class="text-sm">${count(s.email)}</td>
+        <td>${s.active?'<span class="chip bg-emerald-50 text-emerald-700">Aktif</span>':'<span class="chip bg-slate-100 text-slate-500">Pasif</span>'}</td>
+        <td class="text-right whitespace-nowrap">${isCoord()?`<button onclick="openStaffForm('${ek(s.email)}')" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-pen"></i></button>`:''} <button onclick="sendReset('${esc(s.email)}')" title="Şifre sıfırlama e-postası gönder" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-key"></i></button></td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="card p-4 mt-4 text-sm text-slate-600 bg-blue-50/50 border-blue-100"><p class="font-semibold text-slate-700 mb-1"><i class="fas fa-circle-info mr-1 text-blue-600"></i>Personel hesabı nasıl açılır?</p><ol class="list-decimal ml-5 space-y-0.5 text-xs"><li>Koordinatör buradan personelin <b>e-posta adresini ve görevini</b> ekler.</li><li>Personel, giriş ekranındaki <b>Kayıt Ol</b> sekmesinden aynı e-postayla hesap açar ve e-postasını doğrular.</li><li>Girişte sistem e-postayı tanır ve TTO personeli ekranlarını açar. Pasife alınan personel buluşçu ekranını görür.</li></ol>
+      <p class="text-xs mt-2"><b>Yetkiler:</b> Tüm personel dosya ekler, günceller, aşama değiştirir. Dosya silme ve ayarlar Koordinatör ile Koordinatör Yardımcısına; personel yönetimi yalnızca Koordinatöre açıktır.</p></div>`;
+  }
+};
+async function sendReset(email){ if (!confirm(email+' adresine şifre sıfırlama bağlantısı gönderilsin mi?')) return; try { await B.resetPass(email); toast(B.kind==='demo'?'Demo modunda e-posta gönderilmez.':'Bağlantı gönderildi.','success'); } catch(e){ toast(errMsg(e),'error'); } }
+function openStaffForm(k){
+  const s = k ? S.staff[k] : null;
+  openModal(modalHead(s?'Personeli düzenle':'Personel ekle', 'Personel bu e-postayla kayıt olunca yetkileri açılır', 'fa-id-badge') + `<div class="p-6 space-y-3">
+    <div><label class="lbl">Ad Soyad</label><input id="sf-name" class="inp" value="${esc(s?s.name:'')}"></div>
+    <div><label class="lbl">E-posta</label><input id="sf-email" class="inp" value="${esc(s?s.email:'')}" ${s?'disabled':''}></div>
+    <div><label class="lbl">Görev</label><select id="sf-role" class="inp">${Object.entries(ROLES).map(([r,l])=>`<option value="${r}" ${s&&s.role===r?'selected':''}>${l}</option>`).join('')}</select></div>
+    ${s?`<label class="flex items-center gap-2 text-sm"><input id="sf-active" type="checkbox" ${s.active?'checked':''} ${s.email===S.user.email?'disabled':''}> Aktif</label>`:''}
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button onclick="saveStaff('${k||''}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`);
+}
+async function saveStaff(k){
+  const name=$('sf-name').value.trim(), email=$('sf-email').value.trim().toLowerCase(), role=$('sf-role').value;
+  if (!name) return toast('Ad soyad girin.','error'); if (!validEmail(email)) return toast('Geçerli e-posta girin.','error');
+  const key = k || ek(email);
+  if (!k && S.staff[key]) return toast('Bu e-posta zaten personel listesinde.','error');
+  const old = S.staff[key]||{};
+  if (key===S.user.ek && role!=='koordinator') return toast('Kendi koordinatör yetkinizi kaldıramazsınız. Önce başka bir koordinatör tanımlayın.','error');
+  const active = $('sf-active') ? $('sf-active').checked : true;
+  try { await B.set('staff/'+key, {...old, email, name, role, active, addedAt:old.addedAt||Date.now()}); closeModal(); toast('Kaydedildi.','success'); } catch(e){ toast(errMsg(e),'error'); }
+}
+
+// ---------- AYARLAR ----------
+VIEWS.settings = {
+  mount(){
+    setTop('Ayarlar', 'Kurum bilgisi ve beklenen süreler', '');
+    const c = setting(), ro = !isMgr();
+    $('view').innerHTML = `<div class="max-w-3xl space-y-5">
+      ${ro?'<div class="card p-3 text-sm bg-amber-50 border-amber-200 text-amber-800"><i class="fas fa-lock mr-1"></i>Ayarları yalnızca Koordinatör ve Koordinatör Yardımcısı değiştirebilir.</div>':''}
+      <div class="card p-5 space-y-3"><h3 class="font-bold">Kurum</h3>
+        <div><label class="lbl">Kurum / ofis adı</label><input id="st-org" class="inp" value="${esc(c.orgName)}" ${ro?'disabled':''}></div>
+        <div><label class="lbl">Varsayılan hak sahibi (başvuru sahibi)</label><input id="st-owner" class="inp" value="${esc(c.ownerDefault)}" ${ro?'disabled':''}></div></div>
+      <div class="card p-5"><h3 class="font-bold mb-1">TÜRKPATENT'te beklenen ortalama süre (ay)</h3>
+        <p class="text-xs text-slate-500 mb-4">Dosya kartlarındaki bekleme çubuğu ve "ortalama süre aşıldı" uyarısı bu değerlere göre hesaplanır. TÜRKPATENT'in açıkladığı ortalama patent tescil süresi 2023'te 36 ay, 2024'te 30 ay, 2025'in ilk 8 ayında 25 aydır. Diğer türler için değerler yaklaşıktır; kendi dosyalarınızdaki gerçekleşen sürelere göre güncelleyin.</p>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">${Object.entries(TYPES).map(([k,t])=>`<div><label class="lbl">${t.short}</label><input id="st-exp-${k}" type="number" min="1" max="120" class="inp" value="${c.expected[k]}" ${ro?'disabled':''}></div>`).join('')}</div>
+        ${realizedDurations()}</div>
+      <div class="card p-5"><h3 class="font-bold mb-1">Hak talebi kararı için hatırlatma (ay)</h3>
+        <p class="text-xs text-slate-500 mb-3">TTO'ya bildirim tarihinden itibaren bu süre sonunda "hak talebi kararı" hatırlatması gösterilir. Süreyi SMK m.121 ve üniversitenizin buluş yönergesine göre kontrol edip ayarlayın.</p>
+        <input id="st-claim" type="number" min="1" max="24" class="inp !w-32" value="${c.claimMonths}" ${ro?'disabled':''}></div>
+      ${ro?'':`<div class="flex gap-2"><button onclick="saveSettings()" class="btn btn-p"><i class="fas fa-check"></i> Ayarları kaydet</button><button onclick="exportJson()" class="btn btn-s"><i class="fas fa-download"></i> Dosya verilerini yedekle (JSON)</button></div>`}
+      <p class="text-xs text-slate-400">TTO Takip v${APP_VERSION} · ${B.kind==='demo'?'Demo modu':'Firebase'}</p>
+    </div>`;
+  }
+};
+function realizedDurations(){
+  const rows = Object.entries(TYPES).map(([k,t]) => { const xs = list(S.files).filter(f=>f.type===k && f.stage==='tescil' && f.tpAppDate && f.regDate).map(f=>daysBetween(f.tpAppDate,f.regDate)); if (!xs.length) return ''; const avg = xs.reduce((a,b)=>a+b,0)/xs.length; return `<span class="chip bg-emerald-50 text-emerald-700">${t.short}: ${xs.length} tescil, ort. ${(avg/30.44).toFixed(1)} ay</span>`; }).filter(Boolean);
+  return rows.length ? `<div class="mt-4 text-xs text-slate-500">Sizin dosyalarınızda gerçekleşen süre (başvuru → tescil): <div class="flex flex-wrap gap-1.5 mt-1.5">${rows.join('')}</div></div>` : '';
+}
+async function saveSettings(){
+  const exp = {}; Object.keys(TYPES).forEach(k => { const v = parseInt($('st-exp-'+k).value,10); exp[k] = v>0?v:DEFAULT_SETTINGS.expected[k]; });
+  const claim = parseInt($('st-claim').value,10);
+  try { await B.set('settings', {orgName:$('st-org').value.trim()||DEFAULT_SETTINGS.orgName, ownerDefault:$('st-owner').value.trim()||DEFAULT_SETTINGS.ownerDefault, expected:exp, claimMonths: claim>0?claim:4}); toast('Ayarlar kaydedildi.','success'); } catch(e){ toast(errMsg(e),'error'); }
+}
+function exportJson(){
+  const data = {exportedAt:new Date().toISOString(), files:S.files, internal:S.internal, staff:S.staff, users:S.users, settings:S.settings};
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download='TTO_yedek_'+today()+'.json'; a.click();
+}
+
+// ============================================================
+// DOSYA DETAYI
+// ============================================================
+function openDetail(fid){
+  if (!S.files[fid]) return toast('Dosya bulunamadı.','error');
+  const existing = S.modalStack.find(m=>m.detail);
+  if (existing) closeModal(existing.id);
+  S.detailId = fid;
+  const id = openModal('', {wide:true, refresh: body => { if (S.files[fid]) body.innerHTML = detailHtml(fid); else { closeModal(id); } }});
+  S.modalStack[S.modalStack.length-1].detail = true;
+  $(id).querySelector('.modal-body').innerHTML = detailHtml(fid);
+}
+function section(title, icon, body, action){ return `<div class="mb-6"><div class="flex items-center justify-between mb-2.5"><h4 class="text-xs font-bold uppercase tracking-wide text-slate-500"><i class="fas ${icon} mr-1.5"></i>${title}</h4>${action||''}</div>${body}</div>`; }
+function kv(label, val){ return `<div><div class="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">${label}</div><div class="text-sm text-slate-800 mt-0.5">${val||'<span class="text-slate-300">—</span>'}</div></div>`; }
+function detailHtml(fid){
+  const f = S.files[fid]; const staff = isStaff(); const inr = S.internal[fid]||{};
+  const inv = inventorsOf(f);
+  const hist = historyOf(f).map(h=>({...h, pub:true}));
+  if (staff) Object.entries(inr.notes||{}).forEach(([id,n]) => hist.push({id, at:n.at, date:dStr(new Date(n.at)), note:n.text, byName:n.byName, internal:true}));
+  hist.sort((a,b)=>(b.at||0)-(a.at||0));
+  const pubDocs = Object.entries(f.pubDocs||{}).map(([id,d])=>({id,...d, public:true}));
+  const privDocs = staff ? Object.entries(inr.docs||{}).map(([id,d])=>({id,...d, public:false})) : [];
+  const docs = [...pubDocs, ...privDocs].sort((a,b)=>(b.at||0)-(a.at||0));
+  const dls = staff ? deadlinesOf(f) : [];
+  const canDelDoc = d => staff || d.by===S.user.ek;
+  const mailto = 'mailto:'+inv.filter(p=>p.email).map(p=>p.email).join(',')+'?subject='+encodeURIComponent((f.ttoNo?f.ttoNo+' - ':'')+f.title)+'&body='+encodeURIComponent('Sayın buluşçumuz,\n\n"'+f.title+'" başlıklı dosyanızın güncel durumu: '+stageOf(f).label+'.\n\n'+setting().orgName);
+  return `
+  <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+    <div class="flex items-start gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 mb-1.5">${typeChip(f)} ${phaseChip(f)} ${ttoNoHtml(f)} ${f.source==='portal'?'<span class="chip bg-blue-50 text-blue-700"><i class="fas fa-globe"></i>Portal başvurusu</span>':''}</div>
+        <h2 class="text-xl font-bold text-slate-800 leading-snug">${esc(f.title)}</h2>
+        ${f.summary?`<p class="text-sm text-slate-500 mt-1">${esc(f.summary)}</p>`:''}
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        ${staff?`<button onclick="openStageModal('${fid}')" class="btn btn-p"><i class="fas fa-arrow-right-arrow-left"></i> Aşama değiştir</button>
+          <button onclick="openFileForm('${fid}')" class="btn btn-s" title="Düzenle"><i class="fas fa-pen"></i></button>
+          <a href="${esc(mailto)}" class="btn btn-s" title="Buluşçulara e-posta yaz"><i class="fas fa-envelope"></i></a>
+          ${isMgr()?`<button onclick="deleteFile('${fid}')" class="btn btn-d" title="Dosyayı sil"><i class="fas fa-trash"></i></button>`:''}`:''}
+        <button onclick="closeModal()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-100"><i class="fas fa-xmark"></i></button>
+      </div>
+    </div>
+  </div>
+  <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">${stepperHtml(f)}<div class="mt-4">${waitBox(f)}</div></div>
+  <div class="grid lg:grid-cols-5 gap-6 p-6">
+    <div class="lg:col-span-3">
+      ${section('Bilgiler','fa-circle-info', `<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        ${kv("TTO'ya başvuru", fmtD(ttoDateOf(f)))}${kv('Hak sahibi', esc(f.owner))}${kv('Sorumlu TTO personeli', esc(f.responsibleName))}
+        ${kv('TÜRKPATENT başvuru tarihi', fmtD(f.tpAppDate))}${kv('Başvuru numarası', f.tpAppNo?`<span class="font-mono">${esc(f.tpAppNo)}</span>`:'')}${kv('Bülten yayın tarihi', fmtD(f.pubDate))}
+        ${kv('Tescil tarihi', f.regDate?`<b class="text-emerald-700">${fmtD(f.regDate)}</b>`:'')}${kv('Tescil numarası', f.regNo?`<span class="font-mono">${esc(f.regNo)}</span>`:'')}${kv('Güncel aşama', esc(stageOf(f).label)+(f.stageDate?' <span class="text-slate-400 text-xs">· '+fmtD(f.stageDate)+'</span>':''))}
+      </div>`)}
+      ${section('Geçmiş', 'fa-clock-rotate-left', hist.length?`<div class="relative pl-6"><div class="absolute left-2 top-1 bottom-1 w-px bg-slate-200"></div>${hist.map(h=>`<div class="relative mb-4"><span class="absolute -left-[22px] top-0.5 w-4 h-4 rounded-full ${h.internal?'bg-slate-300':'bg-blue-500'} ring-4 ring-white"></span>
+        <div class="text-sm">${h.stage?`<b>${esc((STAGES[h.stage]||{}).label||h.stage)}</b>`:'<b class="text-slate-500"><i class="fas fa-lock text-xs mr-1"></i>İç not</b>'} <span class="text-xs text-slate-400">· ${fmtD(h.date)}${h.byName?' · '+esc(h.byName):''}</span></div>
+        ${h.note?`<div class="text-sm text-slate-600 mt-0.5 ${h.internal?'bg-slate-50 border border-slate-100 rounded-lg px-3 py-2':''}">${esc(h.note).replace(/\n/g,'<br>')}</div>`:''}</div>`).join('')}</div>`:'<p class="text-sm text-slate-400">Kayıt yok.</p>',
+        staff?`<button onclick="openNoteModal('${fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-lock mr-1"></i>İç not ekle</button>`:'')}
+    </div>
+    <div class="lg:col-span-2">
+      ${section('Buluşçular ('+inv.length+')', 'fa-users', `<div class="space-y-2">${inv.map(p=>`<div class="flex items-center gap-2.5 p-2 rounded-lg ${p.email&&ek(p.email)===S.user.ek?'bg-emerald-50':'bg-slate-50'}"><span class="w-8 h-8 rounded-full bg-white text-slate-600 text-xs font-bold flex items-center justify-center flex-shrink-0 border border-slate-200">${esc(initials(p.name))}</span><div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">${esc(p.name)}${p.email&&ek(p.email)===S.user.ek?' <span class="text-xs text-emerald-700 font-normal">(siz)</span>':''}</div><div class="text-[11px] text-slate-400 truncate">${esc(KINDS[p.kind]||'')}${p.unit?' · '+esc(p.unit):''}</div>${staff&&p.email?`<div class="text-[11px] text-slate-400 truncate">${esc(p.email)} ${S.users[ek(p.email)]?'<i class="fas fa-circle-check text-emerald-500" title="Kayıtlı kullanıcı"></i>':''}</div>`:''}</div>${p.share?`<span class="text-xs font-semibold text-slate-500">%${esc(p.share)}</span>`:''}</div>`).join('')}</div>`)}
+      ${staff?section('Süreler','fa-calendar-days', dls.length?`<div class="space-y-1.5">${dls.map(d=>`<div class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 ${d.done?'opacity-60':''}">${d.id?`<input type="checkbox" ${d.done?'checked':''} onchange="toggleDeadline('${fid}','${d.id}',this.checked)">`:'<i class="fas fa-wand-magic-sparkles text-slate-300 text-xs" title="Otomatik hesaplandı"></i>'}<div class="flex-1 min-w-0"><div class="text-xs font-semibold ${d.done?'line-through':''}">${esc(d.title)}</div><div class="text-[11px] text-slate-400">${fmtD(d.date)}${d.hint?' · '+esc(d.hint):''}</div></div>${dueChip(d.date,d.done)}${d.id?`<button onclick="removeDeadline('${fid}','${d.id}')" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-xmark"></i></button>`:''}</div>`).join('')}</div>`:'<p class="text-sm text-slate-400">Süre yok.</p>',
+        `<button onclick="openDeadlineModal('${fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-plus mr-1"></i>Süre ekle</button>`):''}
+      ${section('Belgeler', 'fa-paperclip', `<div class="space-y-1.5">${docs.map(d=>`<div class="flex items-center gap-2.5 p-2 rounded-lg border border-slate-100"><i class="fas ${fileIcon(d.name)} text-lg"></i><div class="flex-1 min-w-0"><div class="text-xs font-semibold truncate">${esc(d.name)}</div><div class="text-[11px] text-slate-400">${fmtSize(d.size)} · ${esc(d.byName||'')} · ${fmtTs(d.at)}${staff?(d.public?' · <span class="text-emerald-600">buluşçular görür</span>':' · <span class="text-slate-500"><i class="fas fa-lock"></i> yalnız TTO</span>'):''}</div></div>
+          ${fileExt(d.name)==='pdf'?`<button onclick="downloadDoc('${fid}','${d.id}','view')" class="text-slate-400 hover:text-blue-600 text-sm" title="Görüntüle"><i class="fas fa-eye"></i></button>`:''}<button onclick="downloadDoc('${fid}','${d.id}')" class="text-slate-400 hover:text-blue-600 text-sm" title="İndir"><i class="fas fa-download"></i></button>${canDelDoc(d)?`<button onclick="deleteDoc('${fid}','${d.id}',${d.public})" class="text-slate-300 hover:text-red-500 text-sm" title="Sil"><i class="fas fa-trash"></i></button>`:''}</div>`).join('') || '<p class="text-sm text-slate-400">Belge yok.</p>'}</div>
+        <div class="mt-2.5"><label class="btn btn-s w-full justify-center cursor-pointer text-xs"><i class="fas fa-upload"></i> Belge yükle<input type="file" class="hidden" multiple onchange="uploadFromDetail('${fid}', this)"></label>
+        ${staff?`<label class="flex items-center gap-2 text-xs text-slate-500 mt-2"><input id="up-public-${fid}" type="checkbox"> Buluşçular da görebilsin</label>`:'<p class="text-[11px] text-slate-400 mt-1.5">Yüklediğiniz belgeyi TTO ve dosyadaki diğer buluşçular görür.</p>'}
+        <div id="up-prog-${fid}" class="hidden mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500 transition-all" style="width:0%"></div></div></div>`)}
+    </div>
+  </div>`;
+}
+async function uploadFromDetail(fid, input){
+  const files = Array.from(input.files||[]); input.value=''; if (!files.length) return;
+  const pub = isStaff() ? !!($('up-public-'+fid)||{}).checked : true;
+  const prog = $('up-prog-'+fid);
+  for (const file of files) {
+    const err = validateFile(file); if (err) { toast(file.name+': '+err,'error'); continue; }
+    try { if (prog) prog.classList.remove('hidden');
+      await uploadDoc(fid, file, pub, p => { const b=$('up-prog-'+fid); if (b) { b.classList.remove('hidden'); b.firstElementChild.style.width=Math.round(p*100)+'%'; } });
+      toast(file.name+' yüklendi.','success');
+      if (!isStaff()) notifyStaff(((S.profile&&S.profile.name)||S.user.email)+' "'+S.files[fid].title+'" dosyasına belge yükledi: '+file.name, fid).catch(()=>{});
+    } catch(e){ toast(file.name+': '+errMsg(e),'error'); }
+  }
+  const b=$('up-prog-'+fid); if (b) b.classList.add('hidden');
+}
+async function deleteFile(fid){
+  const f=S.files[fid]; if (!f) return;
+  if (prompt('Bu dosya, geçmişi ve tüm belgeleri kalıcı olarak silinecek.\nOnaylamak için SİL yazın:\n\n'+f.title)!=='SİL') return;
+  try {
+    const upd = {['files/'+fid]:null, ['internal/'+fid]:null, ['docs/'+fid]:null};
+    inventorsOf(f).forEach(p => { if (p.email) upd['userFiles/'+ek(p.email)+'/'+fid]=null; });
+    if (f.createdBy) upd['userFiles/'+f.createdBy+'/'+fid]=null;
+    await B.update('', upd); closeAllModals(); toast('Dosya silindi.','success');
+  } catch(e){ toast(errMsg(e),'error'); }
+}
+
+function openWhenLoaded(fid, tries=0){ if (S.files[fid]) return openDetail(fid); if (tries<25) setTimeout(()=>openWhenLoaded(fid, tries+1), 120); }
+
+// ---------- AŞAMA DEĞİŞTİR ----------
+function stageOptions(cur, type){
+  const flow = FLOW[type]||FLOW.diger;
+  return Object.entries(PHASES).map(([pk,p]) => `<optgroup label="${p.label}">${Object.entries(STAGES).filter(([k,s])=>s.phase===pk).map(([k,s])=>`<option value="${k}" ${k===cur?'selected':''}>${s.label}${!flow.includes(k)&&!s.side?' (bu türde genelde yok)':''}</option>`).join('')}</optgroup>`).join('');
+}
+function openStageModal(fid){
+  const f=S.files[fid]; const flow=FLOW[f.type]||FLOW.diger; const i=flow.indexOf(f.stage);
+  const next = i>=0 && i<flow.length-1 ? flow[i+1] : f.stage;
+  openModal(modalHead('Aşama değiştir', esc(f.title), 'fa-arrow-right-arrow-left') + `<div class="p-6 space-y-3">
+    <div class="text-xs text-slate-500">Şu an: <b>${esc(stageOf(f).label)}</b></div>
+    <div class="grid grid-cols-3 gap-3"><div class="col-span-2"><label class="lbl">Yeni aşama</label><select id="sg-stage" class="inp" onchange="stageExtra('${fid}')">${stageOptions(next, f.type)}</select></div>
+      <div><label class="lbl">Tarih</label><input id="sg-date" type="date" class="inp" value="${today()}"></div></div>
+    <div id="sg-extra"></div>
+    <div><label class="lbl">Buluşçulara görünen açıklama</label><textarea id="sg-note" rows="3" class="inp" placeholder="Örn: Araştırma raporu olumlu geldi, inceleme talebi yapılacak."></textarea></div>
+    <div><label class="lbl"><i class="fas fa-lock mr-1"></i>İç not (yalnız TTO görür)</label><textarea id="sg-inote" rows="2" class="inp"></textarea></div>
+    <label class="flex items-center gap-2 text-sm"><input id="sg-notify" type="checkbox" checked> Buluşçulara uygulama içi bildirim gönder</label>
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="sg-save" onclick="saveStage('${fid}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`, {sticky:true});
+  stageExtra(fid);
+}
+function stageExtra(fid){
+  const f=S.files[fid], st=$('sg-stage').value; let h='';
+  if (st==='tp_basvuru' || (STAGES[st].phase==='tp' && !f.tpAppDate)) h += `<div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-indigo-50"><div><label class="lbl">TÜRKPATENT başvuru tarihi</label><input id="sg-tpd" type="date" class="inp" value="${esc(f.tpAppDate||$('sg-date').value)}"></div><div><label class="lbl">Başvuru numarası</label><input id="sg-tpn" class="inp" value="${esc(f.tpAppNo||'')}" placeholder="2026/012345"></div></div>`;
+  if (st==='tp_yayin') h += `<div class="p-3 rounded-xl bg-indigo-50"><label class="lbl">Bülten yayın tarihi</label><input id="sg-pub" type="date" class="inp" value="${esc(f.pubDate||$('sg-date').value)}"></div>`;
+  if (st==='tescil') h += `<div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-emerald-50"><div><label class="lbl">Tescil tarihi</label><input id="sg-regd" type="date" class="inp" value="${esc(f.regDate||$('sg-date').value)}"></div><div><label class="lbl">Tescil numarası</label><input id="sg-regn" class="inp" value="${esc(f.regNo||'')}"></div></div>`;
+  $('sg-extra').innerHTML = h;
+}
+async function saveStage(fid){
+  const f=S.files[fid]; const stage=$('sg-stage').value, date=$('sg-date').value||today();
+  const note=$('sg-note').value.trim(), inote=$('sg-inote').value.trim(), notify=$('sg-notify').checked;
+  const upd = {stage, stageDate:date, updatedAt:Date.now()};
+  const v = id => $(id) ? $(id).value.trim() : null;
+  if ($('sg-tpd')) { upd.tpAppDate = v('sg-tpd')||null; upd.tpAppNo = v('sg-tpn')||null; }
+  if ($('sg-pub')) upd.pubDate = v('sg-pub')||null;
+  if ($('sg-regd')) { upd.regDate = v('sg-regd')||null; upd.regNo = v('sg-regn')||null; }
+  if (stage==='tp_basvuru' && !upd.tpAppDate) return toast('TÜRKPATENT başvuru tarihini girin.','error');
+  const btn=$('sg-save'); busy(btn,true);
+  try {
+    const hid = B.newKey('files/'+fid+'/history');
+    const multi = {};
+    Object.entries(upd).forEach(([k,x]) => multi['files/'+fid+'/'+k]=x);
+    multi['files/'+fid+'/history/'+hid] = {stage, date, at:Date.now(), note, byName:S.me.name, by:S.user.ek};
+    if (inote) multi['internal/'+fid+'/notes/'+B.newKey('internal')] = {at:Date.now(), text:inote, byName:S.me.name};
+    await B.update('', multi);
+    if (!f.ttoNo && stage!=='basvuru') await assignTtoNo(fid).catch(e=>console.warn(e));
+    if (notify) await notifyInventors({...f, ...upd}, '"'+f.title+'" dosyanız → '+STAGES[stage].label+(note?' · '+note:'')).catch(e=>console.warn(e));
+    closeModal(); toast('Aşama güncellendi.','success');
+  } catch(e){ toast(errMsg(e),'error'); busy(btn,false); }
+}
+
+// ---------- NOT / SÜRE ----------
+function openNoteModal(fid){
+  openModal(modalHead('İç not ekle','Yalnızca TTO personeli görür','fa-lock') + `<div class="p-6"><textarea id="nt-text" rows="4" class="inp" placeholder="Not…"></textarea></div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button onclick="saveNote('${fid}')" class="btn btn-p"><i class="fas fa-check"></i> Ekle</button></div>`);
+  setTimeout(()=>$('nt-text')?.focus(),50);
+}
+async function saveNote(fid){ const t=$('nt-text').value.trim(); if (!t) return; try { await B.set('internal/'+fid+'/notes/'+B.newKey('internal'), {at:Date.now(), text:t, byName:S.me.name}); closeModal(); } catch(e){ toast(errMsg(e),'error'); } }
+function openDeadlineModal(fid){
+  openModal(modalHead('Süre ekle','Örn: inceleme talebi, yıllık ücret, itiraz cevabı, eksik belge','fa-calendar-plus') + `<div class="p-6 space-y-3">
+    <div><label class="lbl">Başlık</label><input id="dl-title" class="inp" list="dl-suggest"><datalist id="dl-suggest"><option>İnceleme talebi son günü</option><option>Yıllık ücret ödemesi</option><option>İtiraza cevap son günü</option><option>Eksik belge tamamlama</option><option>Tescil belge ücreti</option><option>Yurt dışı (PCT) başvuru kararı</option><option>Kurul toplantısı</option></datalist></div>
+    <div><label class="lbl">Tarih</label><input id="dl-date" type="date" class="inp"></div></div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button onclick="saveDeadline('${fid}')" class="btn btn-p"><i class="fas fa-check"></i> Ekle</button></div>`);
+}
+async function saveDeadline(fid){ const t=$('dl-title').value.trim(), d=$('dl-date').value; if (!t||!d) return toast('Başlık ve tarih girin.','error'); try { await B.set('internal/'+fid+'/deadlines/'+B.newKey('internal'), {title:t, date:d, done:false}); closeModal(); } catch(e){ toast(errMsg(e),'error'); } }
+async function toggleDeadline(fid, id, done){ try { await B.set('internal/'+fid+'/deadlines/'+id+'/done', done); } catch(e){ toast(errMsg(e),'error'); } }
+async function removeDeadline(fid, id){ if (!confirm('Süre silinsin mi?')) return; try { await B.remove('internal/'+fid+'/deadlines/'+id); } catch(e){ toast(errMsg(e),'error'); } }
+
+// ============================================================
+// DOSYA FORMU (personel: yeni/düzenle · buluşçu: yeni başvuru)
+// ============================================================
+function knownPeople(){ const m={}; list(S.files).forEach(f=>inventorsOf(f).forEach(p=>{ if (p.email) m[ek(p.email)]=p; })); Object.entries(S.users||{}).forEach(([k,u])=>{ m[k]={...m[k], ...u}; }); return m; }
+function invRowHtml(p, locked){
+  p = p||{};
+  return `<div class="inv-row grid grid-cols-12 gap-2 items-start p-2 rounded-xl ${locked?'bg-emerald-50':'bg-slate-50'}">
+    <input class="inp col-span-3 inv-name" placeholder="Ad Soyad" value="${esc(p.name||'')}" ${locked?'readonly':''}>
+    <input class="inp col-span-3 inv-email" placeholder="E-posta" list="people-dl" value="${esc(p.email||'')}" ${locked?'readonly':''} onchange="fillFromKnown(this)">
+    <select class="inp col-span-2 inv-kind" ${locked?'disabled':''}>${Object.entries(KINDS).map(([k,l])=>`<option value="${k}" ${p.kind===k?'selected':''}>${{akademik:'Akademik',ogrenci:'Öğrenci',idari:'İdari',harici:'Harici'}[k]}</option>`).join('')}</select>
+    <input class="inp col-span-2 inv-unit" placeholder="Birim / Kurum" value="${esc(p.unit||'')}" ${locked?'readonly':''}>
+    <input class="inp col-span-1 inv-share !px-2" placeholder="%" type="number" min="0" max="100" value="${esc(p.share??'')}">
+    <div class="col-span-1 flex justify-end">${locked?'<span class="text-[10px] text-emerald-700 font-semibold mt-2.5">Siz</span>':`<button type="button" onclick="this.closest('.inv-row').remove()" class="w-9 h-9 rounded-lg text-slate-400 hover:text-red-500 hover:bg-white"><i class="fas fa-xmark"></i></button>`}</div></div>`;
+}
+function fillFromKnown(inp){
+  const p = knownPeople()[ek(inp.value)]; if (!p) return;
+  const row = inp.closest('.inv-row');
+  if (!row.querySelector('.inv-name').value) row.querySelector('.inv-name').value = p.name||'';
+  if (!row.querySelector('.inv-unit').value) row.querySelector('.inv-unit').value = p.unit||'';
+  if (p.kind) row.querySelector('.inv-kind').value = p.kind;
+}
+function addInvRow(){ $('inv-rows').insertAdjacentHTML('beforeend', invRowHtml({kind:'akademik'})); }
+function collectInventors(){
+  const out = {}; let i=0; const errs=[];
+  document.querySelectorAll('#inv-rows .inv-row').forEach(r => {
+    const name=r.querySelector('.inv-name').value.trim(), email=r.querySelector('.inv-email').value.trim().toLowerCase();
+    if (!name && !email) return;
+    if (!name) { errs.push('Her buluşçunun adını yazın.'); return; }
+    if (email && !validEmail(email)) { errs.push(name+': e-posta geçersiz.'); return; }
+    const share = r.querySelector('.inv-share').value;
+    const key = email ? ek(email) : 'x'+pushId();
+    if (out[key]) { errs.push(email+' iki kez yazılmış.'); return; }
+    out[key] = {name, email:email||null, kind:r.querySelector('.inv-kind').value, unit:r.querySelector('.inv-unit').value.trim()||null, share:share===''?null:Number(share), order:i++};
+  });
+  return {inv:out, errs};
+}
+function fileFormHtml(f, applicant){
+  const c=setting();
+  const staffOpts = list(S.staff).filter(s=>s.active).map(s=>`<option value="${esc(ek(s.email))}" ${(f?f.responsible:S.user.ek)===ek(s.email)?'selected':''}>${esc(s.name)} — ${ROLES[s.role]}</option>`).join('');
+  const people = Object.values(knownPeople()).map(p=>`<option value="${esc(p.email)}">${esc(p.name)}</option>`).join('');
+  const meRow = applicant ? {name:S.profile?.name||'', email:S.user.email, kind:S.profile?.kind||'akademik', unit:S.profile?.unit||''} : null;
+  const invs = f ? inventorsOf(f) : [];
+  return `<div class="p-6 space-y-5">
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="lbl">Tür</label><select id="ff-type" class="inp">${Object.entries(TYPES).map(([k,t])=>`<option value="${k}" ${f&&f.type===k?'selected':''}>${t.label}</option>`).join('')}</select></div>
+      <div class="col-span-2"><label class="lbl">${applicant?'Buluşun / tasarımın / markanın adı':'Başlık (buluş adı, tasarım adı veya marka ismi)'}</label><input id="ff-title" class="inp" value="${esc(f?f.title:'')}"></div>
+      <div class="col-span-3"><label class="lbl">Kısa açıklama</label><textarea id="ff-summary" rows="2" class="inp" placeholder="${applicant?'Buluşunuz hangi sorunu nasıl çözüyor? (Gizli teknik ayrıntıları buraya yazmanıza gerek yok; belge olarak ekleyebilirsiniz.)':''}">${esc(f?f.summary:'')}</textarea></div>
+    </div>
+    ${applicant?'':`<div class="grid grid-cols-3 gap-3">
+      <div><label class="lbl">TTO dosya no</label><input id="ff-no" class="inp font-mono" value="${esc(f&&f.ttoNo||'')}" placeholder="Boşsa otomatik verilir"></div>
+      <div><label class="lbl">TTO'ya başvuru tarihi</label><input id="ff-ttod" type="date" class="inp" value="${esc(f?ttoDateOf(f):today())}"></div>
+      <div><label class="lbl">Sorumlu personel</label><select id="ff-resp" class="inp"><option value="">—</option>${staffOpts}</select></div>
+      <div class="col-span-3"><label class="lbl">Hak sahibi / başvuru sahibi</label><input id="ff-owner" class="inp" value="${esc(f?f.owner:c.ownerDefault)}"></div>
+    </div>
+    <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4"><div class="text-xs font-bold text-indigo-800 uppercase tracking-wide mb-3"><i class="fas fa-landmark mr-1"></i>TÜRKPATENT bilgileri</div>
+      <div class="grid grid-cols-3 gap-3">
+        <div><label class="lbl">Başvuru tarihi</label><input id="ff-tpd" type="date" class="inp" value="${esc(f&&f.tpAppDate||'')}"></div>
+        <div><label class="lbl">Başvuru numarası</label><input id="ff-tpn" class="inp font-mono" value="${esc(f&&f.tpAppNo||'')}"></div>
+        <div><label class="lbl">Bülten yayın tarihi</label><input id="ff-pub" type="date" class="inp" value="${esc(f&&f.pubDate||'')}"></div>
+        <div><label class="lbl">Tescil tarihi</label><input id="ff-regd" type="date" class="inp" value="${esc(f&&f.regDate||'')}"></div>
+        <div><label class="lbl">Tescil numarası</label><input id="ff-regn" class="inp font-mono" value="${esc(f&&f.regNo||'')}"></div>
+        ${f?'':`<div><label class="lbl">Başlangıç aşaması</label><select id="ff-stage" class="inp">${stageOptions('basvuru','patent')}</select></div>`}
+      </div>
+      ${f?'':'<p class="text-[11px] text-indigo-800/70 mt-2">Eski dosyaları sisteme aktarırken başlangıç aşamasını ve TÜRKPATENT tarihlerini girin; bekleme süresi bu tarihten hesaplanır.</p>'}
+    </div>`}
+    <div><div class="flex items-center justify-between mb-2"><label class="lbl !mb-0">Buluşçular <span class="normal-case font-normal text-slate-400">— her biri kendi e-postasıyla dosyayı takip eder</span></label><button type="button" onclick="addInvRow()" class="text-xs text-blue-600 font-semibold hover:underline"><i class="fas fa-plus mr-1"></i>Buluşçu ekle</button></div>
+      <div class="grid grid-cols-12 gap-2 px-2 text-[10px] text-slate-400 font-semibold uppercase"><span class="col-span-3">Ad Soyad</span><span class="col-span-3">E-posta</span><span class="col-span-2">Tür</span><span class="col-span-2">Birim / Kurum</span><span class="col-span-1">Pay</span></div>
+      <div id="inv-rows" class="space-y-1.5 mt-1">${applicant?invRowHtml(meRow,true):''}${invs.map(p=>invRowHtml(p)).join('')}${(!f && !applicant)?invRowHtml({kind:'akademik'}):''}</div>
+      <datalist id="people-dl">${people}</datalist></div>
+    ${f?'':`<div><label class="lbl">Belgeler ${applicant?'(buluş bildirim formu, tarifname taslağı, çizimler…)':'(isteğe bağlı)'}</label><input id="ff-docs" type="file" multiple class="inp">
+      ${applicant?'':'<label class="flex items-center gap-2 text-xs text-slate-500 mt-1.5"><input id="ff-docs-pub" type="checkbox" checked> Buluşçular da görebilsin</label>'}</div>`}
+  </div>`;
+}
+function openFileForm(fid){
+  const f = fid ? S.files[fid] : null;
+  openModal(modalHead(f?'Dosyayı düzenle':'Yeni dosya', f?esc(f.title):'TTO kaydı oluşturun', f?'fa-pen':'fa-folder-plus') + fileFormHtml(f,false)
+    + `<div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="ff-save" onclick="saveFileForm('${fid||''}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`, {mid:true, sticky:true});
+}
+async function saveFileForm(fid){
+  const g = id => ($(id)?$(id).value.trim():'');
+  const title=g('ff-title'); if (!title) return toast('Başlık girin.','error');
+  const {inv, errs} = collectInventors(); if (errs.length) return toast(errs[0],'error');
+  if (!Object.keys(inv).length) return toast('En az bir buluşçu / başvuru sorumlusu ekleyin.','error');
+  const respK = g('ff-resp'); const resp = S.staff[respK];
+  const data = {type:g('ff-type'), title, summary:g('ff-summary'), owner:g('ff-owner'), ttoDate:g('ff-ttod')||today(), responsible:respK||null, responsibleName:resp?resp.name:null,
+    tpAppDate:g('ff-tpd')||null, tpAppNo:g('ff-tpn')||null, pubDate:g('ff-pub')||null, regDate:g('ff-regd')||null, regNo:g('ff-regn')||null, inventors:inv, updatedAt:Date.now()};
+  const no = g('ff-no');
+  const btn=$('ff-save'); busy(btn,true);
+  try {
+    if (fid) {
+      const old = S.files[fid];
+      const upd = {}; Object.entries(data).forEach(([k,x]) => upd['files/'+fid+'/'+k]=x);
+      if (no && no!==old.ttoNo) upd['files/'+fid+'/ttoNo']=no;
+      // buluşçu dizini
+      Object.keys(inv).forEach(k => { if (inv[k].email) upd['userFiles/'+k+'/'+fid]=true; });
+      Object.entries(old.inventors||{}).forEach(([k,p]) => { if (p.email && !inv[k] && k!==old.createdBy) upd['userFiles/'+k+'/'+fid]=null; });
+      await B.update('', upd);
+      const added = Object.entries(inv).filter(([k,p]) => p.email && !(old.inventors||{})[k]);
+      if (added.length) { const nu={}; added.forEach(([k])=>nu['notifs/'+k+'/'+B.newKey('notifs')]={at:Date.now(), text:'"'+title+'" dosyasına buluşçu olarak eklendiniz.', fid, read:false}); await B.update('', nu).catch(()=>{}); }
+      closeModal(); toast('Dosya güncellendi.','success');
+    } else {
+      const id = B.newKey('files'); const stage = g('ff-stage')||'basvuru';
+      const stageDate = STAGES[stage].phase==='tp' && data.tpAppDate && stage==='tp_basvuru' ? data.tpAppDate : (stage==='tescil'&&data.regDate?data.regDate:data.ttoDate);
+      const hist = {h0:{stage:'basvuru', date:data.ttoDate, at:Date.now()-1000, note:'Dosya TTO tarafından oluşturuldu.', byName:S.me.name, by:S.user.ek}};
+      if (stage!=='basvuru') hist.h1 = {stage, date:stageDate, at:Date.now(), note:'Dosya sisteme bu aşamada aktarıldı.', byName:S.me.name, by:S.user.ek};
+      const file = {id, ...data, ttoNo:no||null, stage, stageDate, source:'tto', createdAt:Date.now(), createdBy:S.user.ek, createdByName:S.me.name, history:hist};
+      const upd = {['files/'+id]:file}; Object.keys(inv).forEach(k => { if (inv[k].email) upd['userFiles/'+k+'/'+id]=true; });
+      await B.update('', upd);
+      if (!no) await assignTtoNo(id).catch(e=>console.warn(e));
+      const docs = Array.from(($('ff-docs')||{}).files||[]); const pub = !!($('ff-docs-pub')||{}).checked;
+      for (const d of docs) { const err=validateFile(d); if (err) { toast(d.name+': '+err,'error'); continue; } try { await uploadDoc(id, d, pub); } catch(e){ toast(d.name+': '+errMsg(e),'error'); } }
+      await notifyInventors({...file}, '"'+title+'" dosyası adınıza TTO\'da açıldı.').catch(()=>{});
+      closeModal(); toast('Dosya oluşturuldu.','success'); openWhenLoaded(id);
+    }
+  } catch(e){ toast(errMsg(e),'error'); busy(btn,false); }
+}
+
+// ============================================================
+// BULUŞÇU (BAŞVURU SAHİBİ) EKRANLARI
+// ============================================================
+VIEWS.myfiles = {
+  mount(){ setTop('Dosyalarım', 'Buluşçu olarak yer aldığınız dosyalar ve güncel durumları', `<button onclick="goto('newapp')" class="btn btn-p"><i class="fas fa-circle-plus"></i> Yeni Başvuru</button>`); $('view').innerHTML='<div id="my-out"></div>'; },
+  update(){
+    const out=$('my-out'); if (!out) return;
+    if (!S.loaded.myIndex) { out.innerHTML=loading(); return; }
+    const fs = list(S.files).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    if (!fs.length) { out.innerHTML = emptyState('fa-folder-open','Henüz dosyanız görünmüyor', `TTO'ya bildirdiğiniz e-posta (<b>${esc(S.user.email)}</b>) bir dosyada buluşçu olarak yazılıysa dosya burada otomatik görünür. Yeni bir buluşunuz varsa başvuru yapabilirsiniz.`, `<button onclick="goto('newapp')" class="btn btn-p"><i class="fas fa-circle-plus"></i> Yeni Başvuru Yap</button>`); return; }
+    const cnt = k => fs.filter(f=>phaseOf(f)===k).length;
+    out.innerHTML = `<div class="grid grid-cols-3 gap-3 mb-5 max-w-2xl">${Object.entries(PHASES).map(([k,p])=>`<div class="card p-3"><div class="text-[11px] font-semibold text-slate-500"><i class="fas ${p.icon} mr-1"></i>${p.label}</div><div class="text-2xl font-bold mt-1">${cnt(k)}</div></div>`).join('')}</div>
+      <div class="space-y-4">${fs.map(myFileCard).join('')}</div>`;
+  }
+};
+function myFileCard(f){
+  const inv = inventorsOf(f); const lastPub = historyOf(f).slice(-1)[0];
+  return `<div class="card overflow-hidden"><div class="p-5">
+    <div class="flex items-start gap-4 mb-4"><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2 mb-1">${typeChip(f)} ${phaseChip(f)} ${ttoNoHtml(f)}</div>
+      <h3 class="font-bold text-lg leading-snug">${esc(f.title)}</h3>
+      <p class="text-xs text-slate-500 mt-1"><i class="fas fa-users mr-1"></i>${inv.map(p=>esc(p.name)+(p.email&&ek(p.email)===S.user.ek?' <b>(siz)</b>':'')).join(', ')}</p></div>
+      <button onclick="openDetail('${f.id}')" class="btn btn-s flex-shrink-0"><i class="fas fa-up-right-from-square"></i> Ayrıntılar</button></div>
+    ${stepperHtml(f, false)}
+    <div class="grid md:grid-cols-2 gap-3 mt-4">${waitBox(f)}
+      <div class="rounded-xl bg-slate-50 border border-slate-100 p-4"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><i class="fas fa-message mr-1"></i>Son güncelleme</div>${lastPub?`<div class="text-sm"><b>${esc((STAGES[lastPub.stage]||{}).label||'')}</b> · <span class="text-slate-400 text-xs">${fmtD(lastPub.date)}</span></div>${lastPub.note?`<div class="text-sm text-slate-600 mt-1">${esc(lastPub.note)}</div>`:''}`:'<div class="text-sm text-slate-400">—</div>'}
+        <div class="text-[11px] text-slate-400 mt-2">${f.tpAppNo?'TÜRKPATENT başvuru no: <span class="font-mono text-slate-600">'+esc(f.tpAppNo)+'</span>':''}${f.regNo?' · Tescil no: <span class="font-mono text-slate-600">'+esc(f.regNo)+'</span>':''}${f.responsibleName?'<br>TTO sorumlusu: '+esc(f.responsibleName):''}</div></div></div>
+  </div></div>`;
+}
+
+VIEWS.newapp = {
+  mount(){
+    setTop('Yeni Başvuru', 'Buluş, faydalı model, tasarım veya marka bildirimi', '');
+    $('view').innerHTML = `<div class="max-w-4xl"><div class="card p-4 mb-4 bg-blue-50/60 border-blue-100 text-sm text-blue-900"><i class="fas fa-circle-info mr-1"></i>Başvurunuz TTO'ya ulaşınca <b>Başvuru Alındı</b> aşamasında görünür. TTO ön incelemeyi yapar, gerekirse sizden ek bilgi ister. Birlikte çalıştığınız diğer buluşçuları e-postalarıyla ekleyin; onlar da aynı e-postayla kayıt olunca dosyayı görür.</div>
+      <div class="card">${fileFormHtml(null, true)}<div class="px-6 py-4 border-t border-slate-100 flex items-center gap-3"><div id="na-prog" class="hidden flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width:0%"></div></div><button id="na-save" onclick="submitApplication()" class="btn btn-p ml-auto"><i class="fas fa-paper-plane"></i> Başvuruyu Gönder</button></div></div></div>`;
+  }
+};
+async function submitApplication(){
+  const title=$('ff-title').value.trim(); if (!title) return toast('Başlık girin.','error');
+  if (!S.profile) { openProfileModal(true); return toast('Önce profil bilgilerinizi tamamlayın.','error'); }
+  const {inv, errs} = collectInventors(); if (errs.length) return toast(errs[0],'error');
+  const meK = S.user.ek;
+  inv[meK] = {...(inv[meK]||{}), name:S.profile.name, email:S.user.email, kind:S.profile.kind, unit:S.profile.unit||null, order:0};
+  const docs = Array.from($('ff-docs').files||[]);
+  for (const d of docs) { const err=validateFile(d); if (err) return toast(d.name+': '+err,'error'); }
+  const btn=$('na-save'); busy(btn,true);
+  try {
+    const id = B.newKey('files'); const t=today();
+    const file = {id, type:$('ff-type').value, title, summary:$('ff-summary').value.trim(), owner:null, inventors:inv, stage:'basvuru', stageDate:t, ttoDate:t,
+      source:'portal', createdAt:Date.now(), createdBy:meK, createdByName:S.profile.name, updatedAt:Date.now(),
+      history:{h0:{stage:'basvuru', date:t, at:Date.now(), note:'Başvuru TTO portalı üzerinden yapıldı.', byName:S.profile.name, by:meK}}};
+    await B.set('files/'+id, file);
+    await B.set('userFiles/'+meK+'/'+id, true);
+    let i=0; const prog=$('na-prog'); prog.classList.remove('hidden');
+    for (const d of docs) { await uploadDoc(id, d, true, p => { prog.firstElementChild.style.width = Math.round(((i+p)/docs.length)*100)+'%'; }); i++; }
+    await notifyStaff(S.profile.name+' portal üzerinden yeni başvuru yaptı: "'+title+'"', id).catch(e=>console.warn(e));
+    toast('Başvurunuz TTO\'ya iletildi.','success');
+    goto('myfiles'); openWhenLoaded(id);
+  } catch(e){ toast(errMsg(e),'error'); busy(btn,false); }
+}
+
+VIEWS.profile = {
+  mount(){
+    setTop('Profilim', S.user.email, '');
+    const p = S.profile||{};
+    $('view').innerHTML = `<div class="max-w-xl card p-6 space-y-3">
+      <div><label class="lbl">Ad Soyad</label><input id="pf-name" class="inp" value="${esc(p.name||'')}"></div>
+      <div><label class="lbl">E-posta</label><input class="inp bg-slate-50" value="${esc(S.user.email)}" disabled></div>
+      <div><label class="lbl">Kullanıcı türü</label><select id="pf-kind" class="inp">${Object.entries(KINDS).map(([k,l])=>`<option value="${k}" ${p.kind===k?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div><label class="lbl">Birim / Kurum</label><input id="pf-unit" class="inp" value="${esc(p.unit||'')}"></div>
+      <div><label class="lbl">Telefon</label><input id="pf-phone" class="inp" value="${esc(p.phone||'')}"></div>
+      <div class="flex gap-2 pt-2"><button onclick="saveProfile()" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button><button onclick="sendReset('${esc(S.user.email)}')" class="btn btn-s"><i class="fas fa-key"></i> Şifre değiştir</button></div>
+    </div>`;
+  }
+};
+function openProfileModal(first){
+  const p = S.profile||{};
+  openModal(modalHead(first?'Profilinizi tamamlayın':'Profil', 'TTO dosyalarınızda bu bilgiler kullanılır', 'fa-user') + `<div class="p-6 space-y-3">
+    <div><label class="lbl">Ad Soyad</label><input id="pf-name" class="inp" value="${esc(p.name||'')}"></div>
+    <div><label class="lbl">Kullanıcı türü</label><select id="pf-kind" class="inp">${Object.entries(KINDS).map(([k,l])=>`<option value="${k}" ${p.kind===k?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div><label class="lbl">Birim / Kurum</label><input id="pf-unit" class="inp" value="${esc(p.unit||'')}"></div>
+    <div><label class="lbl">Telefon</label><input id="pf-phone" class="inp" value="${esc(p.phone||'')}"></div></div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end"><button onclick="saveProfile(true)" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`, {sticky:first});
+}
+async function saveProfile(inModal){
+  const name=$('pf-name').value.trim(); if (name.length<3) return toast('Ad soyad girin.','error');
+  const p = {...(S.profile||{}), email:S.user.email, name, kind:$('pf-kind').value, unit:$('pf-unit').value.trim(), phone:$('pf-phone').value.trim(), createdAt:(S.profile&&S.profile.createdAt)||Date.now()};
+  try { await B.set('users/'+S.user.ek, p); S.profile=p; updateSidebarUser(); if (inModal) closeModal(); toast('Profil kaydedildi.','success'); } catch(e){ toast(errMsg(e),'error'); }
+}
+
+VIEWS.help = {
+  mount(){
+    setTop('Süreç Nasıl İşler?', 'Başvurudan tescile dosyanızın izlediği yol', '');
+    const c = setting();
+    const block = (ph, items) => `<div class="card p-5"><div class="flex items-center gap-2 mb-3"><span class="chip ${PHASES[ph].cls}"><i class="fas ${PHASES[ph].icon}"></i>${PHASES[ph].label}</span></div><ol class="space-y-2">${items.map(k=>`<li class="flex gap-2.5 text-sm"><i class="fas ${STAGES[k].icon} text-slate-400 mt-0.5 w-4 text-center"></i><span><b>${STAGES[k].label}</b>${HELP_TXT[k]?'<br><span class="text-slate-500 text-xs">'+HELP_TXT[k]+'</span>':''}</span></li>`).join('')}</ol></div>`;
+    $('view').innerHTML = `<div class="max-w-4xl space-y-4">
+      ${block('tto',['basvuru','on_inceleme','eksik','kurul','hazirlik'])}
+      ${block('tp',['tp_basvuru','tp_arastirma','tp_yayin','tp_inceleme'])}
+      ${block('son',['tescil','red','geri','serbest'])}
+      <div class="card p-5"><h3 class="font-bold mb-2"><i class="fas fa-hourglass-half mr-1 text-indigo-600"></i>TÜRKPATENT'te ne kadar beklenir?</h3>
+        <p class="text-sm text-slate-600 mb-3">Dosya TÜRKPATENT'e iletildikten sonra süreç kurumun takvimine göre ilerler; bu sırada dosyanız <b>"TÜRKPATENT Sürecinde"</b> görünür ve bekleme süresi sayılır. Patentlerde araştırma, yayın ve inceleme adımları olduğu için bekleme uzundur: TÜRKPATENT'in açıkladığı ortalama patent tescil süresi 2023'te 36 ay, 2024'te 30 ay, 2025'in ilk 8 ayında 25 aydır. Yani "en az iki yıl" beklentisi gerçekçidir.</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">${['patent','faydali','tasarim','marka'].map(k=>`<div class="rounded-lg bg-slate-50 p-3"><div class="text-xs text-slate-500">${TYPES[k].label}</div><div class="font-bold">~${c.expected[k]} ay</div></div>`).join('')}</div>
+        <p class="text-[11px] text-slate-400 mt-2">Değerler ortalamadır; itiraz, eksiklik bildirimi veya ek inceleme süreyi uzatabilir.</p></div>
+    </div>`;
+  }
+};
+const HELP_TXT = {
+  basvuru:'Buluş bildiriminiz TTO\'ya ulaştı.', on_inceleme:'TTO yenilik ve sanayiye uygulanabilirlik açısından ön araştırma yapar.',
+  eksik:'TTO sizden ek bilgi veya belge bekliyor; dosyanızın ayrıntılarındaki açıklamaya bakın.', kurul:'Üniversite, buluş üzerinde hak talep edip etmeyeceğine karar verir.',
+  hazirlik:'Tarifname, istemler ve çizimler (gerekirse patent vekiliyle) hazırlanır.', tp_basvuru:'Başvuru TÜRKPATENT\'e yapıldı; başvuru numarası dosyanızda görünür.',
+  tp_arastirma:'TÜRKPATENT benzer buluşları tarar ve araştırma raporu düzenler.', tp_yayin:'Başvuru bültende yayımlanır; üçüncü kişilerin itiraz süresi işler.',
+  tp_inceleme:'Patentlenebilirlik şartları esastan incelenir.', tescil:'Hak tescil edildi, belge düzenlendi.',
+  red:'Başvuru reddedildi; ayrıntılar geçmişte yazılıdır.', geri:'Başvurudan vazgeçildi veya geri çekildi.', serbest:'Üniversite hak talep etmedi; buluş üzerindeki haklar buluşçuya bırakıldı.'
+};
+
+boot();
+</script>
+</body>
+</html>

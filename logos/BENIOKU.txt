@@ -1,0 +1,11 @@
+KURUM LOGOLARI
+==============
+
+Bu klasöre kurum logolarını koyun ve kurumlar.js dosyasındaki ilgili kaydın
+"logo" alanına yolunu yazın. Örnek:
+
+    logo: 'logos/karabuk.png',
+
+- PNG veya SVG kullanın; şeffaf zeminli, kareye yakın görseller en iyi sonucu verir.
+- Logoları yalnızca kurumun izniyle kullanın.
+- Logo dosyası yoksa veya açılamazsa kurumun kısaltma rozeti (örn. "KBÜ") gösterilir.
