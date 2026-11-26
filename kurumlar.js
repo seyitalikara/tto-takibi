@@ -45,6 +45,16 @@ window.TTO_KURUMLAR = [
     // kurumun gönderdiği dosyayla değiştirmeniz yeterlidir.
     landing: 'kurumlar/karabuk/giris.html',
     firebase: null
+	firebase: {
+	  apiKey: "AIzaSyDHGKMLd30rKX_DWF_HKKSrxIfTxf0D_V4",
+	  authDomain: "ttotakibi.firebaseapp.com",
+	  databaseURL: "https://ttotakibi-default-rtdb.europe-west1.firebasedatabase.app",
+	  projectId: "ttotakibi",
+	  storageBucket: "ttotakibi.firebasestorage.app",
+	  messagingSenderId: "831544691407",
+	  appId: "1:831544691407:web:e272ef306ad29e2f9485ba",
+	  measurementId: "G-NRZ6D2B39W"
+	};
     /* Firebase projesi açılınca null yerine şunu yazın:
     firebase: {
       apiKey: "AIzaSy...",
