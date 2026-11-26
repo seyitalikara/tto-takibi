@@ -44,6 +44,8 @@
     table.xl th.rn{z-index:3}
     table.xl tr.cur:hover td{background:#eff6ff;cursor:pointer}
     table.xl tr.cur:hover td.rn{background:#dbeafe;color:#1d4ed8}
+    @keyframes evrakPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.35)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+    .evrak-pulse{animation:evrakPulse 2s infinite}
     .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   </style>
 </head>
@@ -103,7 +105,7 @@
           <div id="li-forgot" class="text-right mb-4"><button onclick="doForgot()" class="text-xs text-blue-600 hover:underline">Şifremi unuttum</button></div>
           <div id="li-staffnote" class="hidden mb-4 mt-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-2.5 leading-snug"><i class="fas fa-lock mr-1 text-slate-400"></i>TTO personeli hesapları ve şifreleri yalnızca <b>TTO Koordinatörü</b> tarafından tanımlanır. Personel olarak kayıt olunamaz; şifrenizi unuttuysanız koordinatöre başvurun.</div>
           <button id="btn-login" onclick="doLogin()" class="btn btn-p w-full justify-center py-3"><i class="fas fa-arrow-right-to-bracket"></i> Giriş Yap</button>
-          <p id="li-note" class="text-[11px] text-slate-400 mt-3 leading-snug text-center">Akademik personel, öğrenciler, idari personel ve üniversite dışı (harici) buluşçular bu ekrandan girer. Hesabınız yoksa <b>Kayıt Ol</b> sekmesinden kendiniz açabilirsiniz.</p>
+          <p id="li-note" class="text-[11px] text-slate-400 mt-3 leading-snug text-center">Akademik personel, öğrenciler, idari personel ve üniversite dışı (harici) buluşçular bu ekrandan girer. Hesabınız yoksa <b>Kayıt Ol</b> sekmesinden kendiniz açabilirsiniz.<br><span class="text-red-600 font-semibold"><i class="fas fa-triangle-exclamation mr-0.5"></i>Sistemdeki kayıt ön başvurudur: Word çıktısı tüm buluşçularca mavi kalemle imzalanıp Rektörlük Evrak Kayıt Birimine elden teslim edilmelidir.</span></p>
         </div>
         <!-- kayıt -->
         <div id="lf-register" class="hidden">
@@ -526,6 +528,7 @@ function demoSeed(){
     detail: 'Buluş; sayaç gövdesi (1), ölçüm odaları (2), koruyucu katmanlı diyafram (3) ve akış düzenleyici kanaldan (4) oluşur. (Örnek demo metni.)',
     commercial: {ozet:'Hidrojen katkılı doğal gaz hatlarında ölçüm doğruluğunu koruyan diyaframlı sayaç düzeneği.', amac:'Şebekelerde hidrojen katkısına geçişte sayaç değişim maliyetini azaltmak.', sektor:'Enerji, doğal gaz dağıtımı, ölçüm cihazları', trl:'TRL 3 – Kavram kanıtı laboratuvar ölçekte yapılmıştır.', trlSure:'9–12 ay', trlButce:'Yaklaşık 400.000 TL (KDV hariç)', prototip:'Yaklaşık 150.000 TL', avantaj:'Mevcut üretim hatlarına uyumlu, düşük ek maliyet.', dezavantaj:'Uzun süreli saha testleri gereklidir.', lisans:'Sayaç üreticilerine münhasır olmayan lisans önerilir.'}
   }};
+  T.files.demo005.ebys = {date:ago(88), no:'E-12345678-000-0000 (örnek)', allSigned:true, at:ts(ago(88)), byName:resp.n};
   T.formPersonal = {demo005: {[ek(P.can.email)]: {address:'Mühendislik Fakültesi, Demir Çelik Kampüsü', phone:''}}};
   T.staffNotifs.s1 = {at:Date.now()-2*86400000, text:'Hasan Koç portal üzerinden yeni başvuru yaptı: "Titreşim sönümleyici ray altı elastomer ped"', fid:'demo007', fromEk:ek(P.hasan.email)};
   T.notifs[ek(P.can.email)] = {
@@ -736,6 +739,7 @@ async function enterApp(){
   goto(isStaff() ? 'dashboard' : 'myfiles');
   if (!isStaff() && !S.profile) openProfileModal(true);
   renderBanner();
+  if (!isStaff()) { const wait = (n=0) => { if (S.loaded.myIndex && S.myFileIds.every(id=>S.files[id])) evrakLoginReminder(); else if (n<40) setTimeout(()=>wait(n+1), 150); }; wait(); }
 }
 function teardown(){
   S.unsubs.forEach(f=>{ try{f();}catch(e){} }); S.unsubs=[];
@@ -977,6 +981,79 @@ async function notifyInventors(f, text){
 async function notifyStaff(text, fid){
   await B.set('staffNotifs/'+B.newKey('staffNotifs'), {at:Date.now(), text, fid:fid||null, fromEk:S.user.ek});
 }
+// ---------- ISLAK İMZALI EVRAK (EBYS) SÜRECİ ----------
+// Başvuru sistemde kayıtla bitmez: Word çıktısı TÜM buluşçularca MAVİ kalemle imzalanıp
+// Rektörlük binası Evrak Kayıt Birimine ELDEN teslim edilir; evrak TTO'ya resmî olarak EBYS'den gelir.
+const EVRAK_STEPS = [
+  {icon:'fa-floppy-disk', title:'Formu sistemde KAYDEDİN', text:'Buluş Bildirim Formunu eksiksiz doldurup <b>Kaydet</b>\'e basın.'},
+  {icon:'fa-file-word', title:'Word çıktısını İNDİRİN ve yazdırın', text:'<b>Word</b> düğmesiyle dilekçe + bildirim formu + ön raporu indirin, <b>en son kaydettiğiniz hâlini</b> yazdırın.'},
+  {icon:'fa-signature', title:'TÜM buluşçular MAVİ kalemle imzalasın', text:'Her sayfa paraflanır; dosyadaki <b>bütün buluşçular</b> imza alanlarını <b>mavi mürekkepli kalemle</b> imzalar.'},
+  {icon:'fa-building-columns', title:'Rektörlük Evrak Kayıt Birimine ELDEN teslim edin', text:'İmzalı evrakı <b>Rektörlük binası Evrak Kayıt Birimine</b> elden teslim edin. Evrak TTO\'ya resmî olarak <b>EBYS üzerinden</b> ulaşır.'}
+];
+function needsEvrak(f){ if (!f || phaseOf(f)!=='tto') return false; if (!f.ebys) return true; return !!(f.resubmittedAt && f.resubmittedAt > (f.ebys.at||0)); }
+function evrakStatusHtml(f){
+  if (f.ebys && !needsEvrak(f)) return `<span class="chip bg-emerald-100 text-emerald-700"><i class="fas fa-circle-check"></i>Islak imzalı evrak EBYS ile TTO'ya ulaştı · ${fmtD(f.ebys.date)}${f.ebys.no?' · Sayı: '+esc(f.ebys.no):''}</span>`;
+  if (needsEvrak(f)) return `<span class="chip bg-red-100 text-red-700"><i class="fas fa-triangle-exclamation"></i>${f.ebys?'Düzeltilen evrakın yeni ıslak imzalı nüshası bekleniyor':'Islak imzalı evrak henüz EBYS\'den gelmedi'}</span>`;
+  return '';
+}
+function evrakStepsHtml(hi, compact){ // hi: vurgulanacak adım (0-3), -1: hiçbiri
+  return `<ol class="grid ${compact?'grid-cols-2 lg:grid-cols-4':'grid-cols-1 sm:grid-cols-2'} gap-2">${EVRAK_STEPS.map((st,i)=>`<li class="flex gap-2.5 rounded-xl p-2.5 border ${i===hi?'bg-white border-red-400 ring-2 ring-red-300 evrak-pulse':'bg-white/70 border-red-100'}"><span class="w-7 h-7 rounded-full ${i===hi?'bg-red-600':'bg-red-500/80'} text-white text-xs font-bold flex items-center justify-center flex-shrink-0">${i+1}</span><span class="min-w-0"><span class="block text-[13px] font-bold text-red-900 leading-snug"><i class="fas ${st.icon} mr-1"></i>${st.title}</span>${compact?'':`<span class="block text-xs text-red-800/90 mt-0.5 leading-snug">${st.text}</span>`}</span></li>`).join('')}</ol>`;
+}
+function evrakBannerHtml(hi, f, compact){
+  if (isStaff()) return '';
+  return `<div class="rounded-2xl border-2 border-red-300 bg-red-50 p-4 ${compact?'':'mb-4'}">
+    <div class="flex items-start gap-3 mb-3"><span class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center flex-shrink-0 evrak-pulse"><i class="fas fa-triangle-exclamation"></i></span>
+      <div class="min-w-0"><div class="font-bold text-red-900">ÖNEMLİ: Başvurunuz sistemde kayıtla tamamlanmaz!</div>
+      <div class="text-xs text-red-800 mt-0.5">Mavi kalemle imzalı evrak <b>Rektörlük binası Evrak Kayıt Birimine elden</b> teslim edilip TTO'ya <b>EBYS üzerinden</b> resmî olarak ulaşmadan başvurunuz işleme alınmaz.</div>
+      ${f?`<div class="mt-1.5">${evrakStatusHtml(f)}</div>`:''}</div></div>
+    ${evrakStepsHtml(hi, compact)}</div>`;
+}
+// Açılır uyarı (pop-up). step: 0 kayıt sonrası, 1 kaydettikten sonra (Word indir), 2-3 Word indirildikten sonra (imza + teslim)
+function showEvrakPopup(fid, step, lead){
+  if (isStaff()) return;
+  const f = fid ? S.files[fid] : null;
+  const nextBtn = step<=1 && fid ? `<button onclick="closeModal();downloadWordFor('${fid}','all')" class="btn btn-p"><i class="fas fa-file-word"></i> Word çıktısını şimdi indir</button>` : '';
+  openModal(`<div class="px-6 pt-6 pb-2 text-center"><div class="w-16 h-16 rounded-2xl bg-red-600 text-white flex items-center justify-center text-3xl mx-auto mb-3 evrak-pulse"><i class="fas fa-file-signature"></i></div>
+      <h3 class="text-xl font-bold text-red-700">Islak İmzalı Evrak Teslimi Zorunludur</h3>
+      ${lead?`<p class="text-sm text-slate-700 mt-2">${lead}</p>`:''}
+      ${f?`<p class="text-xs text-slate-500 mt-1">${esc(f.title)}</p>`:''}</div>
+    <div class="p-6 pt-3">${evrakStepsHtml(step, false)}
+      <div class="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed"><i class="fas fa-circle-info mr-1"></i>Sistemdeki kayıt ön başvurudur. TTO başvurunuzu, imzalı evrak <b>EBYS üzerinden resmî olarak</b> ulaştığında işleme alır. Formda değişiklik yaparsanız <b>son hâlini yeniden indirip yeniden imzalatın</b>; eski çıktıyı teslim etmeyin.</div></div>
+    <div class="px-6 py-4 border-t border-slate-100 flex flex-wrap justify-end gap-2">${nextBtn}<button onclick="closeModal()" class="btn ${nextBtn?'btn-s':'btn-p'}"><i class="fas fa-check"></i> Okudum, anladım</button></div>`, {mid:true, sticky:true});
+}
+// Girişte, ıslak imzalı evrakı beklenen dosyalar için oturum başına bir kez hatırlatma
+function evrakLoginReminder(){
+  if (isStaff()) return;
+  const key='tto_evrak_hatirlatma_'+(TENANT?TENANT.id:'')+'_'+S.user.ek;
+  try { if (sessionStorage.getItem(key)) return; } catch(e){}
+  const pend = list(S.files).filter(needsEvrak);
+  if (!pend.length) return;
+  try { sessionStorage.setItem(key,'1'); } catch(e){}
+  showEvrakPopup(pend.length===1?pend[0].id:null, 2, `<b>${pend.length}</b> dosyanız için mavi imzalı evrak henüz TTO'ya EBYS ile ulaşmadı:<br>${pend.slice(0,5).map(f=>'• '+esc(f.title)).join('<br>')}`);
+}
+// Personel: evrakın EBYS'den geldiğini işaretler
+function openEbysModal(fid){
+  const f=S.files[fid]; const e=f.ebys||{};
+  openModal(modalHead('Islak imzalı evrak (EBYS)', esc(f.title), 'fa-file-signature') + `<div class="p-6 space-y-3">
+    <p class="text-xs text-slate-500">Buluşçuların mavi kalemle imzaladığı evrak Rektörlük Evrak Kayıt Birimi üzerinden EBYS ile TTO'ya ulaştığında işaretleyin. İşaretlenince buluşçulara giden hatırlatmalar durur.</p>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lbl">EBYS geliş tarihi</label><input id="eb-date" type="date" class="inp" value="${esc(e.date||today())}"></div><div><label class="lbl">EBYS evrak sayısı</label><input id="eb-no" class="inp" value="${esc(e.no||'')}" placeholder="E-12345678-..."></div></div>
+    <label class="flex items-center gap-2 text-sm"><input id="eb-all" type="checkbox" ${e.allSigned!==false?'checked':''}> Tüm buluşçuların mavi imzası tam</label>
+    <div><label class="lbl">Not</label><input id="eb-note" class="inp" value="${esc(e.note||'')}" placeholder="İsteğe bağlı"></div>
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-between gap-2">${f.ebys?`<button onclick="saveEbys('${fid}',true)" class="btn btn-d"><i class="fas fa-rotate-left"></i> İşareti kaldır</button>`:'<span></span>'}<div class="flex gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button onclick="saveEbys('${fid}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div></div>`);
+}
+async function saveEbys(fid, clear){
+  const f=S.files[fid];
+  try {
+    if (clear) await B.remove('files/'+fid+'/ebys');
+    else {
+      const rec={date:$('eb-date').value||today(), no:$('eb-no').value.trim()||null, allSigned:$('eb-all').checked, note:$('eb-note').value.trim()||null, at:Date.now(), byName:S.me.name};
+      await B.set('files/'+fid+'/ebys', rec);
+      notifyInventors(f, '"'+f.title+'" dosyanızın ıslak imzalı evrakı EBYS ile TTO\'ya ulaştı'+(rec.allSigned?'.':' ancak imzalar eksik; TTO sizinle iletişime geçecek.')).catch(()=>{});
+    }
+    closeModal(); toast(clear?'İşaret kaldırıldı.':'Evrak kaydı işlendi.','success');
+  } catch(e){ toast(errMsg(e),'error'); }
+}
+
 // ---------- Eksik tamamlama: buluşçu düzeltilmiş dosyayı TTO'ya yeniden gönderir ----------
 function lastEksikNote(f){ const h = historyOf(f).filter(x=>x.stage==='eksik').slice(-1)[0]; return h ? (h.note||'') : ''; }
 function isResubmitted(f){ const h = historyOf(f).slice(-1)[0]; return !!(h && h.resubmit); } // son hareket buluşçunun yeniden gönderimi → TTO'nun işlem yapması bekleniyor
@@ -986,7 +1063,7 @@ function eksikBoxHtml(f, compact){
   return `<div class="rounded-xl border border-orange-200 bg-orange-50 p-4 ${compact?'mt-3':''}">
     <div class="text-xs font-bold text-orange-800 uppercase tracking-wide mb-1"><i class="fas fa-file-circle-question mr-1"></i>TTO sizden düzeltme / ek bilgi istiyor</div>
     ${note?`<div class="text-sm text-orange-900 bg-white/70 rounded-lg px-3 py-2 mb-2 border border-orange-100">${esc(note).replace(/\n/g,'<br>')}</div>`:''}
-    <div class="text-xs text-orange-800 mb-3">1) Buluş Bildirim Formunda eksikleri tamamlayıp <b>Kaydet</b>'e basın; gerekiyorsa belge yükleyin. 2) Ardından <b>Düzeltmeleri TTO'ya gönder</b> düğmesine basın. Göndermediğiniz sürece dosya TTO'ya geri dönmez.</div>
+    <div class="text-xs text-orange-800 mb-3">1) Buluş Bildirim Formunda eksikleri tamamlayıp <b>Kaydet</b>'e basın; gerekiyorsa belge yükleyin. 2) <b>Düzeltmeleri TTO'ya gönder</b> düğmesine basın. 3) <b>Word çıktısının son hâlini</b> indirip tüm buluşçulara <b>mavi kalemle</b> imzalatın ve <b>Rektörlük Evrak Kayıt Birimine elden</b> teslim edin.</div>
     <div class="flex flex-wrap gap-2"><button onclick="openFormEditor('${f.id}')" class="btn btn-s"><i class="fas fa-pen-to-square text-blue-600"></i> Formu düzenle</button><button onclick="openResubmit('${f.id}')" class="btn btn-p !bg-orange-600 hover:!bg-orange-700"><i class="fas fa-paper-plane"></i> Düzeltmeleri TTO'ya gönder</button></div></div>`;
 }
 function openResubmit(fid){
@@ -998,6 +1075,7 @@ function openResubmit(fid){
     <div class="text-xs text-slate-500">Form doluluğu: <b>%${pr.pct}</b>${form&&form.updatedAt?' · son kayıt '+fmtTs(form.updatedAt):''}</div>
     <div><label class="lbl">TTO'ya not (ne düzelttiniz?)</label><textarea id="rs-note" rows="3" class="inp" placeholder="Örn: Anahtar kelimeler 1. soruya eklendi."></textarea></div>
     <p class="text-[11px] text-slate-400">Gönderince dosya yeniden <b>TTO Ön İnceleme</b> aşamasına geçer ve TTO personeline bildirim gider. İnceleme sırasında formu düzenlemeye devam edebilirsiniz.</p>
+    <div class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800"><i class="fas fa-triangle-exclamation mr-1"></i>Düzeltilmiş formun <b>yeni Word çıktısını</b> tüm buluşçulara <b>mavi kalemle</b> imzalatıp <b>Rektörlük Evrak Kayıt Birimine elden</b> teslim etmeyi unutmayın. Eski imzalı nüsha geçerli değildir.</div>
   </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="rs-save" onclick="resubmitFile('${fid}')" class="btn btn-p"><i class="fas fa-paper-plane"></i> Gönder</button></div>`);
 }
 async function resubmitFile(fid){
@@ -1013,6 +1091,7 @@ async function resubmitFile(fid){
     });
     await notifyStaff(name+' "'+f.title+'" dosyasındaki düzeltmeleri tamamlayıp yeniden gönderdi'+(note?': '+note:'.'), fid).catch(e=>console.warn(e));
     closeModal(); toast('Düzeltmeler TTO\'ya gönderildi. Dosyanız yeniden ön incelemede.','success');
+    setTimeout(()=>showEvrakPopup(fid, 1, 'Düzeltmeleriniz sisteme iletildi. Şimdi düzeltilmiş formun <b>yeni Word çıktısını</b> indirip imzalatarak teslim edin.'), 300);
   } catch(e){ busy(btn,false); toast(errMsg(e)+(isPermErr(e)?' (Firebase kuralları güncel olmayabilir.)':''),'error'); }
 }
 function myNotifs(){
@@ -1124,6 +1203,7 @@ VIEWS.dashboard = {
     if (!S.loaded.files) return;
     const fs = list(S.files), byPh = k => fs.filter(f=>phaseOf(f)===k);
     const newOnes = fs.filter(f=>f.stage==='basvuru').sort((a,b)=>b.createdAt-a.createdAt);
+    const evrakOnes = fs.filter(needsEvrak).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     const backOnes = fs.filter(isResubmitted).sort((a,b)=>(b.resubmittedAt||0)-(a.resubmittedAt||0));
     const reg = fs.filter(f=>f.stage==='tescil').length;
     const tp = byPh('tp').map(f=>({f, w:tpWait(f)})).filter(x=>x.w).sort((a,b)=>b.w.days-a.w.days);
@@ -1142,6 +1222,7 @@ VIEWS.dashboard = {
       </div>
       <div class="grid lg:grid-cols-3 gap-5">
         <div class="lg:col-span-2 space-y-5">
+          ${evrakOnes.length?`<div class="card p-5 border-red-200"><h3 class="font-bold mb-1"><i class="fas fa-file-signature mr-2 text-red-600"></i>Islak imzalı evrakı EBYS'den gelmemiş dosyalar <span class="text-xs font-normal text-slate-400">(${evrakOnes.length})</span></h3><p class="text-xs text-slate-400 mb-2">Evrak EBYS ile gelince dosyayı açıp "EBYS ile geldi olarak işaretle"yin; buluşçulara giden hatırlatmalar durur.</p><div class="divide-y divide-slate-100">${evrakOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${esc(f.ttoNo||'Numara yok')} · ${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${timeAgo(f.createdAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
           ${backOnes.length?`<div class="card p-5 border-emerald-200"><h3 class="font-bold mb-3"><i class="fas fa-rotate-left mr-2 text-emerald-600"></i>Buluşçudan düzeltilip geri gelen dosyalar</h3><div class="divide-y divide-slate-100">${backOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${esc(f.ttoNo||'')} · ${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${timeAgo(f.resubmittedAt||f.updatedAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
           ${newOnes.length?`<div class="card p-5 border-blue-200"><h3 class="font-bold mb-3"><i class="fas fa-inbox mr-2 text-blue-600"></i>İşlem bekleyen yeni başvurular</h3><div class="divide-y divide-slate-100">${newOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${f.source==='portal'?'<span class="text-blue-600 font-semibold">Portal başvurusu</span>':'TTO kaydı'} · ${timeAgo(f.createdAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
           <div class="card p-5">
@@ -1214,7 +1295,7 @@ VIEWS.files = {
     }
     out.innerHTML = head + `<div class="card overflow-hidden"><div class="overflow-x-auto"><table class="tbl w-full min-w-[960px]"><thead><tr><th>Dosya</th><th>Tür</th><th>Buluşçular</th><th>Durum / Aşama</th><th>TÜRKPATENT</th><th>Tescil</th><th>Bekleme</th><th>Sorumlu</th></tr></thead><tbody>
       ${fs.map(f => { const inv=inventorsOf(f); return `<tr class="row" onclick="openDetail('${f.id}')">
-        <td class="max-w-[260px]"><div class="font-semibold text-slate-800 leading-snug">${esc(f.title)}</div>${ttoNoHtml(f)}${f.source==='portal'&&f.stage==='basvuru'?' <span class="chip bg-blue-100 text-blue-700 ml-1">Portal</span>':''}${isResubmitted(f)?' <span class="chip bg-emerald-100 text-emerald-700 ml-1"><i class="fas fa-rotate-left"></i>Düzeltildi</span>':''}</td>
+        <td class="max-w-[260px]"><div class="font-semibold text-slate-800 leading-snug">${esc(f.title)}</div>${ttoNoHtml(f)}${f.source==='portal'&&f.stage==='basvuru'?' <span class="chip bg-blue-100 text-blue-700 ml-1">Portal</span>':''}${isResubmitted(f)?' <span class="chip bg-emerald-100 text-emerald-700 ml-1"><i class="fas fa-rotate-left"></i>Düzeltildi</span>':''}${needsEvrak(f)?' <span class="chip bg-red-50 text-red-700 ml-1" title="Islak imzalı evrak EBYS\'den gelmedi"><i class="fas fa-file-signature"></i>EBYS bekleniyor</span>':''}</td>
         <td>${typeChip(f)}</td>
         <td class="text-xs text-slate-600 max-w-[200px]">${inv.slice(0,3).map(p=>esc(p.name)).join('<br>')}${inv.length>3?`<br><span class="text-slate-400">+${inv.length-3} kişi</span>`:''}</td>
         <td><div class="space-y-1">${phaseChip(f)}<div class="text-xs text-slate-600">${esc(stageOf(f).label)}</div><div class="text-[11px] text-slate-400">${fmtD(f.stageDate)}</div></div></td>
@@ -1604,6 +1685,7 @@ function detailHtml(fid){
       </div>
     </div>
   </div>
+  ${!staff&&needsEvrak(f)?`<div class="px-6 pt-4">${evrakBannerHtml(-1, f, true)}</div>`:''}
   <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">${stepperHtml(f)}${eksikBoxHtml(f, true)}${staff&&isResubmitted(f)?`<div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"><i class="fas fa-rotate-left mr-1"></i><b>Buluşçu düzeltmeleri tamamlayıp dosyayı yeniden gönderdi</b> (${fmtTs(f.resubmittedAt)}). İnceleyip aşamayı güncelleyin.</div>`:''}<div class="mt-4">${waitBox(f)}</div></div>
   <div class="grid lg:grid-cols-5 gap-6 p-6">
     <div class="lg:col-span-3">
@@ -1619,6 +1701,7 @@ function detailHtml(fid){
     </div>
     <div class="lg:col-span-2">
       ${section('Buluş Bildirim Formu','fa-file-signature', formSectionHtml(fid))}
+      ${staff?section('Islak İmzalı Evrak (EBYS)','fa-file-signature', `<div class="rounded-xl border ${needsEvrak(f)?'border-red-200 bg-red-50/60':'border-emerald-200 bg-emerald-50/60'} p-3"><div class="mb-2">${evrakStatusHtml(f)||'<span class="text-xs text-slate-400">Bu aşamada takip edilmiyor.</span>'}</div>${f.ebys&&f.ebys.note?`<div class="text-xs text-slate-600 mb-2">${esc(f.ebys.note)}</div>`:''}<button onclick="openEbysModal('${fid}')" class="btn btn-s !py-1.5 text-xs"><i class="fas fa-inbox"></i> ${f.ebys?'EBYS kaydını düzenle':'EBYS ile geldi olarak işaretle'}</button></div>`):''}
       ${section('Buluşçular ('+inv.length+')', 'fa-users', `<div class="space-y-2">${inv.map(p=>`<div class="flex items-center gap-2.5 p-2 rounded-lg ${p.email&&ek(p.email)===S.user.ek?'bg-emerald-50':'bg-slate-50'}"><span class="w-8 h-8 rounded-full bg-white text-slate-600 text-xs font-bold flex items-center justify-center flex-shrink-0 border border-slate-200">${esc(initials(p.name))}</span><div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">${esc(p.name)}${p.email&&ek(p.email)===S.user.ek?' <span class="text-xs text-emerald-700 font-normal">(siz)</span>':''}</div><div class="text-[11px] text-slate-400 truncate">${esc(KINDS[p.kind]||'')}${p.unit?' · '+esc(p.unit):''}</div>${staff&&p.email?`<div class="text-[11px] text-slate-400 truncate">${esc(p.email)} ${S.users[ek(p.email)]?'<i class="fas fa-circle-check text-emerald-500" title="Kayıtlı kullanıcı"></i>':''}</div>`:''}</div>${p.share?`<span class="text-xs font-semibold text-slate-500">%${esc(p.share)}</span>`:''}</div>`).join('')}</div>`)}
       ${staff?section('Süreler','fa-calendar-days', dls.length?`<div class="space-y-1.5">${dls.map(d=>`<div class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 ${d.done?'opacity-60':''}">${d.id?`<input type="checkbox" ${d.done?'checked':''} onchange="toggleDeadline('${fid}','${d.id}',this.checked)">`:'<i class="fas fa-wand-magic-sparkles text-slate-300 text-xs" title="Otomatik hesaplandı"></i>'}<div class="flex-1 min-w-0"><div class="text-xs font-semibold ${d.done?'line-through':''}">${esc(d.title)}</div><div class="text-[11px] text-slate-400">${fmtD(d.date)}${d.hint?' · '+esc(d.hint):''}</div></div>${dueChip(d.date,d.done)}${d.id?`<button onclick="removeDeadline('${fid}','${d.id}')" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-xmark"></i></button>`:''}</div>`).join('')}</div>`:'<p class="text-sm text-slate-400">Süre yok.</p>',
         `<button onclick="openDeadlineModal('${fid}')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-plus mr-1"></i>Süre ekle</button>`):''}
@@ -1906,6 +1989,7 @@ function formSectionHtml(fid){
       ${form?`<button onclick="downloadWordFor('${fid}','all')" class="btn btn-s !py-1.5 text-xs"><i class="fas fa-file-word text-blue-600"></i> Word</button>`:''}
     </div>
     ${!can && !isStaff() ? '<p class="text-[11px] text-slate-400 mt-2">Dosya TTO ön inceleme aşamasını geçtiği için form yalnızca TTO tarafından düzenlenebilir.</p>':''}
+    ${!isStaff() && needsEvrak(f) ? `<div class="mt-2.5 text-[11px] text-red-700 font-semibold leading-snug"><i class="fas fa-triangle-exclamation mr-1"></i>Kaydet → Word indir → tüm buluşçular mavi kalemle imzalasın → Rektörlük Evrak Kayıt Birimine elden teslim.</div>`:''}
   </div>`;
 }
 function watchForm(fid){
@@ -1961,6 +2045,7 @@ function renderFormEditor(){
     <button onclick="downloadWordFE('all')" class="btn btn-s"><i class="fas fa-file-word text-blue-600"></i> Word</button>
     <button onclick="closeFormEditor()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-100"><i class="fas fa-xmark"></i></button>
   </div>
+  ${!isStaff() && needsEvrak(f) ? `<div class="px-6 pt-4">${evrakBannerHtml(FE.dirty?0:1, f, true)}</div>`:''}
   <div class="flex min-h-[70vh]">
     <div class="w-56 border-r border-slate-100 p-3 space-y-1 flex-shrink-0 bg-slate-50/50">${tabs.map(([k,i,l])=>`<button onclick="feTab('${k}')" class="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${FE.tab===k?'bg-white shadow-sm font-semibold text-blue-700':'text-slate-600 hover:bg-white'}"><i class="fas ${i} w-4 text-center"></i>${l}</button>`).join('')}
       <div class="pt-4 text-[11px] text-slate-400 leading-snug px-1"><i class="fas fa-lock mr-1"></i>T.C. kimlik no, adres ve telefon yalnızca TTO personeli ve bilginin sahibi buluşçu tarafından görülür.</div></div>
@@ -2092,6 +2177,7 @@ async function saveForm(){
     if (Object.keys(upd).length) await B.update('', upd);
     FE.dirty=false; feMarkDirty();
     toast(!isStaff() && S.files[FE.fid] && S.files[FE.fid].stage==='eksik' ? 'Form kaydedildi. Dosyanın TTO\'ya dönmesi için "TTO\'ya gönder" düğmesine basın.' : 'Form kaydedildi.', 'success');
+    if (!isStaff()) { renderFormEditor(); showEvrakPopup(FE.fid, 1, 'Formunuz <b>kaydedildi</b>. Sıradaki adım: <b>Word çıktısını indirin</b>, tüm buluşçulara mavi kalemle imzalatın ve Rektörlük Evrak Kayıt Birimine elden teslim edin.'); }
     if (!isStaff()) notifyStaff(form.updatedByName+' "'+S.files[FE.fid].title+'" buluş bildirim formunu güncelledi.', FE.fid).catch(()=>{});
   } catch(e){ toast(errMsg(e),'error'); }
   busy(btn,false);
@@ -2112,6 +2198,7 @@ async function buildAndDownload(fid, form, personal, kind){
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));
     a.download = asciiName((f.ttoNo?f.ttoNo+'_':'')+names[kind]+'_'+f.title.slice(0,40))+'.docx'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+    if (!isStaff()) setTimeout(()=>showEvrakPopup(fid, 2, 'Word çıktınız <b>indirildi</b>. Şimdi yazdırıp <b>tüm buluşçulara mavi kalemle</b> imzalatın ve <b>Rektörlük binası Evrak Kayıt Birimine elden</b> teslim edin.'), 400);
   } catch(e){ console.error(e); toast('Word oluşturulamadı: '+errMsg(e),'error'); }
 }
 async function loadImageForDocx(fid, docId){
@@ -2374,7 +2461,8 @@ VIEWS.myfiles = {
     const fs = list(S.files).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
     if (!fs.length) { out.innerHTML = emptyState('fa-folder-open','Henüz dosyanız görünmüyor', `TTO'ya bildirdiğiniz e-posta (<b>${esc(S.user.email)}</b>) bir dosyada buluşçu olarak yazılıysa dosya burada otomatik görünür. Yeni bir buluşunuz varsa başvuru yapabilirsiniz.`, `<button onclick="goto('newapp')" class="btn btn-p"><i class="fas fa-circle-plus"></i> Yeni Başvuru Yap</button>`); return; }
     const cnt = k => fs.filter(f=>phaseOf(f)===k).length;
-    out.innerHTML = `<div class="grid grid-cols-3 gap-3 mb-5 max-w-2xl">${Object.entries(PHASES).map(([k,p])=>`<div class="card p-3"><div class="text-[11px] font-semibold text-slate-500"><i class="fas ${p.icon} mr-1"></i>${p.label}</div><div class="text-2xl font-bold mt-1">${cnt(k)}</div></div>`).join('')}</div>
+    const pend = fs.filter(needsEvrak);
+    out.innerHTML = (pend.length ? evrakBannerHtml(-1, null, false).replace('ÖNEMLİ: Başvurunuz sistemde kayıtla tamamlanmaz!', 'ÖNEMLİ: '+pend.length+' dosyanız için mavi imzalı evrak bekleniyor!') : '') + `<div class="grid grid-cols-3 gap-3 mb-5 max-w-2xl">${Object.entries(PHASES).map(([k,p])=>`<div class="card p-3"><div class="text-[11px] font-semibold text-slate-500"><i class="fas ${p.icon} mr-1"></i>${p.label}</div><div class="text-2xl font-bold mt-1">${cnt(k)}</div></div>`).join('')}</div>
       <div class="space-y-4">${fs.map(myFileCard).join('')}</div>`;
   }
 };
@@ -2385,6 +2473,7 @@ function myFileCard(f){
       <h3 class="font-bold text-lg leading-snug">${esc(f.title)}</h3>
       <p class="text-xs text-slate-500 mt-1"><i class="fas fa-users mr-1"></i>${inv.map(p=>esc(p.name)+(p.email&&ek(p.email)===S.user.ek?' <b>(siz)</b>':'')).join(', ')}</p></div>
       <div class="flex flex-col gap-1.5 flex-shrink-0"><button onclick="openDetail('${f.id}')" class="btn btn-s"><i class="fas fa-up-right-from-square"></i> Ayrıntılar</button><button onclick="openFormEditor('${f.id}')" class="btn btn-s"><i class="fas fa-file-signature text-blue-600"></i> Bildirim Formu</button></div></div>
+    ${needsEvrak(f)||f.ebys?`<div class="mb-3">${evrakStatusHtml(f)}</div>`:''}
     ${stepperHtml(f, false)}
     ${eksikBoxHtml(f, true)}
     <div class="grid md:grid-cols-2 gap-3 mt-4">${waitBox(f)}
@@ -2396,7 +2485,7 @@ function myFileCard(f){
 VIEWS.newapp = {
   mount(){
     setTop('Yeni Başvuru', 'Buluş, faydalı model, tasarım veya marka bildirimi', '');
-    $('view').innerHTML = `<div class="max-w-4xl"><div class="card p-4 mb-4 bg-blue-50/60 border-blue-100 text-sm text-blue-900"><i class="fas fa-circle-info mr-1"></i>Başvuruyu gönderdikten sonra <b>Buluş Bildirim Formu</b> açılır; formu doldurup dilekçe, bildirim formu ve ticarileştirme ön raporunu Word olarak alabilirsiniz. Başvurunuz TTO'ya ulaşınca <b>Başvuru Alındı</b> aşamasında görünür. TTO ön incelemeyi yapar, gerekirse sizden ek bilgi ister. Birlikte çalıştığınız diğer buluşçuları e-postalarıyla ekleyin; onlar da aynı e-postayla kayıt olunca dosyayı görür.</div>
+    $('view').innerHTML = `<div class="max-w-4xl">${evrakBannerHtml(-1, null, false)}<div class="card p-4 mb-4 bg-blue-50/60 border-blue-100 text-sm text-blue-900"><i class="fas fa-circle-info mr-1"></i>Başvuruyu gönderdikten sonra <b>Buluş Bildirim Formu</b> açılır; formu doldurup dilekçe, bildirim formu ve ticarileştirme ön raporunu Word olarak alabilirsiniz. Başvurunuz TTO'ya ulaşınca <b>Başvuru Alındı</b> aşamasında görünür. TTO ön incelemeyi yapar, gerekirse sizden ek bilgi ister. Birlikte çalıştığınız diğer buluşçuları e-postalarıyla ekleyin; onlar da aynı e-postayla kayıt olunca dosyayı görür.</div>
       <div class="card">${fileFormHtml(null, true)}<div class="px-6 py-4 border-t border-slate-100 flex items-center gap-3"><div id="na-prog" class="hidden flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width:0%"></div></div><button id="na-save" onclick="submitApplication()" class="btn btn-p ml-auto"><i class="fas fa-paper-plane"></i> Başvuruyu Gönder</button></div></div></div>`;
   }
 };
@@ -2420,11 +2509,11 @@ async function submitApplication(){
     for (const d of docs) { await uploadDoc(id, d, true, p => { prog.firstElementChild.style.width = Math.round(((i+p)/docs.length)*100)+'%'; }); i++; }
     await notifyStaff(S.profile.name+' portal üzerinden yeni başvuru yaptı: "'+title+'"', id).catch(e=>console.warn(e));
     toast('Başvurunuz TTO\'ya iletildi.','success');
-    goto('myfiles'); openFormWhenLoaded(id);
+    goto('myfiles'); openFormWhenLoaded(id, 0, true);
   } catch(e){ toast(errMsg(e),'error'); busy(btn,false); }
 }
 
-function openFormWhenLoaded(fid, tries=0){ if (S.files[fid]) { toast('Şimdi Buluş Bildirim Formunu doldurun; Word çıktısını buradan alabilirsiniz.','info'); return openFormEditor(fid); } if (tries<25) setTimeout(()=>openFormWhenLoaded(fid, tries+1), 120); }
+function openFormWhenLoaded(fid, tries=0, fresh){ if (S.files[fid]) { return openFormEditor(fid).then(()=>{ if (fresh) showEvrakPopup(fid, 0, 'Başvurunuz sisteme <b>kaydedildi</b>; bu bir <b>ön başvurudur</b>. Şimdi Buluş Bildirim Formunu doldurup kaydedin, ardından aşağıdaki adımları tamamlayın.'); }); } if (tries<25) setTimeout(()=>openFormWhenLoaded(fid, tries+1, fresh), 120); }
 
 VIEWS.profile = {
   mount(){
@@ -2473,6 +2562,7 @@ VIEWS.help = {
     const c = setting();
     const block = (ph, items) => `<div class="card p-5"><div class="flex items-center gap-2 mb-3"><span class="chip ${PHASES[ph].cls}"><i class="fas ${PHASES[ph].icon}"></i>${PHASES[ph].label}</span></div><ol class="space-y-2">${items.map(k=>`<li class="flex gap-2.5 text-sm"><i class="fas ${STAGES[k].icon} text-slate-400 mt-0.5 w-4 text-center"></i><span><b>${STAGES[k].label}</b>${HELP_TXT[k]?'<br><span class="text-slate-500 text-xs">'+HELP_TXT[k]+'</span>':''}</span></li>`).join('')}</ol></div>`;
     $('view').innerHTML = `<div class="max-w-4xl space-y-4">
+      ${evrakBannerHtml(-1, null, false)}
       ${block('tto',['basvuru','on_inceleme','eksik','kurul','hazirlik'])}
       ${block('tp',['tp_basvuru','tp_arastirma','tp_yayin','tp_inceleme'])}
       ${block('son',['tescil','red','geri','serbest'])}

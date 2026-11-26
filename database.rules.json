@@ -47,7 +47,7 @@
           ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isNumber()"
         },
         "resubmittedAt": {
-          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isNumber() && newData.val() <= now"
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isNumber()"
         },
         "history": {
           "$hid": {
