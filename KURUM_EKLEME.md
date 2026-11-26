@@ -32,6 +32,12 @@ Bu hâliyle kurum, kurum seçme ekranında **Demo** rozetiyle görünür ve örn
 
 > Bir kurumu listeden gizleyip yalnızca doğrudan bağlantıyla açmak için `listed: false` ekleyin (örn. görüşmesi süren kurumlar).
 
+### 1b. (İsteğe bağlı) Kurumun açılış sayfası
+
+Kurum kendi formatında bir karşılama sayfası istiyorsa, sayfayı `kurumlar/<id>/giris.html` olarak koyun ve kayda `landing: 'kurumlar/<id>/giris.html'` ekleyin. Kurum seçme ekranında kuruma tıklayan önce bu sayfayı görür. Sayfadaki düğmeler uygulamaya şu bağlantılarla bağlanır: `../../index.html?kurum=<id>&giris=buluscu` · `&giris=kayit` · `&giris=personel`. Örnek: [kurumlar/karabuk/BENIOKU.md](kurumlar/karabuk/BENIOKU.md).
+
+**Tek kuruma hizmet verirken** `kurumlar.js` → `TTO_PLATFORM.defaultKurum: '<id>'` yapın: site kökü kurum seçme ekranını atlayıp doğrudan o kurumun açılış sayfasını (yoksa giriş ekranını) açar. `''` yapınca seçme ekranı geri gelir.
+
 ### 2. Logoyu ekleyin
 
 Logoyu kurumun kurumsal kimlik sayfasından veya TTO'sundan **izin alarak** edinin, `logos/` klasörüne koyun (PNG veya SVG, kare veya yatay, şeffaf zemin tercih edin) ve `logo` alanına yolunu yazın. Logo dosyası yoksa ya da açılamazsa kısaltma rozeti otomatik gösterilir.
@@ -42,7 +48,7 @@ Logoyu kurumun kurumsal kimlik sayfasından veya TTO'sundan **izin alarak** edin
 2. `database.rules.json` dosyasını bu projeye yükleyin (5. adım).
 3. Firebase web ayarlarını `kurumlar.js` içindeki kaydın `firebase` alanına yazın.
 4. Yayın adresini Firebase → Authentication → Settings → **Authorized domains** listesine ekleyin.
-5. Kurumun TTO koordinatörü uygulamada kayıt olur ve **Beni koordinatör yap** ile ilk yöneticiyi tanımlar.
+5. Kurumun TTO koordinatörü uygulamada kayıt olur ve **Beni koordinatör yap** ile ilk yöneticiyi tanımlar; diğer personel hesaplarını ve şifrelerini **Personel** ekranından kendisi oluşturur.
 
 Kurumun rozeti **Aktif**'e döner.
 

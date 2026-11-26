@@ -36,6 +36,14 @@
     .tbl td{padding:.6rem .75rem;border-top:1px solid #f1f5f9;font-size:.85rem;vertical-align:top}
     .tbl tr.row:hover td{background:#f8fafc;cursor:pointer}
     .chip{display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;white-space:nowrap}
+    table.xl{border-collapse:separate;border-spacing:0;font-size:12px;width:max-content;min-width:100%}
+    table.xl th{position:sticky;top:0;z-index:2;background:#eef2f7;color:#334155;font-weight:600;text-align:left;padding:4px 8px;border-right:1px solid #d5dde8;border-bottom:1px solid #c4cfdd;white-space:nowrap}
+    table.xl th .cl{display:block;font-size:9px;color:#94a3b8;font-weight:500;letter-spacing:.05em}
+    table.xl td{padding:4px 8px;border-right:1px solid #e3e9f1;border-bottom:1px solid #e3e9f1;vertical-align:top;max-width:380px;background:#fff}
+    table.xl td.rn,table.xl th.rn{position:sticky;left:0;z-index:1;background:#f4f6fa;color:#94a3b8;text-align:center;min-width:38px;font-size:11px;border-right:1px solid #c4cfdd}
+    table.xl th.rn{z-index:3}
+    table.xl tr.cur:hover td{background:#eff6ff;cursor:pointer}
+    table.xl tr.cur:hover td.rn{background:#dbeafe;color:#1d4ed8}
     .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   </style>
 </head>
@@ -77,8 +85,13 @@
       <h1 id="login-tname" class="text-2xl font-bold text-white"></h1>
       <p class="text-slate-400 mt-1 text-sm">Teknoloji Transfer Ofisi · Fikri Mülkiyet Dosya Takibi</p>
     </div>
+    <div class="grid grid-cols-2 gap-2 mb-3 p-1 rounded-xl bg-white/10 border border-white/10">
+      <button id="lm-buluscu" onclick="setLoginMode('buluscu')" class="py-2.5 rounded-lg text-sm font-semibold"><i class="fas fa-lightbulb mr-1.5"></i>Buluşçu / Başvuru</button>
+      <button id="lm-personel" onclick="setLoginMode('personel')" class="py-2.5 rounded-lg text-sm font-semibold"><i class="fas fa-id-badge mr-1.5"></i>TTO Personeli</button>
+    </div>
     <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
-      <div class="flex border-b border-slate-100 text-sm font-semibold">
+      <div id="login-staffhead" class="hidden px-6 pt-5 pb-1"><div class="flex items-center gap-2 text-sm font-bold text-slate-700"><i class="fas fa-id-badge text-blue-600"></i>TTO Personeli Girişi</div></div>
+      <div id="login-tabs" class="flex border-b border-slate-100 text-sm font-semibold">
         <button id="lt-login" onclick="setLoginTab('login')" class="flex-1 py-3.5">Giriş Yap</button>
         <button id="lt-register" onclick="setLoginTab('register')" class="flex-1 py-3.5">Kayıt Ol</button>
       </div>
@@ -87,9 +100,10 @@
         <div id="lf-login">
           <div class="mb-3"><label class="lbl">E-posta</label><input id="li-email" type="email" autocomplete="username" class="inp py-3" placeholder="ad.soyad@karabuk.edu.tr"></div>
           <div class="mb-1"><label class="lbl">Şifre</label><input id="li-pass" type="password" autocomplete="current-password" class="inp py-3" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-          <div class="text-right mb-4"><button onclick="doForgot()" class="text-xs text-blue-600 hover:underline">Şifremi unuttum</button></div>
+          <div id="li-forgot" class="text-right mb-4"><button onclick="doForgot()" class="text-xs text-blue-600 hover:underline">Şifremi unuttum</button></div>
+          <div id="li-staffnote" class="hidden mb-4 mt-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-2.5 leading-snug"><i class="fas fa-lock mr-1 text-slate-400"></i>TTO personeli hesapları ve şifreleri yalnızca <b>TTO Koordinatörü</b> tarafından tanımlanır. Personel olarak kayıt olunamaz; şifrenizi unuttuysanız koordinatöre başvurun.</div>
           <button id="btn-login" onclick="doLogin()" class="btn btn-p w-full justify-center py-3"><i class="fas fa-arrow-right-to-bracket"></i> Giriş Yap</button>
-          <p class="text-[11px] text-slate-400 mt-3 leading-snug text-center">TTO personeli, akademik/idari personel, öğrenciler ve üniversite dışı buluşçular aynı ekrandan girer. Yetkiniz e-posta adresinize göre belirlenir.</p>
+          <p id="li-note" class="text-[11px] text-slate-400 mt-3 leading-snug text-center">Akademik personel, öğrenciler, idari personel ve üniversite dışı (harici) buluşçular bu ekrandan girer. Hesabınız yoksa <b>Kayıt Ol</b> sekmesinden kendiniz açabilirsiniz.</p>
         </div>
         <!-- kayıt -->
         <div id="lf-register" class="hidden">
@@ -115,7 +129,7 @@
       <p class="text-xs font-semibold mb-2 text-amber-300"><i class="fas fa-flask mr-1"></i> Demo hesapları (şifre: 123456)</p>
       <div class="grid grid-cols-2 gap-2 text-xs" id="demo-quick-list"></div>
     </div>
-    <p class="text-center mt-4"><button onclick="goPortal()" class="text-xs text-slate-400 hover:text-white underline"><i class="fas fa-building-columns mr-1"></i>Kurum değiştir</button></p>
+    <p id="login-back" class="text-center mt-4"><button onclick="goPortal()" class="text-xs text-slate-400 hover:text-white underline"><i class="fas fa-building-columns mr-1"></i>Kurum değiştir</button></p>
   </div>
   </div>
 </div>
@@ -189,7 +203,7 @@ const KURUMLAR = (Array.isArray(window.TTO_KURUMLAR) && window.TTO_KURUMLAR.leng
   {id:'hacettepe', name:'Hacettepe Üniversitesi', short:'HÜ', city:'Ankara', color:'#b91c1c', firebase:null}
 ];
 let TENANT = null; // seçili kurum
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 
 // ============================================================
 // SABİTLER
@@ -295,7 +309,9 @@ function errMsg(e){
     'auth/email-already-in-use':'Bu e-posta ile zaten bir hesap var. "Giriş Yap" sekmesini kullanın.', 'auth/weak-password':'Şifre en az 6 karakter olmalı.',
     'auth/invalid-email':'E-posta adresi geçersiz.', 'auth/too-many-requests':'Çok fazla deneme yapıldı. Biraz bekleyip tekrar deneyin.',
     'auth/operation-not-allowed':'Firebase\'de E-posta/Şifre girişi kapalı. Authentication → Sign-in method → Email/Password\'u açın.',
-    'auth/network-request-failed':'İnternet bağlantısı kurulamadı.'
+    'auth/network-request-failed':'İnternet bağlantısı kurulamadı.',
+    'auth/requires-recent-login':'Güvenlik için çıkış yapıp yeniden giriş yapın, sonra tekrar deneyin.',
+    'auth/missing-password':'Şifre girin.'
   };
   if (M[c]) return M[c];
   if (isPermErr(e)) return 'Bu işlem için yetkiniz yok.';
@@ -308,7 +324,15 @@ function errMsg(e){
 function makeFirebaseBackend(cfg, name){
   const app = firebase.apps.find(a=>a.name===name) || firebase.initializeApp(cfg, name);
   const auth = app.auth(), db = app.database();
-  const u2 = u => u ? {email:u.email, verified:u.emailVerified} : null;
+  const u2 = u => u ? {email:u.email, verified:u.emailVerified, uid:u.uid} : null;
+  // Koordinatörün başka biri adına hesap açması / şifre değiştirmesi için geçici ikinci bağlantı.
+  // Koordinatörün kendi oturumu bu işlemlerden etkilenmez.
+  async function withSecondary(fn){
+    const app2 = firebase.initializeApp(cfg, name+'-yonetim-'+Date.now());
+    const a2 = app2.auth();
+    try { await a2.setPersistence(firebase.auth.Auth.Persistence.NONE); } catch(e){}
+    try { return await fn(a2); } finally { try { await a2.signOut(); } catch(e){} try { await app2.delete(); } catch(e){} }
+  }
   return {
     kind: 'firebase',
     onAuth(cb){ return auth.onAuthStateChanged(u => cb(u2(u))); },
@@ -318,6 +342,14 @@ function makeFirebaseBackend(cfg, name){
     async refreshUser(){ const u=auth.currentUser; if(!u) return null; await u.reload(); await u.getIdToken(true); return u2(auth.currentUser); },
     async resetPass(e){ await auth.sendPasswordResetEmail(e); },
     async signOut(){ await auth.signOut(); },
+    // Koordinatör: yeni personel hesabı açar, uid döndürür
+    async createAccount(e,p){ return withSecondary(async a2 => { const c = await a2.createUserWithEmailAndPassword(e,p); return c.user.uid; }); },
+    // Koordinatör: var olan hesabı (şifresini bilerek) bağlar, uid döndürür
+    async checkAccount(e,p){ return withSecondary(async a2 => { const c = await a2.signInWithEmailAndPassword(e,p); return c.user.uid; }); },
+    // Koordinatör: personelin şifresini değiştirir (mevcut şifre gerekir)
+    async setPasswordFor(e,oldP,newP){ return withSecondary(async a2 => { const c = await a2.signInWithEmailAndPassword(e,oldP); await c.user.updatePassword(newP); return c.user.uid; }); },
+    // Kullanıcı: kendi şifresini değiştirir
+    async changeOwnPassword(oldP,newP){ const u=auth.currentUser; if (!u) throw new Error('Oturum yok'); await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, oldP)); await u.updatePassword(newP); },
     async get(p){ const s = await db.ref(p).get(); return s.exists() ? s.val() : null; },
     set(p,v){ return db.ref(p).set(v); },
     update(p,v){ return db.ref(p||undefined).update(v); },
@@ -332,12 +364,15 @@ function makeFirebaseBackend(cfg, name){
 // ARKA UÇ: DEMO (tarayıcı içi, localStorage)
 // ============================================================
 function makeDemoBackend(slug){
-  const KEY='tto_demo_db_v1_'+slug, SKEY='tto_demo_session_'+slug;
+  const KEY='tto_demo_db_v2_'+slug, SKEY='tto_demo_session_'+slug;
   let tree; try { tree = JSON.parse(localStorage.getItem(KEY)); } catch(e){}
   if (!tree || !tree.__auth) { tree = demoSeed(); save(); }
   let listeners = [], authCbs = [];
   let cur = null; try { cur = JSON.parse(localStorage.getItem(SKEY)); } catch(e){}
   if (cur && !(tree.__auth && tree.__auth[ek(cur.email)])) cur = null;
+  if (cur) cur.uid = tree.__auth[ek(cur.email)].uid || ('demo-'+ek(cur.email));
+  const authErr = c => { const er=new Error('x'); er.code=c; return er; };
+  const checkPass = (e,p) => { const a = tree.__auth && tree.__auth[ek(e)]; if (!a) throw authErr('auth/user-not-found'); if (a.pass!==p) throw authErr('auth/wrong-password'); return a; };
   const parts = p => String(p||'').split('/').filter(Boolean);
   const clone = v => v==null ? null : JSON.parse(JSON.stringify(v));
   function clean(v){ if (v==null) return null; if (typeof v!=='object') return v; const o={}; let any=false; for (const [k,x] of Object.entries(v)) { const c=clean(x); if (c!=null) { o[k]=c; any=true; } } return any?o:null; }
@@ -362,9 +397,13 @@ function makeDemoBackend(slug){
   return {
     kind: 'demo',
     onAuth(cb){ authCbs.push(cb); setTimeout(()=>cb(cur?{...cur}:null),0); return ()=>{ authCbs=authCbs.filter(x=>x!==cb); }; },
-    async signIn(e,p){ await delay(); const a = tree.__auth && tree.__auth[ek(e)]; if (!a || a.pass!==p) { const er=new Error('x'); er.code = a?'auth/wrong-password':'auth/user-not-found'; throw er; } cur={email:a.email, verified:true}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
-    async signUp(e,p){ await delay(); const k=ek(e); if (tree.__auth && tree.__auth[k]) { const er=new Error('x'); er.code='auth/email-already-in-use'; throw er; } if ((p||'').length<6) { const er=new Error('x'); er.code='auth/weak-password'; throw er; }
-      setAt('__auth/'+k, {email:e.trim().toLowerCase(), pass:p}); save(); cur={email:e.trim().toLowerCase(), verified:true}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
+    async signIn(e,p){ await delay(); const a = checkPass(e,p); cur={email:a.email, verified:true, uid:a.uid||('demo-'+ek(a.email))}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
+    async signUp(e,p){ await delay(); const k=ek(e); if (tree.__auth && tree.__auth[k]) throw authErr('auth/email-already-in-use'); if ((p||'').length<6) throw authErr('auth/weak-password');
+      const uid='demo-'+k; setAt('__auth/'+k, {email:e.trim().toLowerCase(), pass:p, uid}); save(); cur={email:e.trim().toLowerCase(), verified:true, uid}; localStorage.setItem(SKEY, JSON.stringify(cur)); emitAuth(); },
+    async createAccount(e,p){ await delay(); const k=ek(e); if (tree.__auth && tree.__auth[k]) throw authErr('auth/email-already-in-use'); if ((p||'').length<6) throw authErr('auth/weak-password'); const uid='demo-'+k; setAt('__auth/'+k, {email:e.trim().toLowerCase(), pass:p, uid}); save(); return uid; },
+    async checkAccount(e,p){ await delay(); const a=checkPass(e,p); return a.uid||('demo-'+ek(e)); },
+    async setPasswordFor(e,oldP,newP){ await delay(); const a=checkPass(e,oldP); if ((newP||'').length<6) throw authErr('auth/weak-password'); setAt('__auth/'+ek(e)+'/pass', newP); save(); return a.uid; },
+    async changeOwnPassword(oldP,newP){ await delay(); if (!cur) throw new Error('Oturum yok'); checkPass(cur.email, oldP); if ((newP||'').length<6) throw authErr('auth/weak-password'); setAt('__auth/'+ek(cur.email)+'/pass', newP); save(); },
     async sendVerify(){},
     async refreshUser(){ return cur?{...cur}:null; },
     async resetPass(){ await delay(); },
@@ -387,8 +426,8 @@ function demoSeed(){
   const ts = s => toDate(s).getTime()+10*3600000;
   const T = {__auth:{}, staff:{}, users:{}, files:{}, internal:{}, userFiles:{}, notifs:{}, staffNotifs:{}, docs:{},
     meta:{hasCoordinator:true}, settings:JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), counters:{'2023':9,'2024':3,'2025':12,'2026':5}};
-  const acct = (email) => { T.__auth[ek(email)] = {email, pass:'123456'}; };
-  const staff = (email, name, role) => { acct(email); T.staff[ek(email)] = {email, name, role, active:true, addedAt:Date.now()}; };
+  const acct = (email) => { T.__auth[ek(email)] = {email, pass:'123456', uid:'demo-'+ek(email)}; };
+  const staff = (email, name, role) => { acct(email); T.staff[ek(email)] = {email, name, role, active:true, uid:'demo-'+ek(email), addedAt:Date.now()}; };
   staff('koordinator@tto.demo','Prof. Dr. Ayşe Demir','koordinator');
   staff('yardimci@tto.demo','Doç. Dr. Mehmet Kaya','koordinator_yrd');
   staff('sef@tto.demo','Fatma Yıldız','sef');
@@ -412,6 +451,8 @@ function demoSeed(){
     const history = {};
     o.hist.forEach(([st, d, note], i) => { history['h'+i] = {stage:st, date:d, at:ts(d), note:note||'', byName:(o.r||resp).n}; });
     const last = o.hist[o.hist.length-1];
+    const yr = d => String(d||'').slice(0,4); // demo numaralarının yılı tarihlerle uyumlu olsun
+    if (o.no) o.no = o.no.replace(/\d{4}/, yr(o.hist[0][1])); if (o.tpn && o.tpd) o.tpn = o.tpn.replace(/^\d{4}/, yr(o.tpd));
     T.files[id] = {id, ttoNo:o.no||null, title:o.title, type:o.type, summary:o.summary||'', owner:o.owner||DEFAULT_SETTINGS.ownerDefault,
       inventors:inv, stage:last[0], stageDate:last[1], ttoDate:o.hist[0][1], tpAppDate:o.tpd||null, tpAppNo:o.tpn||null,
       pubDate:o.pub||null, regDate:o.reg||null, regNo:o.regn||null, responsible:ek((o.r||resp).e), responsibleName:(o.r||resp).n,
@@ -457,6 +498,13 @@ function demoSeed(){
   file({no:'TTO-2025-012', type:'faydali', title:'Katlanabilir öğrenci çizim masası', inv:['murat'], r:resp2,
     tpd:ago(300), tpn:'2025/011223',
     hist:[['basvuru',ago(360)],['on_inceleme',ago(350)],['kurul',ago(330)],['hazirlik',ago(315)],['tp_basvuru',ago(300)],['tp_arastirma',ago(200)],['red',ago(40),'Araştırma raporunda yenilik bulunamadığı için başvuru reddedildi.']]});
+  file({no:'TTO-2024-006', type:'faydali', title:'Döküm kalıpları için hızlı soğutma kanalı modülü', inv:['burak','ali'], shares:[50,50], r:resp3, owner:'Ortak başvuru (üniversite + ABC Makina, örnek)',
+    summary:'Sanayi ortağıyla geliştirilen, kalıp çevrim süresini kısaltan değiştirilebilir soğutma kanalı modülü.',
+    tpd:ago(610), tpn:'2024/018876', pub:ago(420),
+    hist:[['basvuru',ago(700),'Harici buluşçu (sanayi ortağı) ile ortak bildirim.'],['on_inceleme',ago(690)],['kurul',ago(660)],['hazirlik',ago(640)],['tp_basvuru',ago(610)],['tp_arastirma',ago(560)],['tp_yayin',ago(420)]]});
+  file({type:'tasarim', title:'Endüstriyel kompresör için gürültü sönümleyici kabin', inv:['burak'], portal:true,
+    summary:'Harici buluşçunun portal üzerinden yaptığı tasarım başvurusu.',
+    hist:[['basvuru',ago(6),'Başvuru TTO portalı üzerinden yapıldı.']]});
   file({no:'TTO-2026-003', type:'tasarim', title:'Modüler güneş paneli taşıyıcı ayak seti', inv:['elif','selin'],
     hist:[['basvuru',ago(45)],['on_inceleme',ago(35)],['hazirlik',ago(12),'Görseller tasarımcıdan bekleniyor.']]});
   T.forms = {demo005: {leadKey: ek(P.can.email),
@@ -510,15 +558,26 @@ const setting = () => ({...DEFAULT_SETTINGS, ...(S.settings||{}), expected:{...D
 function show(id){ ['scr-portal','scr-login','scr-verify','scr-app'].forEach(s => $(s).classList.toggle('hidden', s!==id)); }
 function findTenant(id){ id=String(id||'').toLowerCase(); return KURUMLAR.find(k=>k.id===id) || null; }
 function tenantUrl(id, demo){ return location.pathname+'?kurum='+encodeURIComponent(id)+(demo?'&demo=1':''); }
+function tenantEntry(t){ return landingUrl(t) || tenantUrl(t.id); } // kurum seçme ekranından: önce kurumun açılış sayfası
 function brandMark(t, size){
   size = size||48; const r = Math.round(size*0.28), fs = Math.round(size*(String(t.short||'').length>3?0.26:0.32));
   const mono = `<div style="width:${size}px;height:${size}px;border-radius:${r}px;background:${esc(t.color||'#2563eb')};font-size:${fs}px" class="text-white font-bold flex items-center justify-center tracking-tight shadow-sm">${esc(t.short||initials(t.name))}</div>`;
   if (!t.logo) return mono;
   return `<div style="width:${size}px;height:${size}px;border-radius:${r}px" class="bg-white flex items-center justify-center overflow-hidden shadow-sm"><img src="${esc(t.logo)}" alt="${esc(t.name)}" style="max-width:88%;max-height:88%;object-fit:contain" onerror="this.parentNode.outerHTML=decodeURIComponent('${encodeURIComponent(mono)}')"></div>`;
 }
-function boot(){
+function landingUrl(t){ return t && t.landing ? String(t.landing) : ''; }
+async function landingExists(url){
+  if (!url || location.protocol==='file:') return !!url; // yerel dosyada denetlenemez, varsayılır
+  try { const r = await fetch(url, {method:'HEAD', cache:'no-store'}); return r.ok; } catch(e){ return false; }
+}
+async function boot(){
   const q = new URLSearchParams(location.search);
-  TENANT = findTenant(q.get('kurum'));
+  // Varsayılan kurum: kurum seçme ekranı atlanır (geri açmak için kurumlar.js → defaultKurum: '')
+  if (!q.get('kurum') && !q.has('portal') && PLATFORM.defaultKurum && findTenant(PLATFORM.defaultKurum)) {
+    const t = findTenant(PLATFORM.defaultKurum);
+    if (landingUrl(t) && await landingExists(landingUrl(t))) { location.replace(landingUrl(t)); return; }
+    TENANT = t;
+  } else TENANT = findTenant(q.get('kurum'));
   if (!TENANT) { showPortal(q.get('kurum')); return; }
   try { localStorage.setItem('tto_last_kurum', TENANT.id); } catch(e){}
   DEFAULT_SETTINGS = {...DEFAULT_SETTINGS, orgName: TENANT.name+' Teknoloji Transfer Ofisi', ownerDefault: TENANT.name};
@@ -535,10 +594,16 @@ function boot(){
   }
   $('demo-band').classList.toggle('hidden', B.kind!=='demo');
   if (B.kind==='demo') { document.body.style.paddingTop='28px'; $('scr-app').style.height='calc(100vh - 28px)'; renderDemoQuick(); }
-  setLoginTab('login');
+  // Açılış sayfasından gelen yönlendirme: ?giris=personel | buluscu | kayit
+  const g = (q.get('giris')||'').toLowerCase();
+  setLoginMode(g==='personel'?'personel':'buluscu');
+  setLoginTab(g==='kayit'?'register':'login');
+  const back = $('login-back');
+  if (landingUrl(TENANT)) back.innerHTML = `<a href="${esc(landingUrl(TENANT))}" class="text-xs text-slate-400 hover:text-white underline"><i class="fas fa-house mr-1"></i>${esc(TENANT.name)} giriş sayfasına dön</a>`;
+  else if (PLATFORM.defaultKurum) back.innerHTML = '';
   B.onAuth(onAuthChange);
 }
-function goPortal(){ location.href = location.pathname; }
+function goPortal(){ location.href = location.pathname + (PLATFORM.defaultKurum ? '?portal=1' : ''); }
 function showPortal(unknown){
   show('scr-portal');
   document.title = PLATFORM.name+' — Kurum Seçimi';
@@ -552,22 +617,22 @@ function renderPortal(){
   const ks = KURUMLAR.filter(k => k.listed!==false && (!q || (k.name+' '+(k.city||'')+' '+(k.short||'')).toLocaleLowerCase('tr').includes(q)))
     .sort((a,b)=>a.name.localeCompare(b.name,'tr'));
   let last=null; try { last = findTenant(localStorage.getItem('tto_last_kurum')); } catch(e){}
-  $('pt-last').innerHTML = (last && !q) ? `<a href="${esc(tenantUrl(last.id))}" class="card p-4 mb-5 flex items-center gap-4 hover:shadow-md hover:border-blue-200 transition border-blue-100 bg-blue-50/40">${brandMark(last,44)}<div class="flex-1 min-w-0"><div class="text-[11px] font-semibold text-blue-700 uppercase tracking-wide">Son girdiğiniz kurum</div><div class="font-bold truncate">${esc(last.name)}</div></div><span class="btn btn-p">Devam et <i class="fas fa-arrow-right"></i></span></a>` : '';
+  $('pt-last').innerHTML = (last && !q) ? `<a href="${esc(tenantEntry(last))}" class="card p-4 mb-5 flex items-center gap-4 hover:shadow-md hover:border-blue-200 transition border-blue-100 bg-blue-50/40">${brandMark(last,44)}<div class="flex-1 min-w-0"><div class="text-[11px] font-semibold text-blue-700 uppercase tracking-wide">Son girdiğiniz kurum</div><div class="font-bold truncate">${esc(last.name)}</div></div><span class="btn btn-p">Devam et <i class="fas fa-arrow-right"></i></span></a>` : '';
   $('pt-grid').innerHTML = ks.map(k => { const live = k.firebase && k.firebase.apiKey;
-    return `<a href="${esc(tenantUrl(k.id))}" class="card p-5 flex items-center gap-4 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition group">
+    return `<a href="${esc(tenantEntry(k))}" class="card p-5 flex items-center gap-4 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition group">
       ${brandMark(k, 60)}
       <div class="flex-1 min-w-0"><div class="font-bold text-slate-800 leading-snug group-hover:text-blue-700">${esc(k.name)}</div>
         <div class="text-xs text-slate-400 mt-0.5"><i class="fas fa-location-dot mr-1"></i>${esc(k.city||'')}</div>
         <div class="mt-2">${live?'<span class="chip bg-emerald-50 text-emerald-700"><i class="fas fa-circle-check"></i>Aktif</span>':'<span class="chip bg-amber-50 text-amber-700"><i class="fas fa-flask"></i>Demo</span>'}</div></div>
       <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500"></i></a>`; }).join('') || '<div class="col-span-full text-center text-slate-400 py-10">Kurum bulunamadı.</div>';
 }
-function demoReset(){ if (!confirm('Bu kurumun demo verileri silinip örnek veriler yeniden yüklensin mi?')) return; localStorage.removeItem('tto_demo_db_v1_'+TENANT.id); localStorage.removeItem('tto_demo_session_'+TENANT.id); location.reload(); }
+function demoReset(){ if (!confirm('Bu kurumun demo verileri silinip örnek veriler yeniden yüklensin mi?')) return; localStorage.removeItem('tto_demo_db_v1_'+TENANT.id); localStorage.removeItem('tto_demo_db_v2_'+TENANT.id); localStorage.removeItem('tto_demo_session_'+TENANT.id); location.reload(); }
 function renderDemoQuick(){
   $('demo-quick').classList.remove('hidden');
   const acc = [['koordinator@tto.demo','Koordinatör','fa-user-tie'],['uzman1@tto.demo','TTO Personeli','fa-id-badge'],['akademisyen@tto.demo','Akademisyen (6 dosya)','fa-chalkboard-user'],['ogrenci@tto.demo','Öğrenci','fa-user-graduate'],['idari@tto.demo','İdari Personel','fa-briefcase'],['harici@tto.demo','Harici Buluşçu','fa-industry']];
   $('demo-quick-list').innerHTML = acc.map(([e,l,i]) => `<button onclick="demoLogin('${e}')" class="text-left bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2"><i class="fas ${i} mr-1.5 text-amber-300"></i>${l}</button>`).join('');
 }
-async function demoLogin(e){ $('li-email').value=e; $('li-pass').value='123456'; setLoginTab('login'); await doLogin(); }
+async function demoLogin(e){ setLoginMode(/@tto\.demo$/.test(e) && !/^(akademisyen|ogrenci|idari|harici)@/.test(e) ? 'personel' : 'buluscu'); $('li-email').value=e; $('li-pass').value='123456'; setLoginTab('login'); await doLogin(); }
 
 // ============================================================
 // GİRİŞ / KAYIT
@@ -580,6 +645,19 @@ function setLoginTab(t){
   $('lt-login').className = t==='login'?on:off; $('lt-register').className = t==='register'?on:off;
   $('login-msg').classList.add('hidden');
 }
+let loginMode='buluscu';
+function setLoginMode(m){
+  loginMode = m==='personel' ? 'personel' : 'buluscu';
+  const st = loginMode==='personel';
+  const on='py-2.5 rounded-lg text-sm font-semibold bg-white text-slate-800 shadow', off='py-2.5 rounded-lg text-sm font-semibold text-slate-300 hover:text-white';
+  $('lm-buluscu').className = st?off:on; $('lm-personel').className = st?on:off;
+  $('login-tabs').classList.toggle('hidden', st); $('login-staffhead').classList.toggle('hidden', !st);
+  $('li-forgot').classList.toggle('hidden', st); $('li-staffnote').classList.toggle('hidden', !st);
+  $('li-note').classList.toggle('hidden', st);
+  $('li-email').placeholder = st ? 'kurumsal e-posta (koordinatörün tanımladığı)' : 'ad.soyad@karabuk.edu.tr';
+  if (st) setLoginTab('login');
+  $('login-msg').classList.add('hidden');
+}
 function loginMsg(msg, ok){ const el=$('login-msg'); el.textContent=msg; el.className='text-center text-xs mt-3 '+(ok?'text-emerald-600':'text-red-500'); }
 function busy(btn, on, html){ if (on) { btn.dataset.html = btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Lütfen bekleyin…'; } else { btn.disabled=false; btn.innerHTML = html || btn.dataset.html; } }
 async function doLogin(){
@@ -587,7 +665,8 @@ async function doLogin(){
   if (!validEmail(e)) return loginMsg('Geçerli bir e-posta girin.');
   if (!p) return loginMsg('Şifrenizi girin.');
   busy($('btn-login'), true);
-  try { await B.signIn(e,p); } catch(err){ loginMsg(errMsg(err)); }
+  S.loginIntent = loginMode;
+  try { await B.signIn(e,p); } catch(err){ S.loginIntent=null; loginMsg(errMsg(err)); }
   busy($('btn-login'), false);
 }
 async function doRegister(){
@@ -618,8 +697,16 @@ async function onAuthChange(u){
   if (!u) { teardown(); S.user=null; show('scr-login'); return; }
   try { if (B.kind==='firebase') { const f = await B.refreshUser(); if (f) u = f; } } catch(e){ console.warn(e); }
   if (seq!==authSeq) return;
-  S.user = {email:u.email.toLowerCase(), ek:ek(u.email), verified:u.verified};
-  if (!u.verified) { $('vf-email').textContent = u.email; show('scr-verify'); return; }
+  S.user = {email:u.email.toLowerCase(), ek:ek(u.email), verified:u.verified, uid:u.uid};
+  if (!u.verified) {
+    // Koordinatörün açtığı personel hesapları e-posta doğrulaması beklemez (hesap koordinatöre bağlıdır)
+    const st = await B.get('staff/'+S.user.ek).catch(()=>null);
+    if (seq!==authSeq) return;
+    if (!(st && st.active && st.uid && st.uid===u.uid)) {
+      if (S.loginIntent==='personel') { S.loginIntent=null; await B.signOut().catch(()=>{}); show('scr-login'); setLoginMode('personel'); loginMsg('Bu hesap TTO personeli olarak tanımlı değil. Hesabınızı TTO Koordinatörü tanımlamalıdır.'); return; }
+      $('vf-email').textContent = u.email; show('scr-verify'); return;
+    }
+  }
   try { await enterApp(); } catch(e){ console.error(e); toast('Uygulama açılamadı: '+errMsg(e),'error'); show('scr-login'); }
 }
 
@@ -630,7 +717,13 @@ async function enterApp(){
     B.get('meta').catch(()=>null), B.get('staff/'+me).catch(()=>null), B.get('users/'+me).catch(()=>null), B.get('settings').catch(()=>null)
   ]);
   S.meta = meta||{}; S.settings = settings||{};
-  S.role = staffRec && staffRec.active ? 'staff' : 'applicant';
+  S.role = staffRec && staffRec.active && staffRec.uid && staffRec.uid===S.user.uid ? 'staff' : 'applicant';
+  const intent = S.loginIntent; S.loginIntent = null;
+  if (S.role!=='staff' && intent==='personel') {
+    await B.signOut().catch(()=>{}); show('scr-login'); setLoginMode('personel');
+    loginMsg('Bu hesap TTO personeli olarak tanımlı değil. Buluşçu iseniz "Buluşçu / Başvuru" sekmesinden girin.'); return;
+  }
+  if (S.role!=='staff' && !S.user.verified) { $('vf-email').textContent = S.user.email; show('scr-verify'); return; }
   S.me = staffRec; S.profile = profile;
   // kayıt sırasında girilen profil bilgisi (doğrulamadan önce yazılamaz)
   const pend = (()=>{ try { return JSON.parse(localStorage.getItem('tto_pending_profile')); } catch(e){ return null; } })();
@@ -671,7 +764,7 @@ async function becomeCoordinator(){
   if (!name) return;
   if (!confirm(S.user.email+' adresi TTO Koordinatörü olarak tanımlanacak. Onaylıyor musunuz?')) return;
   try {
-    await B.set('staff/'+S.user.ek, {email:S.user.email, name, role:'koordinator', active:true, addedAt:Date.now()});
+    await B.set('staff/'+S.user.ek, {email:S.user.email, name, role:'koordinator', active:true, uid:S.user.uid, addedAt:Date.now()});
     await B.set('meta/hasCoordinator', true);
     if (!S.settings || !S.settings.orgName) await B.set('settings', DEFAULT_SETTINGS);
     toast('Koordinatör olarak tanımlandınız.','success');
@@ -695,11 +788,11 @@ function startListeners(){
   if (isStaff()) {
     listen('files','files'); listen('internal','internal'); listen('staff','staff'); listen('users','users');
     listen('staffNotifs','staffNotifs'); listen('userFiles','userFilesAll');
-    S.unsubs.push(B.on('staff/'+me, v => { if (!v || !v.active) { toast('Personel yetkiniz kaldırıldı.','error'); enterApp(); } else { S.me=v; updateSidebarUser(); } }));
+    S.unsubs.push(B.on('staff/'+me, v => { if (!v || !v.active || v.uid!==S.user.uid) { toast('Personel yetkiniz kaldırıldı.','error'); enterApp(); } else { S.me=v; updateSidebarUser(); } }));
   } else {
     listen('notifs/'+me, 'notifs');
     S.unsubs.push(B.on('users/'+me, v => { if (v) { S.profile=v; updateSidebarUser(); } }));
-    S.unsubs.push(B.on('staff/'+me, v => { if (v && v.active) { toast('Personel yetkiniz tanımlandı, yeniden yükleniyor…','success'); setTimeout(enterApp, 600); } }));
+    S.unsubs.push(B.on('staff/'+me, v => { if (v && v.active && v.uid===S.user.uid) { toast('Personel yetkiniz tanımlandı, yeniden yükleniyor…','success'); setTimeout(enterApp, 600); } }));
     S.unsubs.push(B.on('userFiles/'+me, v => {
       const ids = Object.keys(v||{}); S.myFileIds = ids; S.loaded.myIndex = true;
       Object.keys(S.fileUnsubs).forEach(fid => { if (!ids.includes(fid)) { S.fileUnsubs[fid](); delete S.fileUnsubs[fid]; delete S.files[fid]; } });
@@ -734,7 +827,10 @@ function buildNav(){
   ] : [
     ['myfiles','fa-folder-open','Dosyalarım'], ['newapp','fa-circle-plus','Yeni Başvuru'], ['profile','fa-user','Profilim'], ['help','fa-circle-question','Süreç Nasıl İşler?']
   ];
-  $('sb-nav').innerHTML = items.map(([v,i,l]) => `<button id="nav-${v}" onclick="goto('${v}')" class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/10 transition"><i class="fas ${i} w-4 text-center"></i><span class="flex-1 text-left">${l}</span><span id="navb-${v}" class="hidden bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"></span></button>`).join('')
+  const navBtn = ([v,i,l]) => `<button id="nav-${v}" onclick="goto('${v}')" class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/10 transition"><i class="fas ${i} w-4 text-center"></i><span class="flex-1 text-left">${l}</span><span id="navb-${v}" class="hidden bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"></span></button>`;
+  $('sb-nav').innerHTML = (isMgr() ? `<div class="px-3 text-[10px] font-semibold text-sky-400 uppercase tracking-wider mb-1"><i class="fas fa-user-shield mr-1"></i>Koordinasyon</div>`
+      + [['coord','fa-table-cells','Koordinatör Paneli']].map(navBtn).join('') + `<div class="pt-4 px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">TTO</div>` : '')
+    + items.map(navBtn).join('')
     + (isStaff() ? `<div class="pt-4 px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Hızlı Filtre</div>`
       + Object.entries(PHASES).map(([k,p]) => `<button onclick="quickPhase('${k}')" class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/10"><span class="w-2 h-2 rounded-full" style="background:${p.bar}"></span><span class="flex-1 text-left">${p.label}</span><span id="navc-${k}" class="text-slate-500"></span></button>`).join('') : '');
 }
@@ -1099,11 +1195,10 @@ function boardCard(f){
     <div class="flex items-center gap-1 mt-2.5">${inv.slice(0,5).map(p=>`<span title="${esc(p.name)}" class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center">${esc(initials(p.name))}</span>`).join('')}${inv.length>5?`<span class="text-[11px] text-slate-400 ml-1">+${inv.length-5}</span>`:''}</div>
   </button>`;
 }
-function exportCsv(){
-  const rows = [['TTO No','Tür','Başlık','Buluşçular','Buluşçu Sayısı','Durum','Aşama','Aşama Tarihi',"TTO'ya Başvuru",'TÜRKPATENT Başvuru Tarihi','Başvuru No','Yayın Tarihi','Tescil Tarihi','Tescil No','TÜRKPATENT\'te Geçen Gün','Sorumlu','Hak Sahibi']];
-  filteredFiles().forEach(f => { const w=tpWait(f); const inv=inventorsOf(f); rows.push([f.ttoNo||'', typeOf(f).label, f.title, inv.map(p=>p.name).join(', '), inv.length, PHASES[phaseOf(f)].label, stageOf(f).label, fmtD(f.stageDate), fmtD(ttoDateOf(f)), fmtD(f.tpAppDate), f.tpAppNo||'', fmtD(f.pubDate), fmtD(f.regDate), f.regNo||'', w?w.days:'', f.responsibleName||'', f.owner||'']); });
-  const csv = '﻿' + rows.map(r => r.map(c => { const s=String(c==null?'':c); return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(';')).join('\r\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='TTO_dosyalar_'+today()+'.csv'; a.click();
+function exportCsv(){ // Dosyalar ekranı: filtrelenmiş listeyi Excel (.xlsx) olarak indirir
+  const cols = [{h:'TTO No',w:15},{h:'Tür',w:16},{h:'Başlık',w:46},{h:'Buluşçular',w:38},{h:'Buluşçu Sayısı',w:9,num:true},{h:'Durum',w:20},{h:'Aşama',w:30},{h:'Aşama Tarihi',w:13,date:true},{h:"TTO'ya Başvuru",w:13,date:true},{h:'TÜRKPATENT Başvuru Tarihi',w:13,date:true},{h:'Başvuru No',w:20},{h:'Yayın Tarihi',w:13,date:true},{h:'Tescil Tarihi',w:13,date:true},{h:'Tescil No',w:18},{h:"TÜRKPATENT'te Geçen Gün",w:11,num:true},{h:'Sorumlu',w:20},{h:'Hak Sahibi',w:28}];
+  const rows = filteredFiles().map(f => { const w=tpWait(f); const inv=inventorsOf(f); return [f.ttoNo||'', typeOf(f).label, f.title, inv.map(p=>p.name).join(', '), inv.length, PHASES[phaseOf(f)].label, stageOf(f).label, f.stageDate||'', ttoDateOf(f)||'', f.tpAppDate||'', f.tpAppNo||'', f.pubDate||'', f.regDate||'', f.regNo||'', w?w.days:'', f.responsibleName||'', f.owner||'']; });
+  downloadXlsx([{name:'Dosyalar', title:setting().orgName+' — Dosya Listesi ('+fmtD(today())+')', cols, rows}], asciiName('TTO_dosyalar_'+today())+'.xlsx');
 }
 
 // ---------- BULUŞÇULAR ----------
@@ -1137,33 +1232,46 @@ VIEWS.people = {
 };
 
 // ---------- PERSONEL ----------
+// Personel hesaplarını ve şifrelerini YALNIZCA koordinatör tanımlar. Personel kendisi kayıt olamaz.
 VIEWS.staff = {
-  mount(){ setTop('TTO Personeli', 'Koordinatör, koordinatör yardımcısı, şef ve personel hesapları', isCoord()?`<button onclick="openStaffForm()" class="btn btn-p"><i class="fas fa-user-plus"></i> Personel Ekle</button>`:''); $('view').innerHTML='<div id="staff-out"></div>'; },
+  mount(){ setTop('TTO Personeli', 'Koordinatör, koordinatör yardımcısı, şef ve personel hesapları', isCoord()?`<button onclick="openStaffForm()" class="btn btn-p"><i class="fas fa-user-plus"></i> Personel Hesabı Oluştur</button>`:''); $('view').innerHTML='<div id="staff-out"></div>'; },
   update(){
     const out=$('staff-out'); if (!out) return;
     const order = Object.keys(ROLES);
     const ss = list(S.staff).sort((a,b)=>order.indexOf(a.role)-order.indexOf(b.role) || (b.active?1:0)-(a.active?1:0));
     const count = k => list(S.files).filter(f=>f.responsible===ek(k) && phaseOf(f)!=='son').length;
-    out.innerHTML = `<div class="card overflow-hidden"><table class="tbl w-full"><thead><tr><th>Ad Soyad</th><th>Görev</th><th>E-posta</th><th>Açık dosya</th><th>Durum</th><th></th></tr></thead><tbody>
-      ${ss.map(s => `<tr><td class="font-semibold">${esc(s.name)}${s.email===S.user.email?' <span class="text-xs text-slate-400">(siz)</span>':''}</td><td><span class="chip ${s.role==='koordinator'?'bg-blue-100 text-blue-700':s.role==='koordinator_yrd'?'bg-sky-100 text-sky-700':s.role==='sef'?'bg-violet-100 text-violet-700':'bg-slate-100 text-slate-600'}">${ROLES[s.role]||s.role}</span></td><td class="text-xs">${esc(s.email)}</td><td class="text-sm">${count(s.email)}</td>
+    out.innerHTML = `<div class="card overflow-hidden"><table class="tbl w-full"><thead><tr><th>Ad Soyad</th><th>Görev</th><th>E-posta (kullanıcı adı)</th><th>Giriş hesabı</th><th>Açık dosya</th><th>Durum</th><th></th></tr></thead><tbody>
+      ${ss.map(s => `<tr><td class="font-semibold">${esc(s.name)}${s.email===S.user.email?' <span class="text-xs text-slate-400">(siz)</span>':''}</td><td><span class="chip ${s.role==='koordinator'?'bg-blue-100 text-blue-700':s.role==='koordinator_yrd'?'bg-sky-100 text-sky-700':s.role==='sef'?'bg-violet-100 text-violet-700':'bg-slate-100 text-slate-600'}">${ROLES[s.role]||s.role}</span></td><td class="text-xs">${esc(s.email)}</td>
+        <td class="text-xs">${s.uid?`<span class="chip bg-emerald-50 text-emerald-700"><i class="fas fa-lock"></i>Hesap tanımlı</span>${s.pwAt?`<div class="text-[10px] text-slate-400 mt-0.5">Şifre: ${fmtTs(s.pwAt)}</div>`:''}`:'<span class="chip bg-amber-50 text-amber-700"><i class="fas fa-triangle-exclamation"></i>Hesap yok</span>'}</td>
+        <td class="text-sm">${count(s.email)}</td>
         <td>${s.active?'<span class="chip bg-emerald-50 text-emerald-700">Aktif</span>':'<span class="chip bg-slate-100 text-slate-500">Pasif</span>'}</td>
-        <td class="text-right whitespace-nowrap">${isCoord()?`<button onclick="openStaffForm('${ek(s.email)}')" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-pen"></i></button>`:''} <button onclick="sendReset('${esc(s.email)}')" title="Şifre sıfırlama e-postası gönder" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-key"></i></button></td></tr>`).join('')}
+        <td class="text-right whitespace-nowrap">${isCoord()?`<button onclick="openStaffForm('${ek(s.email)}')" title="Düzenle" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-pen"></i></button> <button onclick="openStaffPassword('${ek(s.email)}')" title="Şifre belirle" class="btn btn-s !py-1 !px-2.5 text-xs"><i class="fas fa-key"></i></button>`:''}</td></tr>`).join('')}
       </tbody></table></div>
-      <div class="card p-4 mt-4 text-sm text-slate-600 bg-blue-50/50 border-blue-100"><p class="font-semibold text-slate-700 mb-1"><i class="fas fa-circle-info mr-1 text-blue-600"></i>Personel hesabı nasıl açılır?</p><ol class="list-decimal ml-5 space-y-0.5 text-xs"><li>Koordinatör buradan personelin <b>e-posta adresini ve görevini</b> ekler.</li><li>Personel, giriş ekranındaki <b>Kayıt Ol</b> sekmesinden aynı e-postayla hesap açar ve e-postasını doğrular.</li><li>Girişte sistem e-postayı tanır ve TTO personeli ekranlarını açar. Pasife alınan personel buluşçu ekranını görür.</li></ol>
-      <p class="text-xs mt-2"><b>Yetkiler:</b> Tüm personel dosya ekler, günceller, aşama değiştirir. Dosya silme ve ayarlar Koordinatör ile Koordinatör Yardımcısına; personel yönetimi yalnızca Koordinatöre açıktır.</p></div>`;
+      <div class="card p-4 mt-4 text-sm text-slate-600 bg-blue-50/50 border-blue-100"><p class="font-semibold text-slate-700 mb-1"><i class="fas fa-circle-info mr-1 text-blue-600"></i>Personel hesabı nasıl açılır?</p><ol class="list-decimal ml-5 space-y-0.5 text-xs"><li>Koordinatör <b>Personel Hesabı Oluştur</b> ile ad, e-posta, görev ve <b>giriş şifresini</b> belirler.</li><li>Şifreyi personele kendisi iletir. Personel giriş ekranında <b>TTO Personeli</b> sekmesinden girer; ayrıca kayıt olmaz, e-posta doğrulaması gerekmez.</li><li>Şifre değişikliği yalnızca bu ekrandan (<i class="fas fa-key"></i>) koordinatör tarafından yapılır. Pasife alınan personel sisteme personel olarak giremez.</li></ol>
+      <p class="text-xs mt-2"><b>Yetkiler:</b> Tüm personel dosya ekler, günceller, aşama değiştirir. Dosya silme, ayarlar ve Koordinatör Paneli Koordinatör ile Koordinatör Yardımcısına; personel hesapları ve şifreler yalnızca Koordinatöre açıktır. Şifreler sistemde açık hâlde saklanmaz; koordinatör dâhil kimse mevcut bir şifreyi göremez, yalnızca yenisini belirleyebilir.</p></div>`;
   }
 };
-async function sendReset(email){ if (!confirm(email+' adresine şifre sıfırlama bağlantısı gönderilsin mi?')) return; try { await B.resetPass(email); toast(B.kind==='demo'?'Demo modunda e-posta gönderilmez.':'Bağlantı gönderildi.','success'); } catch(e){ toast(errMsg(e),'error'); } }
+function genPassword(){ const A='ABCDEFGHJKLMNPRSTUVYZ', a='abcdefghijkmnoprstuvyz', d='23456789', all=A+a+d; const r=n=>{ const u=new Uint32Array(1); crypto.getRandomValues(u); return u[0]%n; };
+  let p=A[r(A.length)]+a[r(a.length)]+d[r(d.length)]; for (let i=0;i<7;i++) p+=all[r(all.length)]; return p.split('').sort(()=>r(3)-1).join(''); }
+function pwFields(prefix, label){ return `<div><label class="lbl">${label||'Şifre'}</label><div class="flex gap-2"><input id="${prefix}" type="text" autocomplete="new-password" class="inp font-mono" placeholder="En az 8 karakter"><button type="button" onclick="$('${prefix}').value=genPassword()" class="btn btn-s" title="Güçlü şifre üret"><i class="fas fa-wand-magic-sparkles"></i> Üret</button></div><p class="text-[11px] text-slate-400 mt-1">Şifreyi kaydetmeden önce not alın ve personele güvenli bir yoldan (yüz yüze, kurumsal e-posta) iletin. Kaydedildikten sonra kimse göremez.</p></div>`; }
+function staffAccMode(v){ $('sf-pass-l').textContent = v==='link' ? 'Hesabın mevcut şifresi' : 'Giriş şifresi'; $('sf-linknote').classList.toggle('hidden', v!=='link'); }
 function openStaffForm(k){
+  if (!isCoord()) return toast('Personel hesaplarını yalnızca Koordinatör yönetebilir.','error');
   const s = k ? S.staff[k] : null;
-  openModal(modalHead(s?'Personeli düzenle':'Personel ekle', 'Personel bu e-postayla kayıt olunca yetkileri açılır', 'fa-id-badge') + `<div class="p-6 space-y-3">
+  const needAcc = !s || !s.uid;
+  openModal(modalHead(s?'Personeli düzenle':'Personel hesabı oluştur', s?esc(s.email):'Hesap ve giriş şifresi koordinatör tarafından belirlenir', 'fa-id-badge') + `<div class="p-6 space-y-3">
     <div><label class="lbl">Ad Soyad</label><input id="sf-name" class="inp" value="${esc(s?s.name:'')}"></div>
-    <div><label class="lbl">E-posta</label><input id="sf-email" class="inp" value="${esc(s?s.email:'')}" ${s?'disabled':''}></div>
-    <div><label class="lbl">Görev</label><select id="sf-role" class="inp">${Object.entries(ROLES).map(([r,l])=>`<option value="${r}" ${s&&s.role===r?'selected':''}>${l}</option>`).join('')}</select></div>
-    ${s?`<label class="flex items-center gap-2 text-sm"><input id="sf-active" type="checkbox" ${s.active?'checked':''} ${s.email===S.user.email?'disabled':''}> Aktif</label>`:''}
-  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button onclick="saveStaff('${k||''}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`);
+    <div><label class="lbl">E-posta (kullanıcı adı)</label><input id="sf-email" class="inp" value="${esc(s?s.email:'')}" ${s?'disabled':''} placeholder="ad.soyad@karabuk.edu.tr"></div>
+    <div><label class="lbl">Görev</label><select id="sf-role" class="inp">${Object.entries(ROLES).map(([r,l])=>`<option value="${r}" ${(s?s.role:'personel')===r?'selected':''}>${l}</option>`).join('')}</select></div>
+    ${needAcc?`<div class="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/60"><div><label class="lbl">Giriş hesabı</label><select id="sf-accmode" class="inp" onchange="staffAccMode(this.value)"><option value="new">Yeni hesap oluştur ve şifre belirle</option><option value="link">Bu e-postayla zaten hesap var — bağla</option></select></div>
+      <div><label class="lbl" id="sf-pass-l">Giriş şifresi</label><div class="flex gap-2"><input id="sf-pass" type="text" autocomplete="new-password" class="inp font-mono" placeholder="En az 8 karakter"><button type="button" onclick="$('sf-pass').value=genPassword()" class="btn btn-s" title="Güçlü şifre üret"><i class="fas fa-wand-magic-sparkles"></i> Üret</button></div>
+      <p class="text-[11px] text-slate-400 mt-1">Şifreyi not alın ve personele güvenli bir yoldan iletin. Kaydedildikten sonra kimse göremez.</p>
+      <p id="sf-linknote" class="hidden text-[11px] text-amber-700 mt-1">Kişi daha önce buluşçu olarak kayıt olduysa hesabının mevcut şifresini (kişi yanınızdayken) girin. Bağladıktan sonra <i class="fas fa-key"></i> ile yeni şifre belirleyebilirsiniz.</p></div></div>`:''}
+    ${s?`<label class="flex items-center gap-2 text-sm"><input id="sf-active" type="checkbox" ${s.active?'checked':''} ${s.email===S.user.email?'disabled':''}> Aktif (pasif personel sisteme personel olarak giremez)</label>`:''}
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="sf-save" onclick="saveStaff('${k||''}')" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>`);
 }
 async function saveStaff(k){
+  if (!isCoord()) return;
   const name=$('sf-name').value.trim(), email=$('sf-email').value.trim().toLowerCase(), role=$('sf-role').value;
   if (!name) return toast('Ad soyad girin.','error'); if (!validEmail(email)) return toast('Geçerli e-posta girin.','error');
   const key = k || ek(email);
@@ -1171,7 +1279,209 @@ async function saveStaff(k){
   const old = S.staff[key]||{};
   if (key===S.user.ek && role!=='koordinator') return toast('Kendi koordinatör yetkinizi kaldıramazsınız. Önce başka bir koordinatör tanımlayın.','error');
   const active = $('sf-active') ? $('sf-active').checked : true;
-  try { await B.set('staff/'+key, {...old, email, name, role, active, addedAt:old.addedAt||Date.now()}); closeModal(); toast('Kaydedildi.','success'); } catch(e){ toast(errMsg(e),'error'); }
+  const rec = {...old, email, name, role, active, addedAt:old.addedAt||Date.now()};
+  const btn=$('sf-save'); busy(btn,true);
+  try {
+    if (!old.uid) {
+      const mode = $('sf-accmode').value, pass = $('sf-pass').value;
+      if (mode==='new' && pass.length<8) { busy(btn,false); return toast('Şifre en az 8 karakter olmalı.','error'); }
+      if (!pass) { busy(btn,false); return toast('Hesabın şifresini girin.','error'); }
+      try { rec.uid = mode==='new' ? await B.createAccount(email, pass) : await B.checkAccount(email, pass); }
+      catch(e){
+        busy(btn,false);
+        if (e && e.code==='auth/email-already-in-use') return toast('Bu e-postayla zaten bir hesap var (kişi daha önce buluşçu olarak kayıt olmuş olabilir). "Giriş hesabı" alanında "zaten hesap var — bağla" seçeneğini kullanın.','error');
+        return toast(errMsg(e),'error');
+      }
+      rec.pwAt = Date.now(); rec.pwBy = S.user.email;
+    }
+    await B.set('staff/'+key, rec); closeModal();
+    toast(old.uid ? 'Kaydedildi.' : name+' için personel hesabı oluşturuldu. Giriş: TTO Personeli sekmesi.','success');
+  } catch(e){ busy(btn,false); toast(errMsg(e),'error'); }
+}
+function openStaffPassword(k){
+  if (!isCoord()) return;
+  const s = S.staff[k]; if (!s) return;
+  if (!s.uid) return openStaffForm(k);
+  openModal(modalHead('Şifre belirle', esc(s.name)+' · '+esc(s.email), 'fa-key') + `<div class="p-6 space-y-3">
+    <div><label class="lbl">Mevcut şifre</label><input id="sp-old" type="password" autocomplete="off" class="inp" placeholder="Bu hesaba en son verdiğiniz şifre"></div>
+    ${pwFields('sp-new','Yeni şifre')}
+    <div class="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-2.5"><i class="fas fa-circle-info mr-1"></i>Güvenlik gereği şifreler geri okunamaz; değişiklik için mevcut şifre gerekir. Mevcut şifre bilinmiyorsa, personelin kurumsal e-postasına tek kullanımlık <button onclick="sendReset('${esc(s.email)}')" class="text-blue-600 hover:underline">sıfırlama bağlantısı gönderebilirsiniz</button>.</div>
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="sp-save" onclick="saveStaffPassword('${k}')" class="btn btn-p"><i class="fas fa-check"></i> Şifreyi değiştir</button></div>`);
+}
+async function saveStaffPassword(k){
+  const s=S.staff[k]; const o=$('sp-old').value, n=$('sp-new').value;
+  if (!o) return toast('Mevcut şifreyi girin.','error'); if (n.length<8) return toast('Yeni şifre en az 8 karakter olmalı.','error');
+  const btn=$('sp-save'); busy(btn,true);
+  try { await B.setPasswordFor(s.email, o, n); await B.update('staff/'+k, {pwAt:Date.now(), pwBy:S.user.email}); closeModal(); toast(s.name+' için yeni şifre kaydedildi.','success'); }
+  catch(e){ busy(btn,false); toast(errMsg(e),'error'); }
+}
+async function sendReset(email){ if (!confirm(email+' adresine şifre sıfırlama bağlantısı gönderilsin mi?')) return; try { await B.resetPass(email); toast(B.kind==='demo'?'Demo modunda e-posta gönderilmez.':'Bağlantı gönderildi.','success'); } catch(e){ toast(errMsg(e),'error'); } }
+
+// ---------- KOORDİNATÖR PANELİ ----------
+// Koordinatör ve koordinatör yardımcısına açık: TÜRKPATENT'e giden tüm başvurular, harici başvurular, kayıtlı hesaplar.
+function isHarici(f){ return f.external===true || inventorsOf(f).some(p=>p.kind==='harici'); }
+function tpFilesAll(){ return list(S.files).filter(f => f.tpAppNo || tpStartOf(f)); }
+function tpStatus(f){ const st=stageOf(f); if (f.stage==='tescil') return 'Tescil edildi'; if (st.phase==='son') return st.bad?'Olumsuz sonuçlandı':'Sonuçlandı'; return phaseOf(f)==='tp'?'TÜRKPATENT sürecinde':'TTO\'da'; }
+function invNames(xs){ return xs.map(p=>p.name).join(', '); }
+function invUnits(xs){ return [...new Set(xs.map(p=>p.unit).filter(Boolean))].join('; '); }
+const COORD_COLS = {
+  tp: [
+    {h:'Sıra', w:6, num:true}, {h:'TÜRKPATENT Başvuru No', w:22}, {h:'Başvuru Tarihi', w:13, date:true}, {h:'Tür', w:16}, {h:'Buluş / Başvuru Başlığı', w:48},
+    {h:'Buluşçular', w:40}, {h:'Birim / Kurum', w:36}, {h:'Harici Buluşçu', w:10}, {h:'TTO Dosya No', w:15}, {h:'Genel Durum', w:20}, {h:'Güncel Aşama', w:30},
+    {h:'Yayın Tarihi', w:13, date:true}, {h:'Tescil No', w:18}, {h:'Tescil Tarihi', w:13, date:true}, {h:'TÜRKPATENT\'te Geçen Gün', w:12, num:true}, {h:'TTO Sorumlusu', w:20}, {h:'Hak Sahibi', w:28}
+  ],
+  harici: [
+    {h:'Sıra', w:6, num:true}, {h:'TTO\'ya Geliş Tarihi', w:13, date:true}, {h:'Geliş Yolu', w:16}, {h:'TTO Dosya No', w:15}, {h:'Başvuru Başlığı', w:48}, {h:'Tür', w:16},
+    {h:'Harici Buluşçu(lar)', w:32}, {h:'Harici Kurum / Firma', w:32}, {h:'Üniversite İçi Buluşçular', w:36}, {h:'Genel Durum', w:20}, {h:'Güncel Aşama', w:30},
+    {h:'TÜRKPATENT Başvuru No', w:22}, {h:'TÜRKPATENT Başvuru Tarihi', w:13, date:true}, {h:'TTO Sorumlusu', w:20}
+  ],
+  hesap: [
+    {h:'Sıra', w:6, num:true}, {h:'Ad Soyad', w:28}, {h:'E-posta', w:34}, {h:'Kullanıcı Türü', w:22}, {h:'Birim / Kurum', w:36}, {h:'Telefon', w:16}, {h:'Kayıt Tarihi', w:13, date:true}, {h:'Dosya Sayısı', w:10, num:true}
+  ]
+};
+function coordRows(tab){
+  const F = S.coordF, q = (F.q||'').trim().toLocaleLowerCase('tr');
+  const hay = arr => arr.join(' ').toLocaleLowerCase('tr').includes(q);
+  if (tab==='tp') {
+    return tpFilesAll().filter(f => {
+      const d = f.tpAppDate || tpStartOf(f) || '';
+      if (F.year && !d.startsWith(F.year)) return false;
+      if (F.type && f.type!==F.type) return false;
+      if (F.st==='tp' && phaseOf(f)!=='tp') return false;
+      if (F.st==='tescil' && f.stage!=='tescil') return false;
+      if (F.st==='olumsuz' && !(phaseOf(f)==='son' && f.stage!=='tescil')) return false;
+      if (F.st==='nono' && f.tpAppNo) return false;
+      if (F.st==='harici' && !isHarici(f)) return false;
+      return !q || hay([f.title, f.tpAppNo, f.ttoNo, f.regNo, ...inventorsOf(f).map(p=>p.name+' '+(p.unit||''))]);
+    }).sort((a,b)=>String(b.tpAppDate||tpStartOf(b)||'').localeCompare(String(a.tpAppDate||tpStartOf(a)||'')))
+      .map((f,i) => { const inv=inventorsOf(f), w=tpWait(f);
+        return {f, cells:[i+1, f.tpAppNo||'', f.tpAppDate||tpStartOf(f)||'', typeOf(f).label, f.title, invNames(inv), invUnits(inv), isHarici(f)?'Evet':'Hayır', f.ttoNo||'', tpStatus(f), stageOf(f).label,
+          f.pubDate||'', f.regNo||'', f.regDate||'', w?w.days:(f.tpAppDate&&f.regDate?daysBetween(f.tpAppDate,f.regDate):''), f.responsibleName||'', f.owner||setting().ownerDefault||'']}; });
+  }
+  if (tab==='harici') {
+    return list(S.files).filter(f => {
+      if (F.scope==='portal' ? f.source!=='portal' : !isHarici(f)) return false;
+      if (F.year && !(ttoDateOf(f)||'').startsWith(F.year)) return false;
+      if (F.type && f.type!==F.type) return false;
+      return !q || hay([f.title, f.tpAppNo, f.ttoNo, ...inventorsOf(f).map(p=>p.name+' '+(p.unit||''))]);
+    }).sort((a,b)=>String(ttoDateOf(b)||'').localeCompare(String(ttoDateOf(a)||'')))
+      .map((f,i) => { const inv=inventorsOf(f), ext=inv.filter(p=>p.kind==='harici'), int=inv.filter(p=>p.kind!=='harici');
+        return {f, cells:[i+1, ttoDateOf(f)||'', f.source==='portal'?'Portal başvurusu':'TTO kaydı', f.ttoNo||'', f.title, typeOf(f).label, invNames(ext)||'—', invUnits(ext)||'—', invNames(int)||'—', tpStatus(f), stageOf(f).label, f.tpAppNo||'', f.tpAppDate||'', f.responsibleName||'']}; });
+  }
+  // hesap
+  const fc = k => Object.keys((S.userFilesAll||{})[k]||{}).length;
+  return Object.entries(S.users||{}).map(([k,u])=>({k,u})).filter(({k,u}) => {
+    if (F.kind && u.kind!==F.kind) return false;
+    if (F.year && !(u.createdAt && String(new Date(u.createdAt).getFullYear())===F.year)) return false;
+    return !q || hay([u.name, u.email, u.unit]);
+  }).sort((a,b)=>(b.u.createdAt||0)-(a.u.createdAt||0))
+    .map(({k,u},i) => ({u, cells:[i+1, u.name||'', u.email||'', KINDS[u.kind]||'—', u.unit||'', u.phone||'', u.createdAt?dStr(new Date(u.createdAt)):'', fc(k)]}));
+}
+VIEWS.coord = {
+  mount(){
+    if (!isMgr()) { $('view').innerHTML = emptyState('fa-lock','Yetkiniz yok','Bu bölüm yalnızca Koordinatör ve Koordinatör Yardımcısına açıktır.'); return; }
+    if (!S.coordTab) S.coordTab='tp';
+    if (!S.coordF) S.coordF={q:'',year:'',type:'',st:'',scope:'harici',kind:''};
+    setTop('Koordinatör Paneli', 'Koordinatör ve koordinatör yardımcısına özel görünüm', `<button onclick="exportCoordXlsx('all')" class="btn btn-s"><i class="fas fa-file-excel text-emerald-600"></i> Tümünü Excel'e aktar</button>`);
+    $('view').innerHTML = `<div id="coord-tabs" class="flex flex-wrap gap-1 mb-4 border-b border-slate-200"></div><div id="coord-sum"></div><div id="coord-filters"></div><div id="coord-out"></div>`;
+    this.chrome();
+  },
+  chrome(){
+    const T = [['tp','fa-paper-plane','TÜRKPATENT Başvuruları'],['harici','fa-industry','Harici Başvurular'],['hesap','fa-users','Kayıtlı Hesaplar']];
+    $('coord-tabs').innerHTML = T.map(([k,i,l]) => `<button onclick="coordTab('${k}')" class="px-4 py-2.5 text-sm font-semibold -mb-px border-b-2 ${S.coordTab===k?'border-blue-600 text-blue-700':'border-transparent text-slate-500 hover:text-slate-700'}"><i class="fas ${i} mr-1.5"></i>${l}</button>`).join('');
+    const F=S.coordF, tab=S.coordTab;
+    const yrs = tab==='tp' ? tpFilesAll().map(f=>(f.tpAppDate||tpStartOf(f)||'').slice(0,4)) : tab==='harici' ? list(S.files).map(f=>(ttoDateOf(f)||'').slice(0,4)) : list(S.users).map(u=>u.createdAt?String(new Date(u.createdAt).getFullYear()):'');
+    const years=[...new Set(yrs.filter(Boolean))].sort().reverse();
+    const sel = (key, opts, all) => `<select class="inp !w-auto !py-1.5 text-sm" onchange="S.coordF.${key}=this.value;VIEWS.coord.update()"><option value="">${all}</option>${opts.map(([v,l])=>`<option value="${v}" ${F[key]===v?'selected':''}>${l}</option>`).join('')}</select>`;
+    let extra='';
+    if (tab==='tp') extra = sel('type', Object.entries(TYPES).map(([k,t])=>[k,t.label]), 'Tüm türler') + sel('st', [['tp','TÜRKPATENT sürecinde'],['tescil','Tescil edildi'],['olumsuz','Ret / geri çekilme'],['harici','Harici buluşçu içeren'],['nono','Başvuru no girilmemiş']], 'Tüm durumlar');
+    if (tab==='harici') extra = `<select class="inp !w-auto !py-1.5 text-sm" onchange="S.coordF.scope=this.value;VIEWS.coord.update()"><option value="harici" ${F.scope!=='portal'?'selected':''}>Üniversite dışı buluşçu içerenler</option><option value="portal" ${F.scope==='portal'?'selected':''}>Portal üzerinden gelen tüm başvurular</option></select>` + sel('type', Object.entries(TYPES).map(([k,t])=>[k,t.label]), 'Tüm türler');
+    if (tab==='hesap') extra = sel('kind', Object.entries(KINDS), 'Tüm kullanıcı türleri');
+    $('coord-filters').innerHTML = `<div class="card p-3 mb-3 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i><input value="${esc(F.q)}" oninput="S.coordF.q=this.value;VIEWS.coord.update()" placeholder="${tab==='hesap'?'Ad, e-posta veya birim ara…':'Başlık, başvuru no, buluşçu veya birim ara…'}" class="inp pl-9 !py-1.5"></div>
+      ${sel('year', years.map(y=>[y,y]), tab==='hesap'?'Tüm kayıt yılları':'Tüm yıllar')}${extra}
+      <button onclick="exportCoordXlsx('${tab}')" class="btn btn-p ml-auto"><i class="fas fa-file-excel"></i> Excel'e aktar (.xlsx)</button></div>`;
+  },
+  update(){
+    const out=$('coord-out'); if (!out || !isMgr()) return;
+    if (!S.loaded.files) { out.innerHTML=loading(); return; }
+    const tab=S.coordTab, rows=coordRows(tab), cols=COORD_COLS[tab];
+    // özet
+    if (tab==='tp') { const all=tpFilesAll(); const by={}; all.forEach(f=>{ const y=(f.tpAppDate||tpStartOf(f)||'').slice(0,4); if (y) by[y]=(by[y]||0)+1; });
+      const nono = all.filter(f=>!f.tpAppNo).length;
+      $('coord-sum').innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
+        ${stat('TÜRKPATENT\'e giden', all.length, 'fa-paper-plane', 'bg-indigo-100 text-indigo-700', "S.coordF.st='';coordRefresh()")}
+        ${stat('Süreci devam eden', all.filter(f=>phaseOf(f)==='tp').length, 'fa-hourglass-half', 'bg-amber-100 text-amber-700', "S.coordF.st='tp';coordRefresh()")}
+        ${stat('Tescil edilen', all.filter(f=>f.stage==='tescil').length, 'fa-award', 'bg-emerald-100 text-emerald-700', "S.coordF.st='tescil';coordRefresh()")}
+        ${stat('Ret / geri çekilen', all.filter(f=>phaseOf(f)==='son'&&f.stage!=='tescil').length, 'fa-circle-xmark', 'bg-red-100 text-red-700', "S.coordF.st='olumsuz';coordRefresh()")}
+        ${stat('Harici buluşçulu', all.filter(isHarici).length, 'fa-industry', 'bg-slate-100 text-slate-600', "S.coordF.st='harici';coordRefresh()")}
+      </div><div class="flex flex-wrap items-center gap-1.5 mb-3 text-xs text-slate-500"><span class="font-semibold mr-1">Yıllara göre başvuru:</span>${Object.keys(by).sort().map(y=>`<button onclick="S.coordF.year='${y}';coordRefresh()" class="chip bg-white border border-slate-200 text-slate-600 hover:border-blue-300">${y}: <b>${by[y]}</b></button>`).join('')||'—'}
+        ${nono?`<button onclick="S.coordF.st='nono';coordRefresh()" class="chip bg-red-50 text-red-700 ring-1 ring-red-200 ml-2"><i class="fas fa-triangle-exclamation"></i>${nono} dosyada TÜRKPATENT numarası girilmemiş</button>`:''}</div>`; }
+    else if (tab==='harici') { const ext=list(S.files).filter(isHarici), por=list(S.files).filter(f=>f.source==='portal');
+      $('coord-sum').innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+        ${stat('Harici buluşçulu dosya', ext.length, 'fa-industry', 'bg-slate-100 text-slate-600', "S.coordF.scope='harici';coordRefresh()")}
+        ${stat('Bunlardan TÜRKPATENT\'e giden', ext.filter(f=>f.tpAppNo||tpStartOf(f)).length, 'fa-paper-plane', 'bg-indigo-100 text-indigo-700')}
+        ${stat('Portal üzerinden gelen', por.length, 'fa-globe', 'bg-blue-100 text-blue-700', "S.coordF.scope='portal';coordRefresh()")}
+        ${stat('İşlem bekleyen (yeni)', por.filter(f=>f.stage==='basvuru').length, 'fa-inbox', 'bg-amber-100 text-amber-700')}
+      </div>`; }
+    else { const us=list(S.users); const sc=list(S.staff);
+      $('coord-sum').innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-3">${stat('Kayıtlı hesap', us.length, 'fa-users', 'bg-slate-100 text-slate-600', "S.coordF.kind='';coordRefresh()")}${Object.entries(KINDS).map(([k,l])=>stat(l, us.filter(u=>u.kind===k).length, k==='harici'?'fa-industry':k==='ogrenci'?'fa-user-graduate':k==='idari'?'fa-briefcase':'fa-chalkboard-user', 'bg-blue-50 text-blue-700', `S.coordF.kind='${k}';VIEWS.coord.mount()`)).join('')}${stat('TTO personeli', sc.filter(s=>s.active).length, 'fa-id-badge', 'bg-violet-100 text-violet-700', "goto('staff')")}</div>
+        <p class="text-[11px] text-slate-400 mb-3"><i class="fas fa-lock mr-1"></i>Buluşçular (öğrenci, akademisyen, idari personel, harici) kendi hesaplarını açar ve şifrelerini kendileri değiştirir. Şifreler sistemde hiçbir yerde görünmez.</p>`; }
+    const fmt = (c, v) => c.date ? (v?fmtD(v):'') : esc(v);
+    out.innerHTML = `<div class="flex items-center justify-between mb-1.5 text-xs text-slate-500"><span><b>${rows.length}</b> kayıt</span><span>Satıra tıklayınca dosya açılır</span></div>
+      <div class="card overflow-auto max-h-[62vh] !rounded-lg"><table class="xl"><thead><tr><th class="rn"></th>${cols.map((c,i)=>`<th style="min-width:${Math.max(60,c.w*7)}px"><span class="cl">${colLetter(i)}</span>${esc(c.h)}</th>`).join('')}</tr></thead><tbody>
+      ${rows.map((r,ri)=>`<tr ${r.f?`onclick="openDetail('${r.f.id}')" class="cur"`:''}><td class="rn">${ri+1}</td>${r.cells.map((v,ci)=>{ const c=cols[ci];
+        if (tab==='tp' && ci===1 && !v) return '<td><span class="text-red-600 font-semibold text-[11px]"><i class="fas fa-triangle-exclamation mr-1"></i>girilmemiş</span></td>';
+        return `<td class="${c.num?'text-right tabular-nums':''} ${ci===1&&tab==='tp'?'font-mono font-semibold text-indigo-700':''}">${fmt(c,v)}</td>`; }).join('')}</tr>`).join('') || `<tr><td class="rn"></td><td colspan="${cols.length}" class="text-center text-slate-400 !py-10">Kayıt bulunamadı.</td></tr>`}
+      </tbody></table></div>`;
+  }
+};
+function coordRefresh(){ VIEWS.coord.mount(); VIEWS.coord.update(); }
+function coordTab(t){ S.coordTab=t; S.coordF={q:'',year:'',type:'',st:'',scope:S.coordF?S.coordF.scope:'harici',kind:''}; VIEWS.coord.mount(); VIEWS.coord.update(); }
+function colLetter(i){ let s=''; i++; while (i>0) { const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
+function exportCoordXlsx(which){
+  const org = setting().orgName, stamp = fmtD(today());
+  const TITLES = {tp:'TÜRKPATENT Başvuruları', harici:(S.coordF.scope==='portal'?'Portal Üzerinden Gelen Başvurular':'Harici (Üniversite Dışı) Başvurular'), hesap:'Kayıtlı Kullanıcı Hesapları'};
+  const tabs = which==='all' ? ['tp','harici','hesap'] : [which];
+  const keepF = S.coordF; if (which==='all') S.coordF = {q:'',year:'',type:'',st:'',scope:keepF.scope,kind:''};
+  const SHEETS = {tp:'TÜRKPATENT Başvuruları', harici:(S.coordF.scope==='portal'?'Portal Başvuruları':'Harici Başvurular'), hesap:'Kayıtlı Hesaplar'};
+  const sheets = tabs.map(t => ({name:SHEETS[t], title: org+' — '+TITLES[t]+' ('+stamp+')', cols:COORD_COLS[t], rows:coordRows(t).map(r=>r.cells)}));
+  S.coordF = keepF;
+  downloadXlsx(sheets, asciiName((TENANT?TENANT.short+'_':'')+'TTO_'+(which==='all'?'Koordinator_Raporu':TITLES[which])+'_'+today())+'.xlsx');
+}
+
+// ---------- .XLSX ÜRETİCİ (bağımlılıksız) ----------
+function xlsxSerial(s){ const [y,m,d]=String(s).split('-').map(Number); return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000; }
+function buildXlsx(sheets){
+  const files = {};
+  const sheetXml = sh => {
+    const n = sh.cols.length, last = colLetter(n-1);
+    const cell = (v, r, c, st) => { const ref=colLetter(c)+r; if (v===''||v==null) return `<c r="${ref}" s="${st}"/>`;
+      if (typeof v==='number') return `<c r="${ref}" s="${st}"><v>${v}</v></c>`;
+      return `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`; };
+    let rows = `<row r="1" ht="24" customHeight="1">${cell(sh.title,1,0,1)}</row>`;
+    rows += `<row r="2" ht="32" customHeight="1">${sh.cols.map((c,i)=>cell(c.h,2,i,2)).join('')}</row>`;
+    sh.rows.forEach((r, ri) => { const R=ri+3; rows += `<row r="${R}">${r.map((v,ci)=>{ const c=sh.cols[ci];
+      if (c.date && v && /^\d{4}-\d{2}-\d{2}$/.test(v)) return cell(xlsxSerial(v),R,ci,5);
+      if (c.num && v!=='' && v!=null && !isNaN(v)) return cell(Number(v),R,ci,4);
+      return cell(v==null?'':String(v),R,ci,3); }).join('')}</row>`; });
+    const lastRow = Math.max(2, sh.rows.length+2);
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:${last}${lastRow}"/><sheetViews><sheetView workbookViewId="0" zoomScale="100"><pane ySplit="2" topLeftCell="A3" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${sh.cols.map((c,i)=>`<col min="${i+1}" max="${i+1}" width="${c.w||14}" customWidth="1"/>`).join('')}</cols><sheetData>${rows}</sheetData><autoFilter ref="A2:${last}${lastRow}"/><mergeCells count="1"><mergeCell ref="A1:${last}1"/></mergeCells><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToHeight="0"/></worksheet>`;
+  };
+  sheets.forEach((sh,i) => { files['xl/worksheets/sheet'+(i+1)+'.xml'] = sheetXml(sh); });
+  const safe = n => String(n).replace(/[\[\]\:\*\?\/\\]/g,' ').slice(0,31);
+  files['xl/workbook.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${sheets.map((sh,i)=>`<sheet name="${xe(safe(sh.name))}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets><definedNames>${sheets.map((sh,i)=>`<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">'${xe(safe(sh.name)).replace(/'/g,"''")}'!$A$2:$${colLetter(sh.cols.length-1)}$${Math.max(2,sh.rows.length+2)}</definedName>`).join('')}</definedNames></workbook>`;
+  files['xl/_rels/workbook.xml.rels'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((sh,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const bd = `<border><left style="thin"><color rgb="FFC9D3E0"/></left><right style="thin"><color rgb="FFC9D3E0"/></right><top style="thin"><color rgb="FFC9D3E0"/></top><bottom style="thin"><color rgb="FFC9D3E0"/></bottom><diagonal/></border>`;
+  files['xl/styles.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd\\.mm\\.yyyy"/></numFmts><fonts count="3"><font><sz val="10"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="13"/><color rgb="FF1F3864"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1F4E79"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${bd}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="1" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="top"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  files['_rels/.rels'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  files['docProps/core.xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xe(sheets[0].title)}</dc:title><dc:creator>TTO Takip</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0,19)}Z</dcterms:created></cp:coreProperties>`;
+  files['[Content_Types].xml'] = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((sh,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  const order = ['[Content_Types].xml','_rels/.rels', ...Object.keys(files).filter(n=>!['[Content_Types].xml','_rels/.rels'].includes(n))];
+  return zipStore(order.map(n => ({name:n, data:new TextEncoder().encode(files[n])})));
+}
+function downloadXlsx(sheets, fname){
+  try { const bytes = buildXlsx(sheets); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=fname; a.click(); toast('Excel dosyası indirildi.','success'); }
+  catch(e){ console.error(e); toast('Excel oluşturulamadı: '+errMsg(e),'error'); }
 }
 
 // ---------- AYARLAR ----------
@@ -2083,10 +2393,22 @@ VIEWS.profile = {
       <div><label class="lbl">Kullanıcı türü</label><select id="pf-kind" class="inp">${Object.entries(KINDS).map(([k,l])=>`<option value="${k}" ${p.kind===k?'selected':''}>${l}</option>`).join('')}</select></div>
       <div><label class="lbl">Birim / Kurum</label><input id="pf-unit" class="inp" value="${esc(p.unit||'')}"></div>
       <div><label class="lbl">Telefon</label><input id="pf-phone" class="inp" value="${esc(p.phone||'')}"></div>
-      <div class="flex gap-2 pt-2"><button onclick="saveProfile()" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button><button onclick="sendReset('${esc(S.user.email)}')" class="btn btn-s"><i class="fas fa-key"></i> Şifre değiştir</button></div>
+      <div class="flex gap-2 pt-2"><button onclick="saveProfile()" class="btn btn-p"><i class="fas fa-check"></i> Kaydet</button></div>
+    </div>
+    <div class="max-w-xl card p-6 space-y-3 mt-5"><h3 class="font-bold"><i class="fas fa-key mr-2 text-slate-500"></i>Şifre değiştir</h3>
+      <div><label class="lbl">Mevcut şifre</label><input id="pw-old" type="password" autocomplete="current-password" class="inp"></div>
+      <div class="grid grid-cols-2 gap-3"><div><label class="lbl">Yeni şifre</label><input id="pw-new" type="password" autocomplete="new-password" class="inp" placeholder="En az 6 karakter"></div><div><label class="lbl">Yeni şifre (tekrar)</label><input id="pw-new2" type="password" autocomplete="new-password" class="inp"></div></div>
+      <div class="flex items-center gap-3 pt-1"><button id="pw-save" onclick="changeMyPassword()" class="btn btn-p"><i class="fas fa-check"></i> Şifreyi değiştir</button><button onclick="sendReset('${esc(S.user.email)}')" class="text-xs text-blue-600 hover:underline">Mevcut şifremi bilmiyorum</button></div>
     </div>`;
   }
 };
+async function changeMyPassword(){
+  const o=$('pw-old').value, n=$('pw-new').value, n2=$('pw-new2').value;
+  if (!o) return toast('Mevcut şifrenizi girin.','error'); if (n.length<6) return toast('Yeni şifre en az 6 karakter olmalı.','error'); if (n!==n2) return toast('Yeni şifreler eşleşmiyor.','error');
+  const btn=$('pw-save'); busy(btn,true);
+  try { await B.changeOwnPassword(o,n); ['pw-old','pw-new','pw-new2'].forEach(id=>$(id).value=''); toast('Şifreniz değiştirildi.','success'); } catch(e){ toast(errMsg(e),'error'); }
+  busy(btn,false);
+}
 function openProfileModal(first){
   const p = S.profile||{};
   openModal(modalHead(first?'Profilinizi tamamlayın':'Profil', 'TTO dosyalarınızda bu bilgiler kullanılır', 'fa-user') + `<div class="p-6 space-y-3">

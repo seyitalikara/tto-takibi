@@ -9,9 +9,15 @@ Teknoloji Transfer Ofisi (TTO) için buluş, faydalı model, endüstriyel tasar�
 - Bir dosyada 1 ile 6 (veya daha fazla) buluşçu olabilir; bir kişi birden fazla dosyada yer alabilir. Herkes tüm dosyalarını tek hesapta görür.
 - Dosya TÜRKPATENT'e iletildiğinde **"TÜRKPATENT Sürecinde"** durumuna geçer ve bekleme süresi, türün ortalama süresiyle karşılaştırılarak gösterilir.
 
+## 🎓 Şu anki ayar: Karabük Üniversitesi açılış sayfası
+
+Site kökü açıldığında kurum seçme ekranı **atlanır** ve Karabük Üniversitesi'nin açılış sayfası (`kurumlar/karabuk/giris.html`) gösterilir. Bu dosya şimdilik geçici bir yer tutucudur; üniversitenin vereceği sayfa geldiğinde **yalnızca bu dosya değiştirilir**, uygulama koduna dokunulmaz. Ayrıntılar ve düğme bağlantıları: **[kurumlar/karabuk/BENIOKU.md](kurumlar/karabuk/BENIOKU.md)**.
+
+Kurum seçme ekranı silinmedi: `kurumlar.js` → `defaultKurum: ''` yapılınca geri gelir (bu ayar açıkken de `index.html?portal=1` ile görülebilir). O ekranda Karabük Üniversitesi'ne tıklayan, yine bu açılış sayfasına gelir.
+
 ## 🏛️ Çok kurumlu yapı
 
-Uygulama açılınca **kurum seçme ekranı** gelir: platformdaki üniversiteler logolarıyla (logo yoksa kısaltma rozetiyle) listelenir. Kuruma tıklayınca o kurumun TTO giriş ekranı açılır; giriş ekranında ve menüde kurumun adı ve logosu görünür. Son girilen kurum ekranın üstünde "Devam et" kartıyla çıkar.
+Kurum seçme ekranı açıkken (`defaultKurum: ''`) uygulama açılınca **kurum seçme ekranı** gelir: platformdaki üniversiteler logolarıyla (logo yoksa kısaltma rozetiyle) listelenir. Kuruma tıklayınca o kurumun TTO giriş ekranı açılır; giriş ekranında ve menüde kurumun adı ve logosu görünür. Son girilen kurum ekranın üstünde "Devam et" kartıyla çıkar.
 
 - Her kurumun **doğrudan bağlantısı** vardır: `index.html?kurum=karabuk`. Üniversite bu bağlantıyı kendi sitesinde paylaşabilir.
 - Her kurum **ayrı bir Firebase projesi** kullanır. Veriler, kullanıcı hesapları ve güvenlik kuralları kurumlar arasında tamamen ayrıdır.
@@ -69,18 +75,34 @@ Kâğıt ortamdaki eski dosyalar için: **[ESKI_DOSYA_AKTARIMI.md](ESKI_DOSYA_AK
 | Belge yükleme | ✅ (gizli veya buluşçuya açık) | ✅ | ✅ | ✅ (kendi dosyasına) |
 | İç not ve süre yönetimi | ✅ | ✅ | ✅ | ❌ (göremez) |
 | Dosya silme, Ayarlar | ✅ | ✅ | ❌ | ❌ |
-| Personel ekleme / görev değiştirme / pasife alma | ✅ | ❌ | ❌ | ❌ |
+| **Koordinatör Paneli** (TÜRKPATENT başvuruları, harici başvurular, kayıtlı hesaplar) | ✅ | ✅ | ❌ | ❌ |
+| Personel hesabı açma, **personel şifresi belirleme**, görev değiştirme, pasife alma | ✅ | ❌ | ❌ | ❌ |
+| Kendi hesabını açma ve kendi şifresini değiştirme | — | — | ❌ (koordinatör belirler) | ✅ |
 
 Buluşçular, dosyadaki **diğer buluşçuların adlarını**, aşamaları, TTO'nun buluşçulara açık yazdığı açıklamaları ve buluşçulara açık belgeleri görür. İç notları, süreleri ve gizli belgeleri yalnızca TTO görür.
 
 ## 🔑 Hesaplar nasıl çalışır?
 
-Herkes **e-posta + şifre** ile girer; kayıttan sonra e-posta doğrulaması zorunludur. Yetki, e-posta adresine göre belirlenir:
+Giriş ekranında iki sekme vardır: **Buluşçu / Başvuru** ve **TTO Personeli**. Herkes **e-posta + şifre** ile girer.
 
-1. **İlk kurulum:** Koordinatör uygulamada **Kayıt Ol** ile hesap açar, e-postasını doğrular, girişte çıkan **"Beni koordinatör yap"** düğmesine basar. (Bu düğme yalnızca sistemde hiç koordinatör yokken çalışır.)
-2. **Personel:** Koordinatör, **Personel** ekranından kişinin e-postasını ve görevini (Koordinatör Yardımcısı, Şef, Personel) ekler. Personel aynı e-postayla kayıt olunca TTO ekranları açılır.
-3. **Buluşçular:** TTO, dosyaya buluşçuları e-postalarıyla ekler. Buluşçu aynı e-postayla kayıt olunca dosyalarını görür. Portal üzerinden başvuru yapan kişinin eklediği diğer buluşçular da, bir TTO personeli uygulamayı açtığında otomatik olarak dosyaya erişim kazanır.
-4. **Şifre unutma:** Giriş ekranındaki **Şifremi unuttum** bağlantısı, Firebase üzerinden sıfırlama e-postası gönderir.
+1. **İlk kurulum:** Koordinatör **Buluşçu / Başvuru → Kayıt Ol** ile hesap açar, e-postasını doğrular, girişte çıkan **"Beni koordinatör yap"** düğmesine basar. (Bu düğme yalnızca sistemde hiç koordinatör yokken çalışır.)
+2. **TTO personeli — hesabı ve şifreyi yalnızca koordinatör belirler.** Koordinatör **Personel → Personel Hesabı Oluştur** ile ad, e-posta, görev ve giriş şifresini girer; şifreyi personele kendisi iletir. Personel **TTO Personeli** sekmesinden girer; kayıt olmaz, e-posta doğrulaması beklemez. Personel ekranında kayıt ve "şifremi unuttum" seçenekleri yoktur; şifre değişikliğini koordinatör yapar (🔑 düğmesi). Personel yetkisi hesabın benzersiz kimliğine (uid) bağlıdır: biri personelin e-postasıyla kendi hesabını açsa bile personel yetkisi alamaz.
+3. **Buluşçular (öğrenci, akademisyen, idari personel, harici):** Kendi hesaplarını **Kayıt Ol** ile açar, e-postalarını doğrular ve şifrelerini **Profilim → Şifre değiştir** ile kendileri değiştirir. TTO, dosyaya buluşçuları e-postalarıyla ekler; buluşçu aynı e-postayla kayıt olunca dosyalarını görür.
+4. **Şifreler hiçbir yerde açık hâlde tutulmaz.** Firebase şifreleri tek yönlü özetleyerek saklar; koordinatör dâhil kimse mevcut bir şifreyi göremez, yalnızca yenisini belirleyebilir.
+
+## 🗂️ Koordinatör Paneli
+
+Menüde **Koordinasyon** başlığı altında, yalnızca Koordinatör ve Koordinatör Yardımcısına görünür. Excel görünümünde (sütun harfleri, satır numaraları, sabit başlık) üç tablo içerir:
+
+- **TÜRKPATENT Başvuruları:** Üniversiteden TÜRKPATENT'e giden tüm başvurular — TÜRKPATENT başvuru (seri) numarası, başvuru tarihi, tür, başlık, buluşçular, birimler, güncel aşama, yayın ve tescil bilgileri, TÜRKPATENT'te geçen gün. Yıl, tür ve durum filtresi; numarası girilmemiş dosyalar kırmızı uyarıyla işaretlenir.
+- **Harici Başvurular:** Üniversite dışı (harici) buluşçu içeren başvurular; istenirse portal üzerinden gelen tüm başvurular.
+- **Kayıtlı Hesaplar:** Sisteme kayıt olan buluşçular, türlerine göre sayılar ve dosya sayıları.
+
+Her tablo **gerçek Excel dosyası (.xlsx)** olarak indirilir: başlık satırı, sabitlenmiş başlık, filtre okları, tarih biçimli hücreler. **Tümünü Excel'e aktar** üç tabloyu tek dosyada üç sayfa olarak verir. Dosyalar ekranındaki **Excel'e aktar** da artık .xlsx üretir.
+
+## 🔍 Veritabanını görmek
+
+Kurum Firebase'e bağlıyken (`kurumlar.js` içinde `firebase` ayarı doluyken) Firebase Console'dan her şeyi canlı izleyebilirsiniz; ayrıntılar **[FIREBASE_KURULUM.md](FIREBASE_KURULUM.md)** → *Veritabanını inceleme*. Demo modunda veriler yalnızca o tarayıcının yerel deposunda (localStorage) tutulur.
 
 ## 📦 Kurulum ve yayınlama
 
@@ -91,7 +113,8 @@ Firebase kurulumu için **[FIREBASE_KURULUM.md](FIREBASE_KURULUM.md)** dosyasın
 | Dosya | Açıklama |
 |---|---|
 | `index.html` | Uygulamanın tamamı |
-| `kurumlar.js` | Platformdaki kurumlar, logoları ve Firebase ayarları |
+| `kurumlar.js` | Platformdaki kurumlar, logoları, açılış sayfaları, varsayılan kurum ve Firebase ayarları |
+| `kurumlar/karabuk/` | Karabük Üniversitesi açılış sayfası (`giris.html`) — üniversitenin verdiği dosya buraya konur |
 | `logos/` | Kurum logoları (isteğe bağlı) |
 | `KURUM_EKLEME.md` | Yeni üniversite ekleme ve ticari kullanım notları |
 | `ESKI_DOSYA_AKTARIMI.md`, `ornek_aktarim.json` | Kâğıt evrakın dijitale aktarılması ve örnek veri dosyası |
@@ -99,4 +122,4 @@ Firebase kurulumu için **[FIREBASE_KURULUM.md](FIREBASE_KURULUM.md)** dosyasın
 | `database.rules.json` | Firebase Realtime Database güvenlik kuralları |
 | `FIREBASE_KURULUM.md` | Adım adım Firebase kurulumu |
 
-*TTO Takip v1.2*
+*TTO Takip v1.3*

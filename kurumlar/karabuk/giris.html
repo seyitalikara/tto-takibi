@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+  KARABÜK ÜNİVERSİTESİ AÇILIŞ SAYFASI — GEÇİCİ YER TUTUCU
+  --------------------------------------------------------------------------
+  Bu dosya, Karabük Üniversitesi'nin vereceği açılış sayfası gelene kadar
+  yerini tutar. Üniversitenin gönderdiği sayfayı bu dosyanın YERİNE koyun
+  (dosya adı giris.html kalsın). Sayfanın kullandığı görsel, CSS, JS
+  dosyalarını da bu klasöre (kurumlar/karabuk/) kopyalayın.
+
+  Sayfadaki düğmelerin TTO Takip'e bağlanması için bağlantılar:
+    Buluşçu girişi (öğrenci, akademisyen, idari, harici) : ../../index.html?kurum=karabuk&giris=buluscu
+    Yeni hesap / Kayıt ol                                 : ../../index.html?kurum=karabuk&giris=kayit
+    TTO personeli girişi                                 : ../../index.html?kurum=karabuk&giris=personel
+  Ayrıntılar: BENIOKU.md
+  ==========================================================================
+-->
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karabük Üniversitesi — Teknoloji Transfer Ofisi</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;color:#1e293b;background:#fff}
+  .left{flex:1.5;background:linear-gradient(160deg,#0b3d91 0%,#1565c0 45%,#0d8a6a 100%);position:relative;overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:48px}
+  .left:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px}
+  .left h2{position:relative;font-size:30px;font-weight:700;max-width:520px;line-height:1.25}
+  .left p{position:relative;margin-top:10px;opacity:.85;max-width:520px;font-size:15px}
+  .right{width:560px;max-width:100%;display:flex;flex-direction:column;justify-content:center;padding:48px 64px}
+  .head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .mark{width:64px;height:64px;border-radius:16px;background:#1d4ed8;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .head h1{font-size:19px;font-weight:600;line-height:1.3}
+  .hint{font-size:13px;color:#64748b;margin-bottom:12px}
+  a.btn{display:block;text-align:center;text-decoration:none;font-size:15px;padding:11px 14px;border-radius:6px;margin-bottom:14px;transition:filter .15s}
+  a.btn:hover{filter:brightness(.95)}
+  .b1{background:#06c8e0;color:#fff}
+  .b2{background:#6c5ce7;color:#fff}
+  .b3{border:1px solid #22c55e;color:#16a34a}
+  .note{margin-top:26px;font-size:11px;color:#94a3b8;border-top:1px dashed #e2e8f0;padding-top:12px;line-height:1.5}
+  @media (max-width:900px){body{flex-direction:column}.left{min-height:220px;padding:28px}.right{width:100%;padding:32px 24px}}
+</style>
+</head>
+<body>
+  <div class="left">
+    <h2>Teknoloji Transfer Ofisi<br>Fikri Mülkiyet Dosya Takibi</h2>
+    <p>Buluş, faydalı model, endüstriyel tasarım ve marka başvurularınızı başvurudan tescile kadar takip edin.</p>
+  </div>
+  <div class="right">
+    <div class="head">
+      <div class="mark">KBÜ</div>
+      <h1>Karabük Üniversitesi<br>Teknoloji Transfer Ofisi</h1>
+    </div>
+    <p class="hint">Lütfen seçim yapınız</p>
+    <a class="btn b1" href="../../index.html?kurum=karabuk&amp;giris=buluscu">Buluşçu Girişi (Öğrenci · Akademisyen · İdari · Harici)</a>
+    <a class="btn b2" href="../../index.html?kurum=karabuk&amp;giris=personel">TTO Personel Girişi</a>
+    <a class="btn b3" href="../../index.html?kurum=karabuk&amp;giris=kayit">Yeni Hesap Oluştur</a>
+    <p class="note">Bu sayfa, Karabük Üniversitesi'nin kurumsal açılış sayfası gelene kadar kullanılan geçici sayfadır.</p>
+  </div>
+</body>
+</html>

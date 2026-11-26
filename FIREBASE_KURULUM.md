@@ -2,6 +2,8 @@
 
 Bu kurulum **bir kez** yapılır. Buluşçuların ve personelin hiçbir ayar yapmasına gerek kalmaz.
 
+> **v1.2'den v1.3'e geçiyorsanız:** Personel girişi değişti (7. adım) — kuralları (5. adım) yeniden yükleyin.
+
 > **v1.1'den v1.2'ye geçiyorsanız:** Buluş Bildirim Formu için yeni kurallar eklendi (`forms`, `formPersonal`). Firebase kullanan kurumlarda **5. adımı** (kuralları yeniden yükleme) tekrarlayın.
 
 > **JellyFish projesini kullanmayın.** TTO Takip için **ayrı bir Firebase projesi** açın. `database.rules.json` yüklendiğinde projedeki tüm kuralların yerine geçer; aynı projeyi kullanırsanız JellyFish çalışmaz hâle gelir.
@@ -59,9 +61,14 @@ Kaydedin. Kurum seçme ekranında kurumun rozeti **Demo**'dan **Aktif**'e döner
 
 > Bu adımı kuralları yükledikten **hemen sonra** siz yapın. Düğme yalnızca sistemde hiç koordinatör yokken çalışır; sonrasında yeni koordinatörü yalnızca mevcut koordinatör atayabilir.
 
-## 7. Personeli tanımlayın
+## 7. Personel hesaplarını oluşturun
 
-**Personel → Personel Ekle**: Koordinatör yardımcısı, şef ve iki personelin ad, e-posta ve görevini girin. Ardından her biri **aynı e-postayla** Kayıt Ol ekranından hesap açar ve doğrular.
+**Personel → Personel Hesabı Oluştur**: Koordinatör yardımcısı, şef ve personelin ad, e-posta, görev ve **giriş şifresini** girin (**Üret** düğmesi güçlü şifre önerir). Şifreyi not alıp personele güvenli bir yoldan iletin. Personel giriş ekranında **TTO Personeli** sekmesinden girer; kayıt olmaz, e-posta doğrulaması gerekmez.
+
+- Şifre değiştirmek için Personel listesindeki 🔑 düğmesini kullanın (mevcut şifre gerekir).
+- Kişi daha önce buluşçu olarak kayıt olduysa, formda **"Bu e-postayla zaten hesap var — bağla"** seçeneğiyle o hesabın şifresini (kişi yanınızdayken) girip bağlayın; sonra 🔑 ile yeni şifre verin.
+
+> **v1.2'den v1.3'e geçiş:** Personel yetkisi artık hesabın uid'sine bağlıdır. Kuralları (5. adım) yeniden yükleyin. Firebase'e bağlı çalışan bir kurumda eski personel kayıtlarının uid'si yoktur: koordinatör bu kişileri Personel ekranında ✏️ ile açıp **"zaten hesap var — bağla"** ile yeniden bağlamalıdır. İlk koordinatör için bu mümkün değilse Firebase Console → Realtime Database → `staff/<e-posta>` kaydına `uid` alanını (Authentication → Users listesindeki User UID) elle ekleyin.
 
 ## 8. Mevcut dosyaları aktarın
 
@@ -79,10 +86,31 @@ Kaydedin. Kurum seçme ekranında kurumun rozeti **Demo**'dan **Aktif**'e döner
 
 ---
 
+## 🔍 Veritabanını inceleme (deneme ve sunum için)
+
+Kurumun Firebase projesine Google hesabınızla girin: [console.firebase.google.com](https://console.firebase.google.com) → proje.
+
+| Ne görmek istiyorsunuz? | Nerede? |
+|---|---|
+| Kimler hesap açtı, ne zaman açtı, en son ne zaman girdi | **Authentication → Users** (şifreler görünmez; Firebase şifreleri tek yönlü özetleyerek saklar) |
+| Tüm veriler canlı (dosyalar, personel, buluşçu profilleri) | **Realtime Database → Data** — uygulamada yapılan her değişiklik burada anında görünür |
+| Personel kayıtları ve yetkileri | Data → `staff` (`role`, `active`, `uid`) |
+| Buluşçu profilleri | Data → `users` (ad, tür: akademik / ogrenci / idari / harici, birim) |
+| Dosyalar ve TÜRKPATENT numaraları | Data → `files` (`tpAppNo`, `tpAppDate`, `stage`…) |
+| Bir kuralın neden izin verip vermediği | **Realtime Database → Rules → Rules Playground** |
+| Kullanım ve kota | Realtime Database → **Usage** |
+| Tüm verinin yedeği | Data → ⋮ → **Export JSON** |
+
+Projeye başka birini (örn. koordinatörü) izleyici olarak eklemek için: ⚙️ **Project settings → Users and permissions → Add member → Viewer**.
+
+> **Deneme önerisi:** Gerçek veriyle başlamadan önce bir deneme Firebase projesi açıp birkaç personel hesabı ve buluşçu kaydı oluşturun; Console'da `staff`, `users`, `files` düğümlerinin nasıl dolduğunu izleyin. Denemeden sonra proje silinebilir.
+> Demo modunda (Firebase ayarı boşken) veriler yalnızca o tarayıcıda tutulur; tarayıcının Geliştirici Araçları → Application → Local Storage → `tto_demo_db_v2_karabuk` anahtarında görülebilir.
+
 ## 🔐 Güvenlik özeti
 
-- Doğrulanmamış e-postalar hiçbir veriyi okuyamaz ve yazamaz.
-- Personel yetkisi `staff` listesindeki **aktif** kayda bağlıdır; pasife alınan personel anında buluşçu ekranına düşer.
+- Buluşçular (doğrulanmamış e-postalar) hiçbir veriyi okuyamaz ve yazamaz.
+- Personel yetkisi `staff` listesindeki **aktif** kayda ve o kayda bağlı hesabın **uid**'sine bağlıdır. Personel hesaplarını ve şifrelerini yalnızca koordinatör oluşturur; biri personelin e-postasıyla kendi hesabını açsa bile yetki alamaz. Pasife alınan personel anında buluşçu ekranına düşer.
+- Şifreler veritabanında saklanmaz; Firebase Authentication tarafından tek yönlü özetlenir. Koordinatör yeni şifre belirleyebilir, mevcut şifreyi göremez.
 - Buluşçu yalnızca **kendi e-postasının yazılı olduğu** dosyaları okuyabilir. Başkasının dosyasını, iç notları (`internal`) ve gizli belgeleri okuyamaz.
 - Buluşçu yalnızca "Başvuru Alındı" aşamasında yeni portal başvurusu açabilir; mevcut dosyaların aşamasını, tarihlerini ve buluşçu listesini değiştiremez.
 - Belgeler Firebase Storage'da değil, Realtime Database içinde parçalara bölünerek saklanır (**kredi kartı gerekmez**). Belge sınırı 10 MB'tır.
@@ -100,7 +128,7 @@ Dosyadaki e-posta ile kayıt olduğu e-posta aynı mı? Büyük/küçük harf fa
 Herhangi bir TTO personeli uygulamayı açtığında erişim otomatik tanımlanır. Bir personelin giriş yapması yeterlidir.
 
 **"Bu işlem için yetkiniz yok" hatası.**
-Kurallar güncel değilse (5. adım) ya da kullanıcının e-postası doğrulanmamışsa çıkar. Personel ise **Personel** listesinde **Aktif** olduğundan emin olun.
+Kurallar güncel değilse (5. adım) ya da kullanıcının e-postası doğrulanmamışsa çıkar. Personel ise **Personel** listesinde **Aktif** ve **Hesap tanımlı** olduğundan emin olun.
 
 **"E-Posta/Şifre girişi kapalı" uyarısı.**
 2. adım yapılmamış: Authentication → Sign-in method → Email/Password'u açın.
@@ -110,4 +138,4 @@ Uygulamada **Ayarlar → Dosya verilerini yedekle (JSON)** ya da Firebase Consol
 
 ---
 
-*TTO Takip v1.2 — Teknoloji Transfer Ofisi Fikri Mülkiyet Dosya Takibi*
+*TTO Takip v1.3 — Teknoloji Transfer Ofisi Fikri Mülkiyet Dosya Takibi*
