@@ -36,6 +36,23 @@
           "$docId": {
             ".write": "(auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists() && ((!data.exists() && newData.child('by').val() === auth.token.email.toLowerCase().replace('.', ',')) || (data.exists() && data.child('by').val() === auth.token.email.toLowerCase().replace('.', ',') && !newData.exists()))"
           }
+        },
+        "stage": {
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && data.val() === 'eksik' && newData.val() === 'on_inceleme'"
+        },
+        "stageDate": {
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isString()"
+        },
+        "updatedAt": {
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isNumber()"
+        },
+        "resubmittedAt": {
+          ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().child('stage').val() === 'on_inceleme' && newData.isNumber() && newData.val() <= now"
+        },
+        "history": {
+          "$hid": {
+            ".write": "((auth != null && auth.token.email_verified === true) && root.child('files').child($fid).child('inventors').child(auth.token.email.toLowerCase().replace('.', ',')).exists()) && !data.exists() && root.child('files').child($fid).child('stage').val() === 'eksik' && newData.parent().parent().child('stage').val() === 'on_inceleme' && newData.child('stage').val() === 'on_inceleme' && newData.child('by').val() === auth.token.email.toLowerCase().replace('.', ',') && newData.child('resubmit').val() === true"
+          }
         }
       }
     },

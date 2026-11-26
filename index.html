@@ -853,7 +853,7 @@ function updateNavBadges(){
   if (!isStaff()) { const b=$('navb-myfiles'); if (b) { const n=list(S.files).length; b.textContent=n; b.className = n?'bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full':'hidden'; } return; }
   const fs = list(S.files);
   Object.keys(PHASES).forEach(k => { const el=$('navc-'+k); if (el) el.textContent = fs.filter(f=>phaseOf(f)===k).length; });
-  const newCount = fs.filter(f=>f.stage==='basvuru').length; const b=$('navb-files');
+  const newCount = fs.filter(f=>f.stage==='basvuru' || isResubmitted(f)).length; const b=$('navb-files');
   if (b) { b.textContent=newCount; b.className = newCount ? 'bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full' : 'hidden'; }
 }
 
@@ -977,6 +977,44 @@ async function notifyInventors(f, text){
 async function notifyStaff(text, fid){
   await B.set('staffNotifs/'+B.newKey('staffNotifs'), {at:Date.now(), text, fid:fid||null, fromEk:S.user.ek});
 }
+// ---------- Eksik tamamlama: buluşçu düzeltilmiş dosyayı TTO'ya yeniden gönderir ----------
+function lastEksikNote(f){ const h = historyOf(f).filter(x=>x.stage==='eksik').slice(-1)[0]; return h ? (h.note||'') : ''; }
+function isResubmitted(f){ const h = historyOf(f).slice(-1)[0]; return !!(h && h.resubmit); } // son hareket buluşçunun yeniden gönderimi → TTO'nun işlem yapması bekleniyor
+function eksikBoxHtml(f, compact){
+  if (isStaff() || f.stage!=='eksik' || !myInventorRec(f)) return '';
+  const note = lastEksikNote(f);
+  return `<div class="rounded-xl border border-orange-200 bg-orange-50 p-4 ${compact?'mt-3':''}">
+    <div class="text-xs font-bold text-orange-800 uppercase tracking-wide mb-1"><i class="fas fa-file-circle-question mr-1"></i>TTO sizden düzeltme / ek bilgi istiyor</div>
+    ${note?`<div class="text-sm text-orange-900 bg-white/70 rounded-lg px-3 py-2 mb-2 border border-orange-100">${esc(note).replace(/\n/g,'<br>')}</div>`:''}
+    <div class="text-xs text-orange-800 mb-3">1) Buluş Bildirim Formunda eksikleri tamamlayıp <b>Kaydet</b>'e basın; gerekiyorsa belge yükleyin. 2) Ardından <b>Düzeltmeleri TTO'ya gönder</b> düğmesine basın. Göndermediğiniz sürece dosya TTO'ya geri dönmez.</div>
+    <div class="flex flex-wrap gap-2"><button onclick="openFormEditor('${f.id}')" class="btn btn-s"><i class="fas fa-pen-to-square text-blue-600"></i> Formu düzenle</button><button onclick="openResubmit('${f.id}')" class="btn btn-p !bg-orange-600 hover:!bg-orange-700"><i class="fas fa-paper-plane"></i> Düzeltmeleri TTO'ya gönder</button></div></div>`;
+}
+function openResubmit(fid){
+  const f=S.files[fid]; if (!f || f.stage!=='eksik') return toast('Bu dosya şu anda düzeltme beklemiyor.','info');
+  if (FE && FE.fid===fid && FE.dirty) return toast('Formda kaydedilmemiş değişiklikler var. Önce Kaydet\'e basın.','error');
+  const form=S.forms[fid]; const pr = formProgress(form||{}, null, f);
+  openModal(modalHead("Düzeltmeleri TTO'ya gönder", esc(f.title), 'fa-paper-plane') + `<div class="p-6 space-y-3">
+    ${lastEksikNote(f)?`<div class="text-sm rounded-lg bg-orange-50 border border-orange-100 px-3 py-2"><span class="text-[11px] font-semibold text-orange-700 uppercase">TTO'nun isteği</span><br>${esc(lastEksikNote(f))}</div>`:''}
+    <div class="text-xs text-slate-500">Form doluluğu: <b>%${pr.pct}</b>${form&&form.updatedAt?' · son kayıt '+fmtTs(form.updatedAt):''}</div>
+    <div><label class="lbl">TTO'ya not (ne düzelttiniz?)</label><textarea id="rs-note" rows="3" class="inp" placeholder="Örn: Anahtar kelimeler 1. soruya eklendi."></textarea></div>
+    <p class="text-[11px] text-slate-400">Gönderince dosya yeniden <b>TTO Ön İnceleme</b> aşamasına geçer ve TTO personeline bildirim gider. İnceleme sırasında formu düzenlemeye devam edebilirsiniz.</p>
+  </div><div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2"><button onclick="closeModal()" class="btn btn-s">Vazgeç</button><button id="rs-save" onclick="resubmitFile('${fid}')" class="btn btn-p"><i class="fas fa-paper-plane"></i> Gönder</button></div>`);
+}
+async function resubmitFile(fid){
+  const f=S.files[fid]; if (!f || f.stage!=='eksik') { closeModal(); return; }
+  const note=$('rs-note').value.trim(), t=today(), now=Date.now(), me=S.user.ek;
+  const name=(S.profile&&S.profile.name)||S.user.email;
+  const btn=$('rs-save'); busy(btn,true);
+  try {
+    const hid = B.newKey('files/'+fid+'/history');
+    await B.update('', {
+      ['files/'+fid+'/stage']:'on_inceleme', ['files/'+fid+'/stageDate']:t, ['files/'+fid+'/updatedAt']:now, ['files/'+fid+'/resubmittedAt']:now,
+      ['files/'+fid+'/history/'+hid]:{stage:'on_inceleme', date:t, at:now, note:'Buluşçu istenen düzeltmeleri yaptı ve dosyayı TTO\'ya yeniden gönderdi.'+(note?'\n'+note:''), byName:name, by:me, resubmit:true}
+    });
+    await notifyStaff(name+' "'+f.title+'" dosyasındaki düzeltmeleri tamamlayıp yeniden gönderdi'+(note?': '+note:'.'), fid).catch(e=>console.warn(e));
+    closeModal(); toast('Düzeltmeler TTO\'ya gönderildi. Dosyanız yeniden ön incelemede.','success');
+  } catch(e){ busy(btn,false); toast(errMsg(e)+(isPermErr(e)?' (Firebase kuralları güncel olmayabilir.)':''),'error'); }
+}
 function myNotifs(){
   if (isStaff()) return Object.entries(S.staffNotifs||{}).map(([id,n])=>({id, ...n, read: !!(n.readBy && n.readBy[S.user.ek])})).sort((a,b)=>b.at-a.at);
   return Object.entries(S.notifs||{}).map(([id,n])=>({id,...n})).sort((a,b)=>b.at-a.at);
@@ -1086,6 +1124,7 @@ VIEWS.dashboard = {
     if (!S.loaded.files) return;
     const fs = list(S.files), byPh = k => fs.filter(f=>phaseOf(f)===k);
     const newOnes = fs.filter(f=>f.stage==='basvuru').sort((a,b)=>b.createdAt-a.createdAt);
+    const backOnes = fs.filter(isResubmitted).sort((a,b)=>(b.resubmittedAt||0)-(a.resubmittedAt||0));
     const reg = fs.filter(f=>f.stage==='tescil').length;
     const tp = byPh('tp').map(f=>({f, w:tpWait(f)})).filter(x=>x.w).sort((a,b)=>b.w.days-a.w.days);
     const dl = []; fs.forEach(f => { if (phaseOf(f)==='son' && !S.internal[f.id]) return; deadlinesOf(f).forEach(d => { if (!d.done && d.date && daysBetween(today(), d.date) <= 60) dl.push({...d, f}); }); });
@@ -1103,6 +1142,7 @@ VIEWS.dashboard = {
       </div>
       <div class="grid lg:grid-cols-3 gap-5">
         <div class="lg:col-span-2 space-y-5">
+          ${backOnes.length?`<div class="card p-5 border-emerald-200"><h3 class="font-bold mb-3"><i class="fas fa-rotate-left mr-2 text-emerald-600"></i>Buluşçudan düzeltilip geri gelen dosyalar</h3><div class="divide-y divide-slate-100">${backOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${esc(f.ttoNo||'')} · ${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${timeAgo(f.resubmittedAt||f.updatedAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
           ${newOnes.length?`<div class="card p-5 border-blue-200"><h3 class="font-bold mb-3"><i class="fas fa-inbox mr-2 text-blue-600"></i>İşlem bekleyen yeni başvurular</h3><div class="divide-y divide-slate-100">${newOnes.slice(0,6).map(f=>`<button onclick="openDetail('${f.id}')" class="w-full text-left py-2.5 flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2"><span class="flex-1 min-w-0"><span class="block font-semibold text-sm truncate">${esc(f.title)}</span><span class="text-xs text-slate-400">${inventorsOf(f).map(p=>esc(p.name)).join(', ')} · ${f.source==='portal'?'<span class="text-blue-600 font-semibold">Portal başvurusu</span>':'TTO kaydı'} · ${timeAgo(f.createdAt)}</span></span>${typeChip(f)}</button>`).join('')}</div></div>`:''}
           <div class="card p-5">
             <div class="flex items-center justify-between mb-3"><h3 class="font-bold"><i class="fas fa-hourglass-half mr-2 text-indigo-600"></i>TÜRKPATENT'te bekleyen dosyalar</h3><span class="text-xs text-slate-400">en uzun bekleyen üstte</span></div>
@@ -1174,7 +1214,7 @@ VIEWS.files = {
     }
     out.innerHTML = head + `<div class="card overflow-hidden"><div class="overflow-x-auto"><table class="tbl w-full min-w-[960px]"><thead><tr><th>Dosya</th><th>Tür</th><th>Buluşçular</th><th>Durum / Aşama</th><th>TÜRKPATENT</th><th>Tescil</th><th>Bekleme</th><th>Sorumlu</th></tr></thead><tbody>
       ${fs.map(f => { const inv=inventorsOf(f); return `<tr class="row" onclick="openDetail('${f.id}')">
-        <td class="max-w-[260px]"><div class="font-semibold text-slate-800 leading-snug">${esc(f.title)}</div>${ttoNoHtml(f)}${f.source==='portal'&&f.stage==='basvuru'?' <span class="chip bg-blue-100 text-blue-700 ml-1">Portal</span>':''}</td>
+        <td class="max-w-[260px]"><div class="font-semibold text-slate-800 leading-snug">${esc(f.title)}</div>${ttoNoHtml(f)}${f.source==='portal'&&f.stage==='basvuru'?' <span class="chip bg-blue-100 text-blue-700 ml-1">Portal</span>':''}${isResubmitted(f)?' <span class="chip bg-emerald-100 text-emerald-700 ml-1"><i class="fas fa-rotate-left"></i>Düzeltildi</span>':''}</td>
         <td>${typeChip(f)}</td>
         <td class="text-xs text-slate-600 max-w-[200px]">${inv.slice(0,3).map(p=>esc(p.name)).join('<br>')}${inv.length>3?`<br><span class="text-slate-400">+${inv.length-3} kişi</span>`:''}</td>
         <td><div class="space-y-1">${phaseChip(f)}<div class="text-xs text-slate-600">${esc(stageOf(f).label)}</div><div class="text-[11px] text-slate-400">${fmtD(f.stageDate)}</div></div></td>
@@ -1564,7 +1604,7 @@ function detailHtml(fid){
       </div>
     </div>
   </div>
-  <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">${stepperHtml(f)}<div class="mt-4">${waitBox(f)}</div></div>
+  <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">${stepperHtml(f)}${eksikBoxHtml(f, true)}${staff&&isResubmitted(f)?`<div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"><i class="fas fa-rotate-left mr-1"></i><b>Buluşçu düzeltmeleri tamamlayıp dosyayı yeniden gönderdi</b> (${fmtTs(f.resubmittedAt)}). İnceleyip aşamayı güncelleyin.</div>`:''}<div class="mt-4">${waitBox(f)}</div></div>
   <div class="grid lg:grid-cols-5 gap-6 p-6">
     <div class="lg:col-span-3">
       ${section('Bilgiler','fa-circle-info', `<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1917,6 +1957,7 @@ function renderFormEditor(){
     <div class="w-40"><div class="flex justify-between text-[11px] text-slate-500 mb-0.5"><span>Doluluk</span><span id="fe-prog-t">%${pr.pct}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div id="fe-prog" class="h-full bg-blue-500 rounded-full" style="width:${pr.pct}%"></div></div></div>
     <span id="fe-dirty" class="${FE.dirty?'':'hidden'}"><span class="chip bg-amber-100 text-amber-800">Kaydedilmedi</span></span>
     ${FE.readOnly?'':`<button onclick="saveForm()" id="fe-save" class="btn btn-p"><i class="fas fa-floppy-disk"></i> Kaydet</button>`}
+    ${!isStaff() && f.stage==='eksik' && !FE.readOnly ? `<button onclick="openResubmit('${FE.fid}')" class="btn btn-p !bg-orange-600 hover:!bg-orange-700" title="Kaydettikten sonra dosyayı TTO'ya geri gönderin"><i class="fas fa-paper-plane"></i> TTO'ya gönder</button>`:''}
     <button onclick="downloadWordFE('all')" class="btn btn-s"><i class="fas fa-file-word text-blue-600"></i> Word</button>
     <button onclick="closeFormEditor()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-100"><i class="fas fa-xmark"></i></button>
   </div>
@@ -2049,7 +2090,8 @@ async function saveForm(){
     const upd = {};
     Object.entries(FE.personal).forEach(([k,v]) => { if (isStaff() || k===S.user.ek) upd['formPersonal/'+FE.fid+'/'+k] = {tc:(v.tc||'').trim()||null, address:(v.address||'').trim()||null, phone:(v.phone||'').trim()||null}; });
     if (Object.keys(upd).length) await B.update('', upd);
-    FE.dirty=false; feMarkDirty(); toast('Form kaydedildi.','success');
+    FE.dirty=false; feMarkDirty();
+    toast(!isStaff() && S.files[FE.fid] && S.files[FE.fid].stage==='eksik' ? 'Form kaydedildi. Dosyanın TTO\'ya dönmesi için "TTO\'ya gönder" düğmesine basın.' : 'Form kaydedildi.', 'success');
     if (!isStaff()) notifyStaff(form.updatedByName+' "'+S.files[FE.fid].title+'" buluş bildirim formunu güncelledi.', FE.fid).catch(()=>{});
   } catch(e){ toast(errMsg(e),'error'); }
   busy(btn,false);
@@ -2344,6 +2386,7 @@ function myFileCard(f){
       <p class="text-xs text-slate-500 mt-1"><i class="fas fa-users mr-1"></i>${inv.map(p=>esc(p.name)+(p.email&&ek(p.email)===S.user.ek?' <b>(siz)</b>':'')).join(', ')}</p></div>
       <div class="flex flex-col gap-1.5 flex-shrink-0"><button onclick="openDetail('${f.id}')" class="btn btn-s"><i class="fas fa-up-right-from-square"></i> Ayrıntılar</button><button onclick="openFormEditor('${f.id}')" class="btn btn-s"><i class="fas fa-file-signature text-blue-600"></i> Bildirim Formu</button></div></div>
     ${stepperHtml(f, false)}
+    ${eksikBoxHtml(f, true)}
     <div class="grid md:grid-cols-2 gap-3 mt-4">${waitBox(f)}
       <div class="rounded-xl bg-slate-50 border border-slate-100 p-4"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><i class="fas fa-message mr-1"></i>Son güncelleme</div>${lastPub?`<div class="text-sm"><b>${esc((STAGES[lastPub.stage]||{}).label||'')}</b> · <span class="text-slate-400 text-xs">${fmtD(lastPub.date)}</span></div>${lastPub.note?`<div class="text-sm text-slate-600 mt-1">${esc(lastPub.note)}</div>`:''}`:'<div class="text-sm text-slate-400">—</div>'}
         <div class="text-[11px] text-slate-400 mt-2">${f.tpAppNo?'TÜRKPATENT başvuru no: <span class="font-mono text-slate-600">'+esc(f.tpAppNo)+'</span>':''}${f.regNo?' · Tescil no: <span class="font-mono text-slate-600">'+esc(f.regNo)+'</span>':''}${f.responsibleName?'<br>TTO sorumlusu: '+esc(f.responsibleName):''}</div></div></div>
